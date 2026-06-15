@@ -365,8 +365,7 @@ function monthCard(canaan, mo){
       <div class="canaan${mo.index===6?' yearchange':''}">שנת ${mo.index>=6?canaan+1:canaan} לכניסה לכנען</div>
       <div class="canaan${mo.index===6?' yearchange':''}">${samHtml('שנת')} ${mo.index>=6?canaan+1:canaan} ${samHtml('למובא בני ישראל לארץ כנען')}</div>
       <div class="mname">${mo.name} - ${samHtml(mo.name)}</div>
-      <div class="molad">המולד: <b>${m.syriac}</b> (מזרחי)${m.islamic?` · ${m.islamic} (מוסלמי)`:''}<br>
-        שעת המולד: <b>${m.clock} ${m.daynight}</b> <span class="mlabel">(מסורתי · מ-18:00)</span>${m.clock_real?` · <b>${m.clock_real} ${m.daynight_real}</b> <span class="mlabel">(שקיעה אמיתית)</span>`:''} <span class="est">משוער</span></div>
+      <div class="molad">המולד חל <b>${m.daynight==='לילה'?'בליל':'ביום'} ${m.molad_wd}</b> · <b>${m.clock}</b> שעות ${m.daynight==='לילה'?'מהליל':'מהיום'} · <b>${m.molad_syr}</b> (מזרחי)${m.islamic?` · ${m.islamic} (מוסלמי)`:''} <span class="est">משוער</span></div>
     </div>
     <div class="wdrow">${WD.map(w=>`<div>${w}</div>`).join('')}</div>
     <div class="grid">${cells}</div>
