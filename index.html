@@ -14,7 +14,7 @@
     --accent:#8a6d3b; --accent2:#735a30; --soft:#efe6d3; --line:#e3dac8;
     --sam:#3c7a4f; --sam-bg:#e8f1e9; --jew:#3a5f9e; --jew-bg:#e6ecf6;
     --sab:#7a4f9e; --sab-bg:#f0e8f6; --moed:#1f7a86; --moed-bg:#e0f0f2;
-    --sat:#f6f0e2; --hol:#fbf7ee;
+    --sat:#f6f0e2; --hol:#fbf7ee; --grid:#c4b894;
   }
   *{box-sizing:border-box}
   body{margin:0;font-family:"Segoe UI","Assistant",system-ui,Arial,sans-serif;
@@ -32,15 +32,18 @@
     font-size:.78rem;color:var(--accent);font-weight:600;white-space:nowrap}
   .act:hover{background:var(--soft)}
   @media print{
-    .bar,.legend{display:none!important}
+    .bar,.legend,.modal{display:none!important}
     body{background:#fff}
     .months{grid-template-columns:repeat(2,1fr);gap:8px}
-    .month{break-inside:avoid;box-shadow:none}
+    .month{break-inside:avoid;box-shadow:none;border-color:#9a8f70}
+    .grid{background:#8f8568;gap:1px;padding:1px;
+      -webkit-print-color-adjust:exact;print-color-adjust:exact}  /* emphasize cell separators */
+    .wdrow{border-bottom-color:#9a8f70}
     .copyright{margin-top:8px}
-    /* copyright repeated at the bottom of every printed/PDF page */
+    /* copyright + year repeated at the bottom of every printed/PDF page */
     .print-footer{display:block;position:fixed;bottom:0;left:0;right:0;text-align:center;
-      font-size:9px;color:#666;border-top:1px solid #ccc;padding:3px 0;background:#fff}
-    .wrap{padding-bottom:30px}
+      font-size:10px;color:#3a342a;border-top:1px solid #999;padding:4px 0;background:#fff;font-weight:600}
+    .wrap{padding-bottom:34px}
   }
 
   .bar{position:sticky;top:0;z-index:20;display:flex;gap:6px;align-items:center;
@@ -80,7 +83,7 @@
   .wdrow,.grid{display:grid;grid-template-columns:repeat(7,1fr)}
   .wdrow{background:#faf5ea;border-bottom:1px solid var(--line)}
   .wdrow div{text-align:center;font-size:.72rem;color:var(--muted);padding:4px 0;font-weight:600}
-  .grid{gap:1px;background:var(--line);padding:1px}
+  .grid{gap:1.5px;background:var(--grid);padding:1.5px}
   .cell{background:var(--card);min-height:108px;padding:5px 6px;position:relative;font-size:.82rem}
   .cell.empty{background:#f7f2e8}
   .cell.sat{background:var(--sat)}
@@ -126,6 +129,21 @@
   .copyright{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:.8rem;color:var(--ink)}
   .copyright a{color:var(--accent);text-decoration:none;font-weight:600}
   .copyright a:hover{text-decoration:underline}
+
+  /* category filter chips (moadim list + sync) */
+  .filter-row{display:flex;flex-wrap:wrap;gap:6px;padding:9px 14px;border-bottom:1px solid var(--line);background:#faf6ec}
+  .fchip{border:1px solid var(--line);border-radius:999px;padding:4px 12px;cursor:pointer;font-size:.8rem;
+    font-weight:700;background:#fff;color:var(--muted);user-select:none;white-space:nowrap}
+  .fchip:hover{border-color:var(--accent)}
+  .fchip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .sync-note{text-align:center;color:var(--ink);font-weight:600;margin:12px 0 0}
+  .sync-actions{display:flex;gap:10px;justify-content:center;margin:14px 0 4px;flex-wrap:wrap}
+  .sync-go{font-size:.95rem;padding:10px 18px;border:1px solid var(--line);background:var(--soft);
+    color:var(--accent);font-weight:800;border-radius:10px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+  .sync-go:hover{background:#e3d4b4}
+  .sync-hint{text-align:center;color:var(--muted);font-size:.76rem;margin:10px 16px 6px;line-height:1.55}
+  .wa-ico{width:1.05em;height:1.05em;vertical-align:-2px;fill:#25D366}
+  .act .wa-ico{fill:#25D366}
 
   /* ---------- Responsive: tablets ---------- */
   @media (max-width:760px){
@@ -193,8 +211,9 @@
       <button class="act" id="zoomout" title="הקטן תצוגה">➖</button>
       <button class="act" id="zoomin" title="הגדל תצוגה">➕</button>
       <button class="act" id="print" title="הדפסה או שמירה כ-PDF">🖨 הדפס / PDF</button>
-      <button class="act" id="ics" title="סנכרון ל-Google / Outlook (קובץ ICS)">📅 סנכרון ליומן</button>
-      <button class="act" id="email" title="שליחה במייל">✉ מייל</button>
+      <button class="act" id="ics" title="סנכרון ליומן Google או Outlook">📅 סנכרון ליומן</button>
+      <button class="act" id="email" title="שליחה בדוא״ל">✉ דוא״ל</button>
+      <button class="act" id="whatsapp" title="שיתוף ב-WhatsApp"><svg class="wa-ico" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.945C.16 5.335 5.495 0 12.05 0a11.82 11.82 0 018.413 3.488 11.82 11.82 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 001.51 5.26l-.999 3.648 3.978-1.717zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg> שיתוף</button>
     </span>
   </div>
 
@@ -209,7 +228,7 @@
 
   <div id="result"></div>
   <div class="meta" id="meta"></div>
-  <div class="print-footer">All rights reserved to Osher Sassoni · כל הזכויות שמורות לאושר ששוני · www.the-samaritans.net</div>
+  <div class="print-footer"><span id="pf-year"></span>All rights reserved to Osher Sassoni · כל הזכויות שמורות לאושר ששוני · www.the-samaritans.net</div>
 
   <div id="modal" class="modal" hidden>
     <div class="modal-box">
@@ -220,7 +239,30 @@
           <button class="act" id="modal-close" title="סגור">✕</button>
         </span>
       </div>
+      <div class="filter-row" id="moadim-filters"></div>
       <div class="modal-body"><table id="moadim-table"></table></div>
+    </div>
+  </div>
+
+  <div id="sync-modal" class="modal" hidden>
+    <div class="modal-box">
+      <div class="modal-head">
+        <span>סנכרון ליומן — <span id="sync-year"></span></span>
+        <span class="modal-actions">
+          <button class="act" id="sync-close" title="סגור">✕</button>
+        </span>
+      </div>
+      <div class="filter-row" id="sync-filters"></div>
+      <div class="modal-body">
+        <p class="sync-note">בחרו אילו אירועים לסנכרן, ואז בחרו יומן יעד:</p>
+        <div class="sync-actions">
+          <button class="sync-go" id="sync-google">📆 יומן Google</button>
+          <button class="sync-go" id="sync-outlook">📧 Outlook</button>
+        </div>
+        <p class="sync-hint">הסנכרון מתבצע באמצעות קובץ יומן תקני (ICS) המכיל את האירועים שבחרתם.
+          ב-<b>Google</b> ייפתח דף הייבוא — בחרו את הקובץ שירד.
+          ב-<b>Outlook</b> פתחו את הקובץ שירד (Outlook במחשב מייבא אותו אוטומטית) או ייבאו אותו ב-Outlook באינטרנט.</p>
+      </div>
     </div>
   </div>
 
@@ -329,28 +371,46 @@ function setMode(m){
   inp.min=lo; inp.max=hi;
 }
 
-// ---- moadim list: all festivals/moadim/chol-hamoed + community events, no Sabbaths ----
-function collectMoadim(yc){
-  const INC = {sam:1, moed:1, period:1, community:1};   // exclude sabbath/parasha/jew
-  const out = [];
+// ---- category filters (shared by the moadim list + the calendar sync) ----
+const CATS = [['sam','חגים שומרונים'],['jew','חגים יהודים'],['sabbath','אירועי שבת'],['community','אירועי קהילה']];
+const KIND2CAT = {sam:'sam', moed:'sam', period:'sam', jew:'jew', national:'jew', sabbath:'sabbath', community:'community'};
+let moadimCats = new Set(['sam','jew','sabbath','community']);
+let syncCats   = new Set(['sam','jew','sabbath','community']);
+function renderFilters(containerId, activeSet, onChange){
+  const c=document.getElementById(containerId);
+  c.innerHTML=CATS.map(([k,label])=>`<span class="fchip${activeSet.has(k)?' on':''}" data-cat="${k}">${label}</span>`).join('');
+  c.querySelectorAll('.fchip').forEach(ch=>ch.onclick=()=>{
+    const k=ch.dataset.cat;
+    activeSet.has(k)?activeSet.delete(k):activeSet.add(k);
+    ch.classList.toggle('on'); onChange();
+  });
+}
+function collectMoadim(yc, cats){
+  const out=[];
   for(const mo of yc.months) for(const rec of mo.days) for(const f of (rec.festivals||[])){
-    if(!(f.kind in INC)) continue;
+    const cat=KIND2CAT[f.kind]; if(!cat || !cats.has(cat)) continue;   // weekly parasha excluded from the list
     out.push({date:rec.greg, wd:WD[wdOfISO(rec.greg)], name:f.name, color:f.color||''});
   }
   out.sort((a,b)=> a.date<b.date?-1:1);
   return out;
 }
-function openMoadim(){
-  if(!DATA_YC) return;
-  const rows=collectMoadim(DATA_YC);
-  document.getElementById('modal-year').textContent=`שנת ${DATA_YC.canaan_year} לכניסה לכנען (לועזי ${DATA_YC.greg_year})`;
-  const body=rows.map(r=>`<tr><td>${fmtGreg(r.date)}</td><td>${r.wd}</td><td${r.color?` style="color:${r.color};font-weight:700"`:''}>${r.name}</td></tr>`).join('');
+function renderMoadimTable(){
+  const rows=collectMoadim(DATA_YC, moadimCats);
+  const body=rows.length
+    ? rows.map(r=>`<tr><td>${fmtGreg(r.date)}</td><td>${r.wd}</td><td${r.color?` style="color:${r.color};font-weight:700"`:''}>${r.name}</td></tr>`).join('')
+    : `<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:14px">— אין פריטים בקטגוריות שנבחרו —</td></tr>`;
   document.getElementById('moadim-table').innerHTML=
     `<thead><tr><th>תאריך לועזי</th><th>יום בשבוע</th><th>תיאור החג / האירוע</th></tr></thead><tbody>${body}</tbody>`;
+}
+function openMoadim(){
+  if(!DATA_YC) return;
+  document.getElementById('modal-year').textContent=`שנת ${DATA_YC.canaan_year} לכניסה לכנען (לועזי ${DATA_YC.greg_year})`;
+  renderFilters('moadim-filters', moadimCats, renderMoadimTable);
+  renderMoadimTable();
   document.getElementById('modal').hidden=false;
 }
 function downloadMoadimXLS(){
-  const rows=collectMoadim(DATA_YC);
+  const rows=collectMoadim(DATA_YC, moadimCats);
   const q=c=>`"${String(c).replace(/"/g,'""')}"`;
   const csv=[['תאריך לועזי','יום בשבוע','תיאור החג / האירוע'],
     ...rows.map(r=>[fmtGreg(r.date), r.wd, r.name])].map(row=>row.map(q).join(',')).join('\r\n');
@@ -360,28 +420,40 @@ function downloadMoadimXLS(){
   a.remove(); URL.revokeObjectURL(a.href);
 }
 
-// ---- export the displayed year to an .ics file (import into Google / Outlook / phone) ----
+// ---- calendar sync: build a FILTERED .ics that Google / Outlook import ----
 function _icsEsc(s){ return String(s).replace(/([\\,;])/g,'\\$1').replace(/\n/g,'\\n'); }
 function _nextDay(iso){ const [y,m,d]=iso.split('-').map(Number);
   return new Date(Date.UTC(y,m-1,d+1)).toISOString().slice(0,10).replace(/-/g,''); }
-function downloadICS(){
-  const yc=DATA_YC; if(!yc) return;
-  const PFX={sam:'',moed:'',sabbath:'',parasha:'פרשה: ',community:''};
+function buildICS(yc, cats){
+  const PFX={sam:'',moed:'',period:'',sabbath:'',community:'',jew:'יהודי: ',national:'',parasha:'פרשה: '};
   const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//the-samaritans.net//Samaritan Calendar//HE','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
   let n=0;
   for(const mo of yc.months) for(const rec of mo.days) for(const f of (rec.festivals||[])){
-    if(!(f.kind in PFX)) continue;                 // skip Jewish cross-ref & background periods
+    const cat = f.kind==='parasha' ? 'sam' : KIND2CAT[f.kind];   // weekly portions sync with the Samaritan set
+    if(!cat || !cats.has(cat) || !(f.kind in PFX)) continue;
     const ds=rec.greg.replace(/-/g,'');
     L.push('BEGIN:VEVENT','UID:sam-'+(n++)+'-'+ds+'@the-samaritans.net',
       'DTSTART;VALUE=DATE:'+ds,'DTEND;VALUE=DATE:'+_nextDay(rec.greg),
       'SUMMARY:'+_icsEsc(PFX[f.kind]+f.name),'TRANSP:TRANSPARENT','END:VEVENT');
   }
   L.push('END:VCALENDAR');
-  const blob=new Blob([L.join('\r\n')],{type:'text/calendar;charset=utf-8'});
+  return L.join('\r\n');
+}
+function _downloadICS(cats){
+  const yc=DATA_YC; if(!yc) return;
+  const blob=new Blob([buildICS(yc,cats)],{type:'text/calendar;charset=utf-8'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download=`samaritan-calendar-${yc.greg_year}.ics`; document.body.appendChild(a); a.click();
   a.remove(); URL.revokeObjectURL(a.href);
 }
+function openSync(){
+  if(!DATA_YC) return;
+  document.getElementById('sync-year').textContent=`שנת ${DATA_YC.canaan_year} (לועזי ${DATA_YC.greg_year})`;
+  renderFilters('sync-filters', syncCats, ()=>{});
+  document.getElementById('sync-modal').hidden=false;
+}
+function syncGoogle(){ _downloadICS(syncCats); window.open('https://calendar.google.com/calendar/u/0/r/settings/import','_blank','noopener'); }
+function syncOutlook(){ _downloadICS(syncCats); window.open('https://outlook.live.com/calendar/0/addcalendar','_blank','noopener'); }
 
 async function init(){
   setMode('greg');
@@ -400,8 +472,17 @@ async function init(){
   const applyZoom=()=>{document.getElementById('result').style.zoom=zoom;};
   document.getElementById('zoomin').onclick=()=>{zoom=Math.min(1.8,zoom+0.1);applyZoom();};
   document.getElementById('zoomout').onclick=()=>{zoom=Math.max(0.6,zoom-0.1);applyZoom();};
-  document.getElementById('print').onclick=()=>window.print();   // print or "Save as PDF"
-  document.getElementById('ics').onclick=()=>downloadICS();
+  document.getElementById('print').onclick=()=>{
+    const yc=DATA_YC;
+    document.getElementById('pf-year').textContent =
+      yc ? `הלוח השומרוני · שנת ${yc.canaan_year} לכניסה לכנען (לועזי ${yc.greg_year}) · ` : '';
+    window.print();   // print or "Save as PDF"
+  };
+  document.getElementById('ics').onclick=openSync;
+  document.getElementById('sync-close').onclick=()=>document.getElementById('sync-modal').hidden=true;
+  document.getElementById('sync-modal').onclick=e=>{ if(e.target.id==='sync-modal') document.getElementById('sync-modal').hidden=true; };
+  document.getElementById('sync-google').onclick=syncGoogle;
+  document.getElementById('sync-outlook').onclick=syncOutlook;
   document.getElementById('moadim').onclick=openMoadim;
   document.getElementById('moadim-xls').onclick=downloadMoadimXLS;
   document.getElementById('modal-close').onclick=()=>document.getElementById('modal').hidden=true;
@@ -411,6 +492,11 @@ async function init(){
     const subj=`הלוח העברי השומרוני — שנת ${yc?yc.canaan_year:''} לכניסה לכנען (לועזי ${g})`;
     const body=`לוח השנה השומרוני לשנה ${g} (כנען ${yc?yc.canaan_year:''}).\nצפייה בלוח: ${location.href.split('#')[0]}\n\nהערה: לוח זה אינו תחליף לחשבון הקשט המופץ ע"י הכהן הגדול.`;
     location.href=`mailto:?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`;
+  };
+  document.getElementById('whatsapp').onclick=()=>{
+    const g=currentGreg(), yc=DATA_YC;
+    const text=`הלוח העברי השומרוני — שנת ${yc?yc.canaan_year:''} לכניסה לכנען (לועזי ${g}).\nצפייה בלוח: ${location.href.split('#')[0]}`;
+    window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank','noopener');
   };
 }
 init();
