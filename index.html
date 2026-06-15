@@ -78,6 +78,7 @@
   .mhead .canaan{font-size:.74rem;color:var(--muted);letter-spacing:.02em}
   .mhead .mname{font-size:1.18rem;font-weight:800;color:var(--accent);margin:1px 0}
   .mhead .greg{position:absolute;top:9px;left:12px;font-size:.74rem;color:var(--muted)}
+  .mhead .hijri{position:absolute;top:25px;left:12px;font-size:.6rem;color:var(--muted);opacity:.85}
   .mhead .idx{position:absolute;top:9px;right:12px;font-size:.74rem;color:var(--muted)}
   .mhead .molad{font-size:.78rem;color:#6c6253;margin-top:2px}
   .mhead .molad b{color:var(--ink)}
@@ -241,7 +242,7 @@
     <span class="chip"><span class="dot sab"></span> שבת מיוחדת / מופת</span>
     <span class="chip"><span class="dot moed"></span> מעמד הר סיני</span>
     <span class="chip"><span class="dot sat"></span> שבת</span>
-    <span class="chip">ז/ש = זריחה/שקיעה (שעון ישראל, הרגריזים) · מז. = יום בחודש המזרחי</span>
+    <span class="chip">ז/ש = זריחה/שקיעה מישורית (תל אביב, שעון ישראל) · בהר גריזים יש להוסיף 5 דקות · מז. = יום בחודש המזרחי</span>
   </div>
 
   <div id="result"></div>
@@ -362,6 +363,7 @@ function monthCard(canaan, mo){
     <div class="mhead">
       <div class="idx">חודש ${mo.index}</div>
       <div class="greg">${[...new Set(mo.days.map(d=>d.greg.slice(0,4)))].join(' / ')} - ${mo.greg_months}</div>
+      ${mo.hijri_year?`<div class="hijri">${mo.hijri_year} להג׳רה</div>`:''}
       <div class="canaan${mo.index===6?' yearchange':''}">שנת ${mo.index>=6?canaan+1:canaan} לכניסה לכנען</div>
       <div class="canaan${mo.index===6?' yearchange':''}">${samHtml('שנת')} ${mo.index>=6?canaan+1:canaan} ${samHtml('למובא בני ישראל לארץ כנען')}</div>
       <div class="mname">${mo.name} - ${samHtml(mo.name)}</div>
