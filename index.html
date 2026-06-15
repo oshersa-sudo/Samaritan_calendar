@@ -573,7 +573,7 @@ function shareChooser(channel){
   if(!DATA_YC) return;
   dialog({ title:'שיתוף הלוח', html:'מה ברצונכם לשתף?',
     buttons:[
-      {label:'🖼 תמונת הלוח', primary:true, act:shareImage},
+      {label:'🖼 תמונת הלוח', primary:true, act:()=>shareImage(channel)},
       {label:'🔗 קישור ללוח', act:()=>shareLink(channel)},
       {label:'ביטול'}
     ]});
@@ -594,7 +594,7 @@ function _loadH2C(){
     s.onload=()=>res(); s.onerror=rej; document.head.appendChild(s);
   });
 }
-async function shareImage(){
+async function shareImage(channel){
   const yc=DATA_YC; if(!yc) return;
   dialog({ title:'מכין תמונה…', html:'רגע, יוצר את תמונת הלוח…', buttons:[] });
   try{
@@ -603,18 +603,26 @@ async function shareImage(){
     const prevZoom=el.style.zoom; el.style.zoom='';                 // capture at 100%
     const canvas=await html2canvas(el,{backgroundColor:'#f4f1ea',scale:Math.min(2,window.devicePixelRatio||1.5)});
     el.style.zoom=prevZoom;
+    const g=currentGreg(), link=location.href.split('#')[0];
     const text=`הלוח העברי השומרוני — שנת ${yc.canaan_year} לכניסה לכנען (לועזי ${yc.greg_year})`;
     canvas.toBlob(async blob=>{
       const file=new File([blob],`luach-${yc.greg_year}.png`,{type:'image/png'});
+      // MOBILE: native share sheet (user taps WhatsApp/email; the image is attached).
       if(navigator.canShare && navigator.canShare({files:[file]})){
         document.getElementById('dialog').hidden=true;
         try{ await navigator.share({files:[file],title:text,text}); }catch(e){}
-      } else {                                                       // desktop: download
-        const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=file.name;
-        document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
-        dialog({ title:'בוצע', html:'תמונת הלוח ירדה — ניתן לצרף אותה להודעת וואטסאפ / דוא״ל.',
-          buttons:[{label:'סגור',primary:true}] });
+        return;
       }
+      // DESKTOP (no file-share): download the image, then open the chosen channel to attach it.
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=file.name;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+      if(channel==='wa'){
+        window.open('https://wa.me/?text='+encodeURIComponent(text+'\n(צרפו את התמונה שהורדה זה עתה)'),'_blank','noopener');
+      } else if(channel==='mail'){
+        location.href=`mailto:?subject=${encodeURIComponent(text)}&body=${encodeURIComponent(text+'\nצרפו את תמונת הלוח שהורדה זה עתה.\n\nצפייה בלוח: '+link)}`;
+      }
+      dialog({ title:'בוצע', html:'תמונת הלוח ירדה ונפתח חלון השליחה — <b>צרפו את התמונה שהורדה</b> להודעה.',
+        buttons:[{label:'סגור',primary:true}] });
     },'image/png');
   }catch(e){
     dialog({ title:'שגיאה', html:'לא הצלחתי ליצור תמונה. נסו שוב, או השתמשו בכפתור ההדפסה לשמירה כ-PDF.',
