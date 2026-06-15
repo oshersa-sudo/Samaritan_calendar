@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>הלוח השומרוני — לוח שנה מלא</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#8a6d3b">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="חשבון קשט">
 <style>
   @font-face{ font-family:'SAM_FONT'; src:url('Sam_font.ttf') format('truetype'); font-display:swap; }
   .samf{ font-family:'SAM_FONT'; font-size:0.85em; }   /* Samaritan glyphs run large; scale down a touch */
@@ -501,8 +508,11 @@ function dialog(opts){
   document.getElementById('dialog').hidden=false;
 }
 
-// ---- desktop shortcut (downloads a Windows .url internet-shortcut) ----
-function createShortcut(){
+// ---- shortcut / install: app on mobile (PWA), .url file on desktop ----
+let deferredInstall = null;   // captured beforeinstallprompt (Android/Chrome/Edge)
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall = e; });
+
+function desktopShortcut(){
   dialog({ title:'קיצור דרך', html:'האם ברצונך ליצור קיצור דרך על שולחן העבודה?',
     buttons:[
       {label:'אישור', primary:true, act:()=>{
@@ -518,6 +528,35 @@ function createShortcut(){
       }},
       {label:'ביטול'}
     ]});
+}
+function createShortcut(){
+  const ua = navigator.userAgent;
+  const isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+  const isMobile = isIOS || /Android/i.test(ua);
+  if(deferredInstall){
+    // Android / Chrome / Edge: real install to the home screen / launcher
+    dialog({ title:'התקנת אפליקציה',
+      html:'להוסיף את <b>חשבון קשט</b> למסך הבית כאפליקציה?',
+      buttons:[
+        {label:'התקן', primary:true, act: async ()=>{
+          deferredInstall.prompt();
+          try{ await deferredInstall.userChoice; }catch(e){}
+          deferredInstall = null;
+        }},
+        {label:'ביטול'}
+      ]});
+  } else if(isIOS){
+    dialog({ title:'הוספה למסך הבית',
+      html:'ב-<b>ספארי</b>: הקישו על כפתור השיתוף <b>⎋</b> שבתחתית, ואז בחרו <b>"הוסף למסך הבית"</b>.<br>'+
+        '<span style="color:var(--muted);font-size:.85rem">הלוח ייפתח כאפליקציה עם האייקון השומרוני.</span>',
+      buttons:[{label:'הבנתי', primary:true}] });
+  } else if(isMobile){
+    dialog({ title:'הוספה למסך הבית',
+      html:'בתפריט הדפדפן (<b>⋮</b>) בחרו <b>"התקן אפליקציה"</b> או <b>"הוסף למסך הבית"</b>.',
+      buttons:[{label:'הבנתי', primary:true}] });
+  } else {
+    desktopShortcut();   // desktop: Windows .url shortcut file
+  }
 }
 
 // ---- share: one button -> choose channel (WhatsApp / email), then PDF or link ----
@@ -606,6 +645,9 @@ async function init(){
   document.getElementById('dialog').onclick=e=>{ if(e.target.id==='dialog') document.getElementById('dialog').hidden=true; };
 }
 init();
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
 </script>
 </body>
 </html>
