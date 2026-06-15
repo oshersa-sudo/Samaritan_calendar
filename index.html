@@ -66,7 +66,7 @@
   .dot.sam{background:var(--sam)} .dot.jew{background:var(--jew)} .dot.sat{background:#d8c89c}
   .dot.sab{background:var(--sab)} .dot.moed{background:var(--moed)}
 
-  .months{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:18px}
+  .months{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(420px,100%),1fr));gap:18px}
   .month{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)}
   .mhead{background:linear-gradient(180deg,#fbf6ea,#f3ead4);border-bottom:1px solid var(--line);padding:9px 12px;text-align:center;position:relative}
   .mhead .canaan{font-size:.74rem;color:var(--muted);letter-spacing:.02em}
@@ -126,6 +126,48 @@
   .copyright{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:.8rem;color:var(--ink)}
   .copyright a{color:var(--accent);text-decoration:none;font-weight:600}
   .copyright a:hover{text-decoration:underline}
+
+  /* ---------- Responsive: tablets ---------- */
+  @media (max-width:760px){
+    .wrap{padding:14px 8px 48px}
+    h1{font-size:1.4rem}
+    .note-important,.note-exp{font-size:.82rem;padding:6px 10px}
+    .months{grid-template-columns:1fr;gap:14px}
+    .legend{gap:10px;font-size:.76rem}
+  }
+  /* ---------- Responsive: phones ---------- */
+  @media (max-width:480px){
+    .wrap{padding:10px 5px 40px}
+    h1{font-size:1.2rem}
+    .sub{font-size:.8rem}
+    .note-important,.note-exp{font-size:.76rem;line-height:1.45;margin-top:6px}
+    /* sticky control bar: let buttons wrap instead of forcing a sideways scroll */
+    .bar{flex-wrap:wrap;overflow-x:visible;gap:5px;padding:8px;justify-content:center}
+    .modes button,.bar .go,.act{font-size:.72rem;padding:6px 7px}
+    input[type=number]{width:70px;font-size:.92rem}
+    .actions{display:flex;flex-wrap:wrap;flex-basis:100%;width:100%;justify-content:center;gap:5px;margin-inline-start:0}
+    .legend{gap:7px 10px;font-size:.7rem;margin:6px 0 12px}
+    /* month header */
+    .mhead{padding:8px 10px}
+    .mhead .mname{font-size:1.02rem}
+    .mhead .canaan{font-size:.66rem}
+    .mhead .greg,.mhead .idx{font-size:.62rem;top:7px}
+    .mhead .molad{font-size:.68rem}
+    .wdrow div{font-size:.6rem;padding:3px 0}
+    /* day cells: shrink so 7 columns fit a narrow screen legibly */
+    .cell{min-height:78px;padding:3px 3px;font-size:.64rem}
+    .cell .hd{font-size:.78rem;top:2px;right:3px}
+    .cell .gd{font-size:.62rem;top:2px;left:3px}
+    .cell .fest{margin-top:15px;margin-bottom:22px;line-height:1.2}
+    .cell .fest .f{font-size:.56rem;padding:1px 2px;margin:1px 0;border-radius:4px}
+    .cell .fest .f.period,.cell .fest .f.community{font-size:.5rem}
+    .cell .fest .gmonth{font-size:.6rem}
+    .cell .sun{font-size:.5rem;bottom:2px;left:3px;line-height:1.15}
+    .cell .syr{font-size:.66rem;bottom:2px;right:3px}
+    .cell .syr .syr-lbl{font-size:.46rem}
+    .modal{padding:8px}
+    #moadim-table{font-size:.78rem}
+  }
 </style>
 </head>
 <body>
