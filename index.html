@@ -573,7 +573,7 @@ function shareChooser(channel){
   if(!DATA_YC) return;
   dialog({ title:'שיתוף הלוח', html:'מה ברצונכם לשתף?',
     buttons:[
-      {label:'📄 קובץ PDF', primary:true, act:sharePDF},
+      {label:'🖼 תמונת הלוח', primary:true, act:shareImage},
       {label:'🔗 קישור ללוח', act:()=>shareLink(channel)},
       {label:'ביטול'}
     ]});
@@ -587,18 +587,39 @@ function shareLink(channel){
     location.href=`mailto:?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(text+'\n\nהערה: לוח זה אינו תחליף לחשבון הקשט המופץ ע"י הכהן הגדול.')}`;
   }
 }
-function sharePDF(){
-  dialog({ title:'שיתוף כ-PDF',
-    html:'ייפתח חלון ההדפסה — בחרו <b>"שמירה כ-PDF"</b> (Save as PDF) כדי לקבל את הלוח כקובץ,<br>'+
-      '<span style="color:var(--muted);font-size:.85rem">ואז ניתן לצרף את הקובץ להודעת וואטסאפ / דוא״ל.</span>',
-    buttons:[
-      {label:'המשך', primary:true, act:()=>{
-        const yc=DATA_YC;
-        document.getElementById('pf-year').textContent = yc ? `הלוח השומרוני · שנת ${yc.canaan_year} לכניסה לכנען (לועזי ${yc.greg_year}) · ` : '';
-        window.print();
-      }},
-      {label:'ביטול'}
-    ]});
+function _loadH2C(){
+  return new Promise((res,rej)=>{
+    if(window.html2canvas) return res();
+    const s=document.createElement('script'); s.src='html2canvas.min.js';
+    s.onload=()=>res(); s.onerror=rej; document.head.appendChild(s);
+  });
+}
+async function shareImage(){
+  const yc=DATA_YC; if(!yc) return;
+  dialog({ title:'מכין תמונה…', html:'רגע, יוצר את תמונת הלוח…', buttons:[] });
+  try{
+    await _loadH2C();
+    const el=document.getElementById('result');
+    const prevZoom=el.style.zoom; el.style.zoom='';                 // capture at 100%
+    const canvas=await html2canvas(el,{backgroundColor:'#f4f1ea',scale:Math.min(2,window.devicePixelRatio||1.5)});
+    el.style.zoom=prevZoom;
+    const text=`הלוח העברי השומרוני — שנת ${yc.canaan_year} לכניסה לכנען (לועזי ${yc.greg_year})`;
+    canvas.toBlob(async blob=>{
+      const file=new File([blob],`luach-${yc.greg_year}.png`,{type:'image/png'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        document.getElementById('dialog').hidden=true;
+        try{ await navigator.share({files:[file],title:text,text}); }catch(e){}
+      } else {                                                       // desktop: download
+        const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=file.name;
+        document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
+        dialog({ title:'בוצע', html:'תמונת הלוח ירדה — ניתן לצרף אותה להודעת וואטסאפ / דוא״ל.',
+          buttons:[{label:'סגור',primary:true}] });
+      }
+    },'image/png');
+  }catch(e){
+    dialog({ title:'שגיאה', html:'לא הצלחתי ליצור תמונה. נסו שוב, או השתמשו בכפתור ההדפסה לשמירה כ-PDF.',
+      buttons:[{label:'סגור',primary:true}] });
+  }
 }
 
 async function init(){
