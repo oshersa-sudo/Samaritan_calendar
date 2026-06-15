@@ -30,10 +30,11 @@
   header{text-align:center;margin-bottom:16px}
   h1{font-size:1.7rem;margin:.1em 0;color:var(--accent)}
   .sub{color:var(--muted);font-size:.9rem}
-  .note-important{max-width:680px;margin:8px auto 0;font-size:.9rem;font-weight:700;color:#8a3b3b;
-    background:#fbecea;border:1px solid #eccfcb;border-radius:10px;padding:7px 12px;line-height:1.5}
-  .note-exp{max-width:720px;margin:6px auto 0;font-size:.92rem;font-weight:800;color:#c0392b;
-    background:#fdeceb;border:1px solid #f3c6c1;border-radius:10px;padding:7px 12px;line-height:1.5}
+  .notes-box{max-width:720px;margin:8px auto 0;background:#fbecea;border:1px solid #eccfcb;
+    border-radius:10px;padding:8px 12px}
+  .note-important{font-size:.9rem;font-weight:700;color:#8a3b3b;line-height:1.5}
+  .note-exp{font-size:.92rem;font-weight:800;color:#c0392b;line-height:1.5;
+    margin-top:7px;padding-top:7px;border-top:1px solid #f0d0cb}
   .actions{display:inline-flex;gap:8px;margin-inline-start:6px}
   .act{background:#fff;border:1px solid var(--line);border-radius:9px;padding:6px 8px;cursor:pointer;
     font-size:.78rem;color:var(--accent);font-weight:600;white-space:nowrap}
@@ -176,7 +177,8 @@
   @media (max-width:760px){
     .wrap{padding:14px 8px 48px}
     h1{font-size:1.4rem}
-    .note-important,.note-exp{font-size:.82rem;padding:6px 10px}
+    .notes-box{padding:6px 10px}
+    .note-important,.note-exp{font-size:.82rem}
     .months{grid-template-columns:1fr;gap:14px}
     .legend{gap:10px;font-size:.76rem}
   }
@@ -185,7 +187,7 @@
     .wrap{padding:10px 5px 40px}
     h1{font-size:1.2rem}
     .sub{font-size:.8rem}
-    .note-important,.note-exp{font-size:.76rem;line-height:1.45;margin-top:6px}
+    .note-important,.note-exp{font-size:.76rem;line-height:1.45}
     /* sticky control bar: let buttons wrap instead of forcing a sideways scroll */
     .bar{flex-wrap:wrap;overflow-x:visible;gap:5px;padding:8px;justify-content:center}
     .modes button,.bar .go,.act{font-size:.72rem;padding:6px 7px}
@@ -219,8 +221,10 @@
 <div class="wrap">
   <header>
     <h1>הלוח העברי השומרוני</h1>
-    <div class="note-important">הערה חשובה — לוח זה אינו תחליף לחשבון הקשט (חשבון האמת) המופץ על ידי הכהן הגדול של הקהילה.</div>
-    <div class="note-exp">שימו לב: מנוע זה מחשב את לוח השנה השומרוני בעצמו ( כן כן !) אך ככזה, עדיין הינו ניסיוני בשלב זה, ולכן יש לבדוק אותו בזהירות טרם ההסתמכות עליו.<br>זמני המולד המצויינים מטה עשויים להיות בסטיה של עד 20 דקות</div>
+    <div class="notes-box">
+      <div class="note-important">הערה חשובה — לוח זה אינו תחליף לחשבון הקשט (חשבון האמת) המופץ על ידי הכהן הגדול של הקהילה.</div>
+      <div class="note-exp">שימו לב: מנוע זה מחשב את לוח השנה השומרוני בעצמו ( כן כן !) אך ככזה, עדיין הינו ניסיוני בשלב זה, ולכן יש לבדוק אותו בזהירות טרם ההסתמכות עליו.<br>זמני המולד המצויינים מטה עשויים להיות בסטיה של עד 20 דקות</div>
+    </div>
   </header>
 
   <div class="bar">
