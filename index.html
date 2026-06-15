@@ -239,7 +239,7 @@
 const WD = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
 const GMON = ['','ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 // Calendar range metadata, inlined (no separate JSON file is shipped).
-let INDEX = {greg_range:[1900,2200], canaan_range:[3538,3838], canaan_offset:1638}, mode = 'greg', DATA_YC = null;
+let INDEX = {greg_range:[1900,3000], canaan_range:[3538,4638], canaan_offset:1638}, mode = 'greg', DATA_YC = null;
 
 function gregOf(val){ return mode==='greg' ? val : val - INDEX.canaan_offset; }
 function dispOf(greg){ return mode==='greg' ? greg : greg + INDEX.canaan_offset; }
