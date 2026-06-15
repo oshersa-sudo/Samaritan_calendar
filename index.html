@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>הלוח השומרוני — לוח שנה מלא</title>
+<style>
+  @font-face{ font-family:'SAM_FONT'; src:url('Sam_font.ttf') format('truetype'); font-display:swap; }
+  .samf{ font-family:'SAM_FONT'; font-size:0.85em; }   /* Samaritan glyphs run large; scale down a touch */
+  .mname .samf{ font-size:0.72em; }                     /* month name in Samaritan: a touch smaller */
+  .samdot{ font-style:normal; font-family:initial; color:var(--accent); margin:0 .18em; }
+  :root{
+    --bg:#f4f1ea; --card:#fffdf7; --ink:#2b2620; --muted:#8a8073;
+    --accent:#8a6d3b; --accent2:#735a30; --soft:#efe6d3; --line:#e3dac8;
+    --sam:#3c7a4f; --sam-bg:#e8f1e9; --jew:#3a5f9e; --jew-bg:#e6ecf6;
+    --sab:#7a4f9e; --sab-bg:#f0e8f6; --moed:#1f7a86; --moed-bg:#e0f0f2;
+    --sat:#f6f0e2; --hol:#fbf7ee;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI","Assistant",system-ui,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.5}
+  .wrap{max-width:1180px;margin:0 auto;padding:20px 14px 60px}
+  header{text-align:center;margin-bottom:16px}
+  h1{font-size:1.7rem;margin:.1em 0;color:var(--accent)}
+  .sub{color:var(--muted);font-size:.9rem}
+  .note-important{max-width:680px;margin:8px auto 0;font-size:.9rem;font-weight:700;color:#8a3b3b;
+    background:#fbecea;border:1px solid #eccfcb;border-radius:10px;padding:7px 12px;line-height:1.5}
+  .note-exp{max-width:720px;margin:6px auto 0;font-size:.92rem;font-weight:800;color:#c0392b;
+    background:#fdeceb;border:1px solid #f3c6c1;border-radius:10px;padding:7px 12px;line-height:1.5}
+  .actions{display:inline-flex;gap:8px;margin-inline-start:6px}
+  .act{background:#fff;border:1px solid var(--line);border-radius:9px;padding:6px 8px;cursor:pointer;
+    font-size:.78rem;color:var(--accent);font-weight:600;white-space:nowrap}
+  .act:hover{background:var(--soft)}
+  @media print{
+    .bar,.legend{display:none!important}
+    body{background:#fff}
+    .months{grid-template-columns:repeat(2,1fr);gap:8px}
+    .month{break-inside:avoid;box-shadow:none}
+    .copyright{margin-top:8px}
+    /* copyright repeated at the bottom of every printed/PDF page */
+    .print-footer{display:block;position:fixed;bottom:0;left:0;right:0;text-align:center;
+      font-size:9px;color:#666;border-top:1px solid #ccc;padding:3px 0;background:#fff}
+    .wrap{padding-bottom:30px}
+  }
+
+  .bar{position:sticky;top:0;z-index:20;display:flex;gap:6px;align-items:center;
+    justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:8px}
+  .bar > *{flex:none}
+  .bar label,.bar .yhint{white-space:nowrap}
+  .bar label{font-weight:600;font-size:.92rem}
+  .modes{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .modes button{background:#fff;border:none;padding:6px 9px;cursor:pointer;font-size:.8rem;color:var(--muted);white-space:nowrap}
+  .modes button.on{background:var(--accent);color:#fff;font-weight:700}
+  input[type=number]{font-size:1rem;width:82px;padding:6px 6px;text-align:center;
+    border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)}
+  .bar .go{font-size:.9rem;padding:7px 12px;border:none;border-radius:9px;background:var(--accent);color:#fff;cursor:pointer;font-weight:700;white-space:nowrap}
+  .bar .go:hover{background:var(--accent2)}
+  .nav{background:var(--soft);color:var(--accent);border:none;border-radius:9px;padding:6px 10px;cursor:pointer;font-size:.95rem;font-weight:700}
+  .nav:hover{background:#e3d4b4}
+  .yhint{font-size:.82rem;color:var(--muted)}
+
+  .legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin:6px 0 18px}
+  .chip{display:inline-flex;align-items:center;gap:5px}
+  .dot{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .dot.sam{background:var(--sam)} .dot.jew{background:var(--jew)} .dot.sat{background:#d8c89c}
+  .dot.sab{background:var(--sab)} .dot.moed{background:var(--moed)}
+
+  .months{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:18px}
+  .month{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+  .mhead{background:linear-gradient(180deg,#fbf6ea,#f3ead4);border-bottom:1px solid var(--line);padding:9px 12px;text-align:center;position:relative}
+  .mhead .canaan{font-size:.74rem;color:var(--muted);letter-spacing:.02em}
+  .mhead .mname{font-size:1.18rem;font-weight:800;color:var(--accent);margin:1px 0}
+  .mhead .greg{position:absolute;top:9px;left:12px;font-size:.74rem;color:var(--muted)}
+  .mhead .idx{position:absolute;top:9px;right:12px;font-size:.74rem;color:var(--muted)}
+  .mhead .molad{font-size:.78rem;color:#6c6253;margin-top:2px}
+  .mhead .molad b{color:var(--ink)}
+  .est{font-size:.68rem;background:#f0e2c4;color:#7a5e2a;border-radius:6px;padding:0 5px;margin-inline-start:4px}
+
+  .wdrow,.grid{display:grid;grid-template-columns:repeat(7,1fr)}
+  .wdrow{background:#faf5ea;border-bottom:1px solid var(--line)}
+  .wdrow div{text-align:center;font-size:.72rem;color:var(--muted);padding:4px 0;font-weight:600}
+  .grid{gap:1px;background:var(--line);padding:1px}
+  .cell{background:var(--card);min-height:108px;padding:5px 6px;position:relative;font-size:.82rem}
+  .cell.empty{background:#f7f2e8}
+  .cell.sat{background:var(--sat)}
+  .cell.hol{background:var(--hol)}
+  .cell .hd{position:absolute;top:3px;right:6px;font-weight:800;color:var(--accent);font-size:1.02rem}
+  .cell .gd{position:absolute;top:4px;left:6px;color:var(--muted);font-size:.86rem;font-weight:600}
+  .cell .fest{margin-top:24px;margin-bottom:31px;text-align:center;line-height:1.3}  /* reserve room below for sun/Eastern-day corners */
+  .cell .fest .f{display:block;border-radius:6px;padding:2px 3px;margin:2px 1px;font-size:.74rem;font-weight:700}
+  .cell .fest .f.sam{background:var(--sam-bg);color:var(--sam)}
+  .cell .fest .f.jew{background:var(--jew-bg);color:var(--jew)}
+  .cell .fest .f.sabbath{background:var(--sab-bg);color:var(--sab)}
+  .cell .fest .f.moed{background:var(--moed-bg);color:var(--moed)}
+  .cell .fest .f.parasha{background:#efeae0;color:#6b5a3a;font-weight:800}
+  .cell .fest .f.period{background:#f3eee4;color:#8a7a5a;font-weight:600;font-size:.66rem}
+  .cell .fest .f.community{background:transparent;font-weight:700;font-size:.6rem;padding:1px 0}
+  .cell .fest .f.national{background:#e8f0fe;color:#1d4ed8;font-weight:800}
+  .cell .fest .gmonth{display:block;color:#2563eb;font-weight:800;font-size:.74rem;margin:1px 0}
+  .mhead .canaan.yearchange{color:#7a3b9e;font-weight:800}
+  .print-footer{display:none}
+  .modal{position:fixed;inset:0;z-index:50;background:rgba(40,35,28,.55);display:flex;
+    align-items:center;justify-content:center;padding:18px}
+  .modal[hidden]{display:none}
+  .modal-box{background:var(--card);border-radius:14px;max-width:640px;width:100%;
+    max-height:86vh;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;gap:10px;
+    padding:12px 16px;border-bottom:1px solid var(--line);font-weight:800;color:var(--accent)}
+  .modal-actions{display:flex;gap:8px}
+  .modal-body{overflow:auto;padding:6px 10px 14px}
+  #moadim-table{width:100%;border-collapse:collapse;font-size:.9rem}
+  #moadim-table th{position:sticky;top:0;background:var(--soft);color:var(--accent);
+    padding:7px 8px;text-align:right;border-bottom:2px solid var(--line)}
+  #moadim-table td{padding:6px 8px;border-bottom:1px solid var(--line)}
+  #moadim-table td:first-child{white-space:nowrap;color:var(--muted)}
+  #moadim-table tr:hover td{background:#faf6ec}
+  .cell .sun{position:absolute;bottom:3px;left:6px;font-size:.64rem;color:#9a8f7d;direction:ltr;text-align:left;line-height:1.25}
+  .cell .syr{position:absolute;bottom:3px;right:6px;color:#a98f6a;font-weight:800;font-size:.92rem;
+    text-align:center;line-height:1}
+  .cell .syr .syr-lbl{display:block;font-size:.56rem;font-weight:600;opacity:.85}
+
+  .meta{margin-top:20px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;font-size:.82rem;color:var(--muted)}
+  .err{color:#a33;text-align:center;margin-top:30px;font-weight:700}
+  footer{text-align:center;color:var(--muted);font-size:.76rem;margin-top:26px;line-height:1.7}
+  .copyright{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:.8rem;color:var(--ink)}
+  .copyright a{color:var(--accent);text-decoration:none;font-weight:600}
+  .copyright a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>הלוח העברי השומרוני</h1>
+    <div class="note-important">הערה חשובה — לוח זה אינו תחליף לחשבון הקשט (חשבון האמת) המופץ על ידי הכהן הגדול של הקהילה.</div>
+    <div class="note-exp">שימו לב: מנוע זה מחשב את לוח השנה השומרוני בעצמו ( כן כן !) אך ככזה, עדיין הינו ניסיוני בשלב זה, ולכן יש לבדוק אותו בזהירות טרם ההסתמכות עליו.<br>כי זמני המולד המצויינים מטה עשויים להיות בסטיה של עד 20 דקות וזמני השקיעה והזריחה טרם דויקו</div>
+  </header>
+
+  <div class="bar">
+    <button class="nav" id="prev" title="שנה קודמת">▶</button>
+    <div class="modes">
+      <button id="mGreg" class="on">שנה לועזית</button>
+      <button id="mCanaan">שנת כניסה לכנען</button>
+    </div>
+    <input type="number" id="year" step="1">
+    <button class="go" id="go">בנה לוח</button>
+    <button class="nav" id="next" title="שנה הבאה">◀</button>
+    <span class="yhint" id="yhint"></span>
+    <span class="actions">
+      <button class="act" id="moadim" title="רשימת כל המועדים והחגים">📋 רשימת מועדים וחגים</button>
+      <button class="act" id="zoomout" title="הקטן תצוגה">➖</button>
+      <button class="act" id="zoomin" title="הגדל תצוגה">➕</button>
+      <button class="act" id="print" title="הדפסה או שמירה כ-PDF">🖨 הדפס / PDF</button>
+      <button class="act" id="ics" title="סנכרון ל-Google / Outlook (קובץ ICS)">📅 סנכרון ליומן</button>
+      <button class="act" id="email" title="שליחה במייל">✉ מייל</button>
+    </span>
+  </div>
+
+  <div class="legend">
+    <span class="chip"><span class="dot sam"></span> חג שומרוני (ש-)</span>
+    <span class="chip"><span class="dot jew"></span> חג יהודי (י-)</span>
+    <span class="chip"><span class="dot sab"></span> שבת מיוחדת / מופת</span>
+    <span class="chip"><span class="dot moed"></span> מעמד הר סיני</span>
+    <span class="chip"><span class="dot sat"></span> שבת</span>
+    <span class="chip">ז/ש = זריחה/שקיעה (שעון ישראל, הרגריזים) · מז. = יום בחודש המזרחי</span>
+  </div>
+
+  <div id="result"></div>
+  <div class="meta" id="meta"></div>
+  <div class="print-footer">All rights reserved to Osher Sassoni · כל הזכויות שמורות לאושר ששוני · www.the-samaritans.net</div>
+
+  <div id="modal" class="modal" hidden>
+    <div class="modal-box">
+      <div class="modal-head">
+        <span>רשימת מועדים וחגים — <span id="modal-year"></span></span>
+        <span class="modal-actions">
+          <button class="act" id="moadim-xls">⬇ הורד לאקסל</button>
+          <button class="act" id="modal-close" title="סגור">✕</button>
+        </span>
+      </div>
+      <div class="modal-body"><table id="moadim-table"></table></div>
+    </div>
+  </div>
+
+  <footer>
+    רמת היום/התאריך/העיבור מאומתת. <b>שעת המולד משוערת</b> (~רבע שעה; חריגים נדירים אינם ממודלים) —
+    תהיה מדויקת לאחר בניית מנוע הטבלאות.<br>
+    canaan = לועזי + 1638 · לוח סורי = יוליאני (הפרש 13 יום) · חגים יהודיים: pyluach.
+    <div class="copyright">
+      All rights reserved to Osher Sassoni · כל הזכויות שמורות לאושר ששוני<br>
+      <a href="https://www.the-samaritans.net" target="_blank" rel="noopener">www.the-samaritans.net</a>
+    </div>
+  </footer>
+</div>
+
+<script>
+const WD = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+const GMON = ['','ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+// Calendar range metadata, inlined (no separate JSON file is shipped).
+let INDEX = {greg_range:[1900,2099], canaan_range:[3538,3737], canaan_offset:1638}, mode = 'greg', DATA_YC = null;
+
+function gregOf(val){ return mode==='greg' ? val : val - INDEX.canaan_offset; }
+function dispOf(greg){ return mode==='greg' ? greg : greg + INDEX.canaan_offset; }
+
+function wdOfISO(iso){ const [y,m,d]=iso.split('-').map(Number); return new Date(Date.UTC(y,m-1,d)).getUTCDay(); }
+function fmtGreg(iso){ const [y,m,d]=iso.split('-'); return `${+d}.${+m}.${y}`; }
+
+// Samaritan script separates words with a centred dot. The font's own dot glyph is blank,
+// so render each word in the Samaritan font and the separator dot in the regular font.
+const samHtml = s => s.split(/[\s·]+/).filter(Boolean)
+  .map(w => `<span class="samf">${w}</span>`).join('<i class="samdot">·</i>');
+const _K=[...'shomron-luach-5786'].map(c=>c.charCodeAt(0));
+function decodeData(b64){
+  const bin=atob(b64), bytes=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i)^_K[i%_K.length];
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
+function monthCard(canaan, mo){
+  const m = mo.molad;
+  let cells = '';
+  const firstWd = wdOfISO(mo.days[0].greg);
+  for(let i=0;i<firstWd;i++) cells += `<div class="cell empty"></div>`;
+  for(const rec of mo.days){
+    const wd = wdOfISO(rec.greg);
+    const isSat = wd===6;
+    const hasFest = rec.festivals && rec.festivals.length;
+    const cls = 'cell' + (isSat?' sat':'') + (hasFest&&!isSat?' hol':'');
+    let center = '';
+    if(rec.greg_day===1)   // Gregorian month rolls over inside the Samaritan month
+      center += `<span class="gmonth">${GMON[+rec.greg.slice(5,7)]}</span>`;
+    if(hasFest){
+      center += rec.festivals.map(f=>{
+        const pre = f.kind==='sam' ? 'ש-' : f.kind==='jew' ? 'י-' : '';
+        const style = f.kind==='community' && f.color ? ` style="color:${f.color}"` : '';
+        return `<span class="f ${f.kind}"${style}>${pre}${f.name}</span>`;   // community: colour from xlsx
+      }).join('');
+    }
+    const fest = center ? `<div class="fest">${center}</div>` : '';
+    const sun = (rec.sunrise||rec.sunset)
+      ? `<div class="sun">ז ${rec.sunrise||'--'}<br>ש ${rec.sunset||'--'}</div>` : '';
+    cells += `<div class="${cls}">
+        <span class="hd">${rec.heb_label}</span>
+        <span class="gd">${rec.greg_day}</span>
+        ${fest}${sun}
+        <span class="syr"><span class="syr-lbl">מז.</span>${rec.syriac_day}</span>
+      </div>`;
+  }
+  return `<div class="month">
+    <div class="mhead">
+      <div class="idx">חודש ${mo.index}</div>
+      <div class="greg">${[...new Set(mo.days.map(d=>d.greg.slice(0,4)))].join(' / ')} - ${mo.greg_months}</div>
+      <div class="canaan${mo.index===6?' yearchange':''}">שנת ${mo.index>=6?canaan+1:canaan} לכניסה לכנען</div>
+      <div class="canaan${mo.index===6?' yearchange':''}">${samHtml('שנת')} ${mo.index>=6?canaan+1:canaan} ${samHtml('למובא בני ישראל לארץ כנען')}</div>
+      <div class="mname">${mo.name} - ${samHtml(mo.name)}</div>
+      <div class="molad">המולד: <b>${m.syriac}</b> (מזרחי)${m.islamic?` · ${m.islamic} (מוסלמי)`:''} · ${m.clock} ${m.daynight} <span class="est">משוער</span></div>
+    </div>
+    <div class="wdrow">${WD.map(w=>`<div>${w}</div>`).join('')}</div>
+    <div class="grid">${cells}</div>
+  </div>`;
+}
+
+async function buildYear(greg){
+  const box = document.getElementById('result'), meta = document.getElementById('meta');
+  const [lo,hi] = INDEX.greg_range;
+  if(greg<lo||greg>hi){ box.innerHTML=`<div class="err">השנה מחוץ לטווח (לועזי ${lo}–${hi} · כנען ${INDEX.canaan_range[0]}–${INDEX.canaan_range[1]})</div>`; meta.innerHTML=''; return; }
+  let yc;
+  try{ yc = JSON.parse(decodeData(await (await fetch(`cal/${greg}.dat`)).text())); }
+  catch(e){ box.innerHTML=`<div class="err">לא נטען cal/${greg}.dat (הרץ build_calendars.py)</div>`; return; }
+  DATA_YC = yc;
+  box.innerHTML = `<div class="months">${yc.months.map(mo=>monthCard(yc.canaan_year,mo)).join('')}</div>`;
+  meta.innerHTML = `<b>שנה לועזית ${yc.greg_year}</b> · <b>כנען ${yc.canaan_year}</b> ·
+     ${yc.n_months} חודשים ${yc.leap?'(מעוברת)':'(פשוטה)'} ·
+     הלוח נפתח ב-1 אביב ונמשך עד החודש שלפני אביב הבא.`;
+  document.getElementById('year').value = dispOf(greg);
+  document.getElementById('yhint').textContent =
+    mode==='greg' ? `= כנען ${yc.canaan_year}` : `= לועזי ${yc.greg_year}`;
+}
+
+function currentGreg(){ return gregOf(+document.getElementById('year').value); }
+function setMode(m){
+  mode=m;
+  document.getElementById('mGreg').classList.toggle('on',m==='greg');
+  document.getElementById('mCanaan').classList.toggle('on',m==='canaan');
+  const inp=document.getElementById('year');
+  const [lo,hi]= m==='greg'?INDEX.greg_range:INDEX.canaan_range;
+  inp.min=lo; inp.max=hi;
+}
+
+// ---- moadim list: all festivals/moadim/chol-hamoed + community events, no Sabbaths ----
+function collectMoadim(yc){
+  const INC = {sam:1, moed:1, period:1, community:1};   // exclude sabbath/parasha/jew
+  const out = [];
+  for(const mo of yc.months) for(const rec of mo.days) for(const f of (rec.festivals||[])){
+    if(!(f.kind in INC)) continue;
+    out.push({date:rec.greg, wd:WD[wdOfISO(rec.greg)], name:f.name, color:f.color||''});
+  }
+  out.sort((a,b)=> a.date<b.date?-1:1);
+  return out;
+}
+function openMoadim(){
+  if(!DATA_YC) return;
+  const rows=collectMoadim(DATA_YC);
+  document.getElementById('modal-year').textContent=`שנת ${DATA_YC.canaan_year} לכניסה לכנען (לועזי ${DATA_YC.greg_year})`;
+  const body=rows.map(r=>`<tr><td>${fmtGreg(r.date)}</td><td>${r.wd}</td><td${r.color?` style="color:${r.color};font-weight:700"`:''}>${r.name}</td></tr>`).join('');
+  document.getElementById('moadim-table').innerHTML=
+    `<thead><tr><th>תאריך לועזי</th><th>יום בשבוע</th><th>תיאור החג / האירוע</th></tr></thead><tbody>${body}</tbody>`;
+  document.getElementById('modal').hidden=false;
+}
+function downloadMoadimXLS(){
+  const rows=collectMoadim(DATA_YC);
+  const q=c=>`"${String(c).replace(/"/g,'""')}"`;
+  const csv=[['תאריך לועזי','יום בשבוע','תיאור החג / האירוע'],
+    ...rows.map(r=>[fmtGreg(r.date), r.wd, r.name])].map(row=>row.map(q).join(',')).join('\r\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});   // BOM => Hebrew in Excel
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`moadim-${DATA_YC.greg_year}.csv`; document.body.appendChild(a); a.click();
+  a.remove(); URL.revokeObjectURL(a.href);
+}
+
+// ---- export the displayed year to an .ics file (import into Google / Outlook / phone) ----
+function _icsEsc(s){ return String(s).replace(/([\\,;])/g,'\\$1').replace(/\n/g,'\\n'); }
+function _nextDay(iso){ const [y,m,d]=iso.split('-').map(Number);
+  return new Date(Date.UTC(y,m-1,d+1)).toISOString().slice(0,10).replace(/-/g,''); }
+function downloadICS(){
+  const yc=DATA_YC; if(!yc) return;
+  const PFX={sam:'',moed:'',sabbath:'',parasha:'פרשה: ',community:''};
+  const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//the-samaritans.net//Samaritan Calendar//HE','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
+  let n=0;
+  for(const mo of yc.months) for(const rec of mo.days) for(const f of (rec.festivals||[])){
+    if(!(f.kind in PFX)) continue;                 // skip Jewish cross-ref & background periods
+    const ds=rec.greg.replace(/-/g,'');
+    L.push('BEGIN:VEVENT','UID:sam-'+(n++)+'-'+ds+'@the-samaritans.net',
+      'DTSTART;VALUE=DATE:'+ds,'DTEND;VALUE=DATE:'+_nextDay(rec.greg),
+      'SUMMARY:'+_icsEsc(PFX[f.kind]+f.name),'TRANSP:TRANSPARENT','END:VEVENT');
+  }
+  L.push('END:VCALENDAR');
+  const blob=new Blob([L.join('\r\n')],{type:'text/calendar;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`samaritan-calendar-${yc.greg_year}.ics`; document.body.appendChild(a); a.click();
+  a.remove(); URL.revokeObjectURL(a.href);
+}
+
+async function init(){
+  setMode('greg');
+  const now=new Date().getFullYear();
+  const start=Math.min(Math.max(now,INDEX.greg_range[0]),INDEX.greg_range[1]);
+  document.getElementById('year').value=start;
+  buildYear(start);
+
+  document.getElementById('go').onclick=()=>buildYear(currentGreg());
+  document.getElementById('next').onclick=()=>{document.getElementById('year').value=+document.getElementById('year').value+1; buildYear(currentGreg());};
+  document.getElementById('prev').onclick=()=>{document.getElementById('year').value=+document.getElementById('year').value-1; buildYear(currentGreg());};
+  document.getElementById('year').addEventListener('keydown',e=>{if(e.key==='Enter')buildYear(currentGreg());});
+  document.getElementById('mGreg').onclick=()=>{const g=currentGreg();setMode('greg');document.getElementById('year').value=g;buildYear(g);};
+  document.getElementById('mCanaan').onclick=()=>{const g=currentGreg();setMode('canaan');document.getElementById('year').value=g+INDEX.canaan_offset;buildYear(g);};
+  let zoom=1;
+  const applyZoom=()=>{document.getElementById('result').style.zoom=zoom;};
+  document.getElementById('zoomin').onclick=()=>{zoom=Math.min(1.8,zoom+0.1);applyZoom();};
+  document.getElementById('zoomout').onclick=()=>{zoom=Math.max(0.6,zoom-0.1);applyZoom();};
+  document.getElementById('print').onclick=()=>window.print();   // print or "Save as PDF"
+  document.getElementById('ics').onclick=()=>downloadICS();
+  document.getElementById('moadim').onclick=openMoadim;
+  document.getElementById('moadim-xls').onclick=downloadMoadimXLS;
+  document.getElementById('modal-close').onclick=()=>document.getElementById('modal').hidden=true;
+  document.getElementById('modal').onclick=e=>{ if(e.target.id==='modal') document.getElementById('modal').hidden=true; };
+  document.getElementById('email').onclick=()=>{
+    const g=currentGreg(), yc=DATA_YC;
+    const subj=`הלוח העברי השומרוני — שנת ${yc?yc.canaan_year:''} לכניסה לכנען (לועזי ${g})`;
+    const body=`לוח השנה השומרוני לשנה ${g} (כנען ${yc?yc.canaan_year:''}).\nצפייה בלוח: ${location.href.split('#')[0]}\n\nהערה: לוח זה אינו תחליף לחשבון הקשט המופץ ע"י הכהן הגדול.`;
+    location.href=`mailto:?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`;
+  };
+}
+init();
+</script>
+</body>
+</html>
