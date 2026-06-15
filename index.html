@@ -57,10 +57,12 @@
     .wrap{padding-bottom:34px}
   }
 
-  .bar{position:sticky;top:0;z-index:20;display:flex;gap:6px;align-items:center;
-    justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;background:var(--card);border:1px solid var(--line);
+  .bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;flex-wrap:wrap;
+    justify-content:center;column-gap:14px;row-gap:8px;background:var(--card);border:1px solid var(--line);
     border-radius:14px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:8px}
-  .bar > *{flex:none}
+  /* two tidy clusters: year/nav controls + action buttons; each wraps as a unit, so the bar
+     is one line when it fits and breaks into two clean rows otherwise. */
+  .bar-group,.bar .actions{display:flex;align-items:center;flex-wrap:wrap;gap:6px;justify-content:center}
   .bar label,.bar .yhint{white-space:nowrap}
   .bar label{font-weight:600;font-size:.92rem}
   .modes{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
@@ -189,10 +191,11 @@
     .sub{font-size:.8rem}
     .note-important,.note-exp{font-size:.76rem;line-height:1.45}
     /* sticky control bar: let buttons wrap instead of forcing a sideways scroll */
-    .bar{flex-wrap:wrap;overflow-x:visible;gap:5px;padding:8px;justify-content:center}
+    .bar{gap:6px;padding:8px}
     .modes button,.bar .go,.act{font-size:.72rem;padding:6px 7px}
     input[type=number]{width:70px;font-size:.92rem}
-    .actions{display:flex;flex-wrap:wrap;flex-basis:100%;width:100%;justify-content:center;gap:5px;margin-inline-start:0}
+    /* on phones: each cluster takes a full row -> two clean stacked rows */
+    .bar-group,.bar .actions{flex-basis:100%;width:100%;gap:5px;margin-inline-start:0}
     .legend{gap:7px 10px;font-size:.7rem;margin:6px 0 12px}
     /* month header */
     .mhead{padding:8px 10px}
@@ -228,15 +231,17 @@
   </header>
 
   <div class="bar">
-    <button class="nav" id="prev" title="שנה קודמת">▶</button>
-    <div class="modes">
-      <button id="mGreg" class="on">שנה לועזית</button>
-      <button id="mCanaan">שנת כניסה לכנען</button>
-    </div>
-    <input type="number" id="year" step="1">
-    <button class="go" id="go">בנה לוח</button>
-    <button class="nav" id="next" title="שנה הבאה">◀</button>
-    <span class="yhint" id="yhint"></span>
+    <span class="bar-group">
+      <button class="nav" id="prev" title="שנה קודמת">▶</button>
+      <div class="modes">
+        <button id="mGreg" class="on">שנה לועזית</button>
+        <button id="mCanaan">שנת כניסה לכנען</button>
+      </div>
+      <input type="number" id="year" step="1">
+      <button class="go" id="go">בנה לוח</button>
+      <button class="nav" id="next" title="שנה הבאה">◀</button>
+      <span class="yhint" id="yhint"></span>
+    </span>
     <span class="actions">
       <button class="act" id="moadim" title="רשימת כל המועדים והחגים">📋 רשימת מועדים וחגים</button>
       <button class="act" id="zoomout" title="הקטן תצוגה">➖</button>
