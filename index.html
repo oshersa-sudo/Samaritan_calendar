@@ -81,6 +81,7 @@
   .mhead .idx{position:absolute;top:9px;right:12px;font-size:.74rem;color:var(--muted)}
   .mhead .molad{font-size:.78rem;color:#6c6253;margin-top:2px}
   .mhead .molad b{color:var(--ink)}
+  .mhead .molad .mlabel{font-size:.66rem;color:var(--muted);font-weight:600}
   .est{font-size:.68rem;background:#f0e2c4;color:#7a5e2a;border-radius:6px;padding:0 5px;margin-inline-start:4px}
 
   .wdrow,.grid{display:grid;grid-template-columns:repeat(7,1fr)}
@@ -364,7 +365,8 @@ function monthCard(canaan, mo){
       <div class="canaan${mo.index===6?' yearchange':''}">שנת ${mo.index>=6?canaan+1:canaan} לכניסה לכנען</div>
       <div class="canaan${mo.index===6?' yearchange':''}">${samHtml('שנת')} ${mo.index>=6?canaan+1:canaan} ${samHtml('למובא בני ישראל לארץ כנען')}</div>
       <div class="mname">${mo.name} - ${samHtml(mo.name)}</div>
-      <div class="molad">המולד: <b>${m.syriac}</b> (מזרחי)${m.islamic?` · ${m.islamic} (מוסלמי)`:''} · ${m.clock} ${m.daynight} <span class="est">משוער</span></div>
+      <div class="molad">המולד: <b>${m.syriac}</b> (מזרחי)${m.islamic?` · ${m.islamic} (מוסלמי)`:''}<br>
+        שעת המולד: <b>${m.clock} ${m.daynight}</b> <span class="mlabel">(מסורתי · מ-18:00)</span>${m.clock_real?` · <b>${m.clock_real} ${m.daynight_real}</b> <span class="mlabel">(שקיעה אמיתית)</span>`:''} <span class="est">משוער</span></div>
     </div>
     <div class="wdrow">${WD.map(w=>`<div>${w}</div>`).join('')}</div>
     <div class="grid">${cells}</div>
