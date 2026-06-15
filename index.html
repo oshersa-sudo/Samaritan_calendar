@@ -90,8 +90,8 @@
   .cell{background:var(--card);min-height:108px;padding:5px 6px;position:relative;font-size:.82rem}
   .cell.empty{background:#f7f2e8}
   .cell.today{box-shadow:inset 0 0 0 2.5px #c0392b;z-index:1}
-  .cell.today::after{content:'היום';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);
-    background:#c0392b;color:#fff;font-size:.52rem;font-weight:800;padding:0 5px;border-radius:6px;line-height:1.5}
+  .cell.today::after{content:'היום';position:absolute;bottom:1px;left:50%;transform:translateX(-50%);
+    background:transparent;color:#c0392b;font-size:.52rem;font-weight:800;line-height:1.4;pointer-events:none}
   .cell.sat{background:var(--sat)}
   .cell.hol{background:var(--hol)}
   .cell .hd{position:absolute;top:3px;right:6px;font-weight:800;color:var(--accent);font-size:1.02rem}
