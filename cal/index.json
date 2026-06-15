@@ -1,0 +1,13 @@
+{
+ "generated": "2026-06-15 21:28 UTC",
+ "greg_range": [
+  1900,
+  3000
+ ],
+ "canaan_range": [
+  3538,
+  4638
+ ],
+ "canaan_offset": 1638,
+ "note": "day/Syriac-date/intercalation verified; molad hour is ESTIMATED (marked)."
+}
