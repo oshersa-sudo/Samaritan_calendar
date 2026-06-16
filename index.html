@@ -178,6 +178,9 @@
   .color-row label{font-size:.84rem;font-weight:600;color:var(--ink)}
   .color-row input[type=color]{width:38px;height:30px;border:1px solid var(--line);border-radius:6px;
     background:#fff;cursor:pointer;padding:2px}
+  .save-flag{display:flex;align-items:center;justify-content:center;gap:7px;margin:12px 16px 0;
+    font-size:.88rem;font-weight:600;color:var(--ink);cursor:pointer}
+  .save-flag input{width:16px;height:16px;cursor:pointer;accent-color:var(--accent)}
 
   /* generic confirm/choice dialog */
   .modal-box.dlg{max-width:430px;width:auto;min-width:300px}
@@ -334,13 +337,14 @@
       <div class="modal-head">
         <span>🎨 הגדרת צבעים</span>
         <span class="modal-actions">
-          <button class="act" id="colors-reset" title="שחזור צבעי ברירת המחדל">↺ איפוס</button>
+          <button class="act" id="colors-reset" title="שחזור צבעי ברירת המחדל">↺ ברירת מחדל</button>
           <button class="act" id="colors-close" title="סגור">✕</button>
         </span>
       </div>
       <div class="modal-body">
         <p class="sync-note">בחרו צבע לכל רכיב. השינוי חל מיד, ונשמר לסשן זה במכשירכם בלבד.</p>
         <div class="color-grid" id="color-grid"></div>
+        <label class="save-flag"><input type="checkbox" id="colors-persist"> שמור הגדרות עבורי</label>
         <div class="sync-actions">
           <button class="sync-go" id="colors-apply">✔ אישור</button>
         </div>
@@ -768,25 +772,39 @@ async function init(){
       inp.oninput=()=>setVar(v,inp.value);                                    // live preview
       row.append(lab,inp); grid.appendChild(row);
     }
+    const cb=document.getElementById('colors-persist');
+    if(cb){ try{ cb.checked=!!localStorage.getItem(COLOR_KEY); }catch(e){ cb.checked=false; } }
     document.getElementById('color-modal').hidden=false;
   }
   function closeColors(save){
     if(save){
       const out={}; for(const [v] of COLOR_DEFS){ const i=document.getElementById('c_'+v); if(i) out[v]=i.value; }
-      try{ sessionStorage.setItem(COLOR_KEY,JSON.stringify(out)); }catch(e){}
-    }else{                                                                    // cancel -> revert preview
-      for(const [v,val] of Object.entries(colorSnapshot||{})) setVar(v,val);
+      try{ sessionStorage.setItem(COLOR_KEY,JSON.stringify(out)); }catch(e){}     // always remember for this session
+      document.getElementById('color-modal').hidden=true;
+      if(document.getElementById('colors-persist').checked){
+        // device-persistent save — confirm, then keep across sessions on THIS device (localStorage)
+        dialog({ title:'שמירת הגדרות', html:'הגדרת הצבעים נשמרה עבורך רק במכשיר זה',
+          buttons:[
+            {label:'אשר', primary:true, act:()=>{ try{ localStorage.setItem(COLOR_KEY,JSON.stringify(out)); }catch(e){} }},
+            {label:'בטל'}    // session-only; nothing kept on the device
+          ]});
+      }
+      return;
     }
+    for(const [v,val] of Object.entries(colorSnapshot||{})) setVar(v,val);        // cancel -> revert preview
     document.getElementById('color-modal').hidden=true;
   }
   function resetColors(){
     captureDefaults();
     for(const [v,val] of Object.entries(DEFAULT_COLORS)){ setVar(v,val); const i=document.getElementById('c_'+v); if(i) i.value=toHex(val); }
     colorSnapshot={...DEFAULT_COLORS};        // reset is final — a later cancel must not undo it
-    try{ sessionStorage.removeItem(COLOR_KEY); }catch(e){}
+    const cb=document.getElementById('colors-persist'); if(cb) cb.checked=false;
+    try{ sessionStorage.removeItem(COLOR_KEY); localStorage.removeItem(COLOR_KEY); }catch(e){}  // back to default -> delete the saved device copy
   }
   captureDefaults();
-  try{ const saved=JSON.parse(sessionStorage.getItem(COLOR_KEY)||'{}'); for(const [v,val] of Object.entries(saved)) setVar(v,val); }catch(e){}
+  // restore on load: a device-saved copy (localStorage) takes precedence over the session copy
+  try{ const saved=JSON.parse(localStorage.getItem(COLOR_KEY)||sessionStorage.getItem(COLOR_KEY)||'{}');
+       for(const [v,val] of Object.entries(saved)) setVar(v,val); }catch(e){}
   document.getElementById('colors').onclick=openColors;
   document.getElementById('colors-apply').onclick=()=>closeColors(true);
   document.getElementById('colors-close').onclick=()=>closeColors(false);
