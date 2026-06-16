@@ -110,6 +110,7 @@
   .mhead .molad b{color:var(--ink)}
   .mhead .molad .mlabel{font-size:.66rem;color:var(--muted);font-weight:600}
   .est{font-size:.68rem;background:#f0e2c4;color:#7a5e2a;border-radius:6px;padding:0 5px;margin-inline-start:4px}
+  .exact-tag{font-size:.68rem;background:var(--sam-bg);color:var(--sam);border-radius:6px;padding:0 5px;margin-inline-start:4px;font-weight:700}
 
   .wdrow,.grid{display:grid;grid-template-columns:repeat(7,1fr)}
   .wdrow{background:var(--soft);border-bottom:1px solid var(--line)}
@@ -392,8 +393,8 @@
   </div>
 
   <footer>
-    רמת היום/התאריך/העיבור מאומתת. <b>שעת המולד משוערת</b> (~רבע שעה; חריגים נדירים אינם ממודלים) —
-    תהיה מדויקת לאחר בניית מנוע הטבלאות.<br>
+    רמת היום/התאריך/העיבור מאומתת. <b>שעת המולד מדויקת</b> לשנים 2009–2100 (מתוך לוח חשבון קשטה המודפס,
+    מסומנת <span class="exact-tag">מדויק</span>); מחוץ לטווח זה היא <b>משוערת</b> (מסומנת <span class="est">משוער</span>).<br>
     canaan = לועזי + 1638 · לוח סורי = יוליאני (הפרש 13 יום) · חגים יהודיים: pyluach.
     <div class="copyright">
       All rights reserved to Osher Sassoni · כל הזכויות שמורות לאושר ששוני<br>
@@ -481,7 +482,7 @@ function monthCard(canaan, changeMonth, mo){
       <div class="canaan${mo.index===changeMonth?' yearchange':''}">שנת ${mo.index>=changeMonth?canaan+1:canaan} לכניסה לארץ הקדושה</div>
       <div class="canaan${mo.index===changeMonth?' yearchange':''}">${samHtml('שנת')} ${mo.index>=changeMonth?canaan+1:canaan} ${samHtml('למובא בני ישראל לארץ הקדושה')}</div>
       <div class="mname">${mo.name} - ${samHtml(mo.name)}</div>
-      <div class="molad">המולד חל <b>${m.daynight==='לילה'?'בליל':'ביום'} ${m.molad_wd}</b> · <b>${m.clock}</b> שעות ${m.daynight==='לילה'?'מהליל':'מהיום'} · <b>${m.molad_syr}</b> (מזרחי)${m.islamic?` · ${m.islamic} (מוסלמי)`:''} <span class="est">משוער</span></div>
+      <div class="molad">המולד חל <b>${m.daynight==='לילה'?'בליל':'ביום'} ${m.molad_wd}</b> · <b>${m.clock}</b> שעות ${m.daynight==='לילה'?'מהליל':'מהיום'}${m.month_type?` · חודש <b>${m.month_type}</b>`:''} · <b>${m.molad_syr}</b> (מזרחי)${m.islamic?` · ${m.islamic} (מוסלמי)`:''} ${m.exact?'<span class="exact-tag">מדויק</span>':'<span class="est">משוער</span>'}</div>
     </div>
     <div class="wdrow">${WD.map(w=>`<div>${w}</div>`).join('')}</div>
     <div class="grid">${cells}</div>
