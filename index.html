@@ -103,8 +103,8 @@
   .cell{background:var(--card);min-height:108px;padding:5px 6px;position:relative;font-size:.82rem}
   .cell.empty{background:#f7f2e8}
   .cell.today{box-shadow:inset 0 0 0 2.5px #c0392b;z-index:1}
-  .cell.today::after{content:'היום';position:absolute;bottom:1px;left:50%;transform:translateX(-50%);
-    background:transparent;color:#c0392b;font-size:.52rem;font-weight:800;line-height:1.4;pointer-events:none}
+  .cell.today::after{content:'היום';position:absolute;top:1px;left:50%;transform:translateX(-50%);
+    background:transparent;color:#c0392b;font-size:.52rem;font-weight:800;line-height:1.2;pointer-events:none}
   .cell.sat{background:var(--sat)}
   .cell.hol{background:var(--hol)}
   .cell .hd{position:absolute;top:3px;right:6px;font-weight:800;color:var(--accent);font-size:1.02rem}
@@ -242,8 +242,9 @@
       <button class="nav" id="prev" title="שנה קודמת">▶</button>
       <div class="modes">
         <button id="mGreg" class="on">שנה לועזית</button>
-        <button id="mCanaan">שנת כניסה לכנען</button>
+        <button id="mCanaan">שנת כניסה לארץ הקדושה</button>
       </div>
+      <button class="nav" id="today" title="עבור ליום הנוכחי">היום</button>
       <input type="number" id="year" step="1">
       <button class="go" id="go">בנה לוח</button>
       <button class="nav" id="next" title="שנה הבאה">◀</button>
@@ -403,8 +404,8 @@ function monthCard(canaan, changeMonth, mo){
       <div class="briah">${(mo.index>=changeMonth?canaan+1:canaan)+2800} לבריאת העולם</div>
       <div class="greg">${[...new Set(mo.days.map(d=>d.greg.slice(0,4)))].join(' / ')} - ${mo.greg_months}</div>
       ${mo.hijri_year?`<div class="hijri">${mo.hijri_year} להג׳רה</div>`:''}
-      <div class="canaan${mo.index===changeMonth?' yearchange':''}">שנת ${mo.index>=changeMonth?canaan+1:canaan} לכניסה לכנען</div>
-      <div class="canaan${mo.index===changeMonth?' yearchange':''}">${samHtml('שנת')} ${mo.index>=changeMonth?canaan+1:canaan} ${samHtml('למובא בני ישראל לארץ כנען')}</div>
+      <div class="canaan${mo.index===changeMonth?' yearchange':''}">שנת ${mo.index>=changeMonth?canaan+1:canaan} לכניסה לארץ הקדושה</div>
+      <div class="canaan${mo.index===changeMonth?' yearchange':''}">${samHtml('שנת')} ${mo.index>=changeMonth?canaan+1:canaan} ${samHtml('למובא בני ישראל לארץ הקדושה')}</div>
       <div class="mname">${mo.name} - ${samHtml(mo.name)}</div>
       <div class="molad">המולד חל <b>${m.daynight==='לילה'?'בליל':'ביום'} ${m.molad_wd}</b> · <b>${m.clock}</b> שעות ${m.daynight==='לילה'?'מהליל':'מהיום'} · <b>${m.molad_syr}</b> (מזרחי)${m.islamic?` · ${m.islamic} (מוסלמי)`:''} <span class="est">משוער</span></div>
     </div>
@@ -473,7 +474,7 @@ function renderMoadimTable(){
 }
 function openMoadim(){
   if(!DATA_YC) return;
-  document.getElementById('modal-year').textContent=`שנת ${DATA_YC.canaan_year} לכניסה לכנען (לועזי ${DATA_YC.greg_year})`;
+  document.getElementById('modal-year').textContent=`שנת ${DATA_YC.canaan_year} לכניסה לארץ הקדושה (לועזי ${DATA_YC.greg_year})`;
   renderFilters('moadim-filters', moadimCats, renderMoadimTable);
   renderMoadimTable();
   document.getElementById('modal').hidden=false;
@@ -611,10 +612,10 @@ function shareChooser(channel){
 }
 function shareLink(channel){
   const g=currentGreg(), yc=DATA_YC, link=location.href.split('#')[0];
-  const text=`הלוח העברי השומרוני — שנת ${yc?yc.canaan_year:''} לכניסה לכנען (לועזי ${g}).\nצפייה בלוח: ${link}`;
+  const text=`הלוח העברי השומרוני — שנת ${yc?yc.canaan_year:''} לכניסה לארץ הקדושה (לועזי ${g}).\nצפייה בלוח: ${link}`;
   if(channel==='wa'){ window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank','noopener'); }
   else {
-    const subj=`הלוח העברי השומרוני — שנת ${yc?yc.canaan_year:''} לכניסה לכנען (לועזי ${g})`;
+    const subj=`הלוח העברי השומרוני — שנת ${yc?yc.canaan_year:''} לכניסה לארץ הקדושה (לועזי ${g})`;
     location.href=`mailto:?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(text+'\n\nהערה: לוח זה אינו תחליף לחשבון הקשט המופץ ע"י הכהן הגדול.')}`;
   }
 }
@@ -635,7 +636,7 @@ async function shareImage(channel){
     const canvas=await html2canvas(el,{backgroundColor:'#f4f1ea',scale:Math.min(2,window.devicePixelRatio||1.5)});
     el.style.zoom=prevZoom;
     const g=currentGreg(), link=location.href.split('#')[0];
-    const text=`הלוח העברי השומרוני — שנת ${yc.canaan_year} לכניסה לכנען (לועזי ${yc.greg_year})`;
+    const text=`הלוח העברי השומרוני — שנת ${yc.canaan_year} לכניסה לארץ הקדושה (לועזי ${yc.greg_year})`;
     canvas.toBlob(async blob=>{
       const file=new File([blob],`luach-${yc.greg_year}.png`,{type:'image/png'});
       // MOBILE: native share sheet (user taps WhatsApp/email; the image is attached).
@@ -681,6 +682,15 @@ async function init(){
   document.getElementById('year').addEventListener('keydown',e=>{if(e.key==='Enter')buildYear(currentGreg());});
   document.getElementById('mGreg').onclick=()=>{const g=currentGreg();setMode('greg');document.getElementById('year').value=g;buildYear(g);};
   document.getElementById('mCanaan').onclick=()=>{const g=currentGreg();setMode('canaan');document.getElementById('year').value=g+INDEX.canaan_offset;buildYear(g);};
+  document.getElementById('today').onclick=async()=>{
+    const gy=new Date().getFullYear();
+    for(const cand of [gy, gy-1]){            // today falls in greg-year cand's Samaritan calendar
+      document.getElementById('year').value = mode==='greg' ? cand : cand+INDEX.canaan_offset;
+      await buildYear(cand);
+      const t=document.querySelector('.cell.today');
+      if(t){ t.scrollIntoView({block:'center',behavior:'smooth'}); break; }
+    }
+  };
   let zoom=1;
   const applyZoom=()=>{document.getElementById('result').style.zoom=zoom;};
   document.getElementById('zoomin').onclick=()=>{zoom=Math.min(1.8,zoom+0.1);applyZoom();};
@@ -688,7 +698,7 @@ async function init(){
   document.getElementById('print').onclick=()=>{
     const yc=DATA_YC;
     document.getElementById('pf-year').textContent =
-      yc ? `הלוח השומרוני · שנת ${yc.canaan_year} לכניסה לכנען (לועזי ${yc.greg_year}) · ` : '';
+      yc ? `הלוח השומרוני · שנת ${yc.canaan_year} לכניסה לארץ הקדושה (לועזי ${yc.greg_year}) · ` : '';
     window.print();   // print or "Save as PDF"
   };
   document.getElementById('ics').onclick=openSync;
