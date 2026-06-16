@@ -90,6 +90,7 @@
   .mhead .greg{position:absolute;top:9px;left:12px;font-size:.74rem;color:var(--muted)}
   .mhead .hijri{position:absolute;top:25px;left:12px;font-size:.6rem;color:var(--muted);opacity:.85}
   .mhead .idx{position:absolute;top:9px;right:12px;font-size:.74rem;color:var(--muted)}
+  .mhead .briah{position:absolute;top:25px;right:12px;font-size:.6rem;color:var(--muted);opacity:.9}
   .mhead .molad{font-size:.78rem;color:#6c6253;margin-top:2px}
   .mhead .molad b{color:var(--ink)}
   .mhead .molad .mlabel{font-size:.66rem;color:var(--muted);font-weight:600}
@@ -141,6 +142,8 @@
   .cell .syr{position:absolute;bottom:3px;right:6px;color:#a98f6a;font-weight:800;font-size:.92rem;
     text-align:center;line-height:1}
   .cell .syr .syr-lbl{display:block;font-size:.56rem;font-weight:600;opacity:.85}
+  .cell .period{position:absolute;bottom:2px;left:30px;right:34px;text-align:center;font-size:.55rem;
+    color:#8a7a5a;font-weight:700;line-height:1;pointer-events:none}
 
   .meta{margin-top:20px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;font-size:.82rem;color:var(--muted)}
   .err{color:#a33;text-align:center;margin-top:30px;font-weight:700}
@@ -202,6 +205,7 @@
     .mhead .mname{font-size:1.02rem}
     .mhead .canaan{font-size:.66rem}
     .mhead .greg,.mhead .idx{font-size:.62rem;top:7px}
+    .mhead .briah{font-size:.5rem;top:20px}
     .mhead .molad{font-size:.68rem}
     .wdrow div{font-size:.6rem;padding:3px 0}
     /* day cells: shrink so 7 columns fit a narrow screen legibly */
@@ -211,6 +215,7 @@
     .cell .fest{margin-top:15px;margin-bottom:22px;line-height:1.2}
     .cell .fest .f{font-size:.56rem;padding:1px 2px;margin:1px 0;border-radius:4px}
     .cell .fest .f.period,.cell .fest .f.community{font-size:.5rem}
+    .cell .period{font-size:.46rem;left:20px;right:22px;bottom:1px}
     .cell .fest .gmonth{font-size:.6rem}
     .cell .sun{font-size:.5rem;bottom:2px;left:3px;line-height:1.15}
     .cell .syr{font-size:.66rem;bottom:2px;right:3px}
@@ -346,6 +351,17 @@ function decodeData(b64){
   return new TextDecoder('utf-8').decode(bytes);
 }
 
+// Bedouin/Arab winter seasons (anwā'): מרבעניה then the four "סעד".
+// Boundaries by month-day, recurring each winter (solstice→equinox, 22.12→20.03).
+function winterPeriod(iso){
+  const md = iso.slice(5);                       // "MM-DD"
+  if(md>='12-22' || md<='01-31') return 'מרבעניה';
+  if(md>='02-01' && md<='02-12') return 'סעד אל-דאבח';
+  if(md>='02-13' && md<='02-24') return 'סעד בלע';
+  if(md>='02-25' && md<='03-08') return 'סעד אל-סעוד';
+  if(md>='03-09' && md<='03-20') return 'סעד אל-ח׳באיא';
+  return null;
+}
 function monthCard(canaan, changeMonth, mo){
   const m = mo.molad;
   let cells = '';
@@ -369,16 +385,20 @@ function monthCard(canaan, changeMonth, mo){
     const fest = center ? `<div class="fest">${center}</div>` : '';
     const sun = (rec.sunrise||rec.sunset)
       ? `<div class="sun">ז ${rec.sunrise||'--'}<br>ש ${rec.sunset||'--'}</div>` : '';
+    // winter period at the very bottom — skip Saturdays and days already full of events
+    const per = (!isSat && !hasFest) ? winterPeriod(rec.greg) : null;
+    const period = per ? `<div class="period">${per}</div>` : '';
     cells += `<div class="${cls}">
         <span class="hd">${rec.heb_label}</span>
         <span class="gd">${rec.greg_day}</span>
-        ${fest}${sun}
+        ${fest}${sun}${period}
         <span class="syr"><span class="syr-lbl">מז.</span>${rec.syriac_day}</span>
       </div>`;
   }
   return `<div class="month">
     <div class="mhead">
       <div class="idx">חודש ${mo.index}</div>
+      <div class="briah">${(mo.index>=changeMonth?canaan+1:canaan)+2800} לבריאת העולם</div>
       <div class="greg">${[...new Set(mo.days.map(d=>d.greg.slice(0,4)))].join(' / ')} - ${mo.greg_months}</div>
       ${mo.hijri_year?`<div class="hijri">${mo.hijri_year} להג׳רה</div>`:''}
       <div class="canaan${mo.index===changeMonth?' yearchange':''}">שנת ${mo.index>=changeMonth?canaan+1:canaan} לכניסה לכנען</div>
