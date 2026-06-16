@@ -181,6 +181,14 @@
   .save-flag{display:flex;align-items:center;justify-content:center;gap:7px;margin:12px 16px 0;
     font-size:.88rem;font-weight:600;color:var(--ink);cursor:pointer}
   .save-flag input{width:16px;height:16px;cursor:pointer;accent-color:var(--accent)}
+  .modal.over{z-index:60}
+  .palette-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;padding:12px 16px}
+  .palette-card{display:flex;flex-direction:column;gap:7px;border:1px solid var(--line);border-radius:10px;
+    padding:10px;background:#fff;cursor:pointer;text-align:right;font:inherit}
+  .palette-card:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.1)}
+  .palette-name{font-weight:700;color:var(--ink);font-size:.9rem}
+  .palette-sw{display:flex;height:24px;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .palette-sw i{flex:1;display:block}
 
   /* generic confirm/choice dialog */
   .modal-box.dlg{max-width:430px;width:auto;min-width:300px}
@@ -337,6 +345,7 @@
       <div class="modal-head">
         <span>🎨 הגדרת צבעים</span>
         <span class="modal-actions">
+          <button class="act" id="colors-palettes" title="בחירה מבין תבניות צבעים מוכנות">🌈 בחר תבנית צבעים</button>
           <button class="act" id="colors-reset" title="שחזור צבעי ברירת המחדל">↺ ברירת מחדל</button>
           <button class="act" id="colors-close" title="סגור">✕</button>
         </span>
@@ -349,6 +358,16 @@
           <button class="sync-go" id="colors-apply">✔ אישור</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div id="palette-modal" class="modal over" hidden>
+    <div class="modal-box">
+      <div class="modal-head">
+        <span>🌈 בחר תבנית צבעים</span>
+        <span class="modal-actions"><button class="act" id="palette-close" title="סגור">✕</button></span>
+      </div>
+      <div class="modal-body"><div class="palette-grid" id="palette-grid"></div></div>
     </div>
   </div>
 
@@ -750,6 +769,21 @@ async function init(){
   const COLOR_DEFS=[['--bg','רקע כללי'],['--card','רקע חודש'],['--accent','צבע ראשי'],
     ['--ink','צבע טקסט'],['--sat','רקע שבת'],['--sam','חגים שומרוניים'],
     ['--jew','חגים יהודיים'],['--sab','שבתות מכונות'],['--moed','מועדים']];
+  // full theme set — saved/restored so whole palettes persist (not only the 9 pickers)
+  const THEME_VARS=['--bg','--card','--ink','--muted','--accent','--accent2','--soft','--line',
+    '--sat','--hol','--grid','--sam','--sam-bg','--jew','--jew-bg','--sab','--sab-bg','--moed','--moed-bg'];
+  const PALETTES=[
+    {name:'קלאסי (חום-חול)', sw:['#8a6d3b','#f4f1ea','#fffdf7','#2b2620'], vars:{}},
+    {name:'תכול וכחול', sw:['#0e7aa0','#eaf4f7','#ffffff','#0f2733'], vars:{'--bg':'#eaf4f7','--card':'#ffffff','--ink':'#0f2733','--muted':'#5a7886','--accent':'#0e7aa0','--accent2':'#0a5c7a','--soft':'#d6ebf2','--line':'#c4e0ea','--sat':'#e2f0f5','--hol':'#f0f8fb','--grid':'#a9cede'}},
+    {name:'כתום בהיר ושחור', sw:['#e07b1a','#fff6ec','#ffffff','#1a1a1a'], vars:{'--bg':'#fff6ec','--card':'#ffffff','--ink':'#1a1a1a','--muted':'#7a6a58','--accent':'#e07b1a','--accent2':'#b85f0c','--soft':'#ffe8cf','--line':'#f2d8bd','--sat':'#fdeedd','--hol':'#fff7ee','--grid':'#e6c39a'}},
+    {name:'אפור ושחור', sw:['#374151','#f2f3f5','#ffffff','#111315'], vars:{'--bg':'#f2f3f5','--card':'#ffffff','--ink':'#111315','--muted':'#6b7280','--accent':'#374151','--accent2':'#1f2937','--soft':'#e4e7eb','--line':'#d6dae0','--sat':'#eceef1','--hol':'#f6f7f9','--grid':'#b9c0c9'}},
+    {name:'אדום בהיר ובורדו', sw:['#9b1c2e','#fdf0f0','#ffffff','#2a1316'], vars:{'--bg':'#fdf0f0','--card':'#ffffff','--ink':'#2a1316','--muted':'#8a5a60','--accent':'#9b1c2e','--accent2':'#7a1523','--soft':'#f7dcdc','--line':'#efc9c9','--sat':'#fbe8e8','--hol':'#fdf2f2','--grid':'#e0a9ad'}},
+    {name:'ירוק יער', sw:['#2f6b3f','#eef4ee','#ffffff','#13241a'], vars:{'--bg':'#eef4ee','--card':'#ffffff','--ink':'#13241a','--muted':'#5d7a64','--accent':'#2f6b3f','--accent2':'#22512f','--soft':'#daeede','--line':'#c7e0cd','--sat':'#e6f1e8','--hol':'#f2f8f3','--grid':'#a9cbb1'}},
+    {name:'סגול מלכותי', sw:['#6b3fa0','#f5f1fb','#ffffff','#241a2e'], vars:{'--bg':'#f5f1fb','--card':'#ffffff','--ink':'#241a2e','--muted':'#6f5d83','--accent':'#6b3fa0','--accent2':'#522f7d','--soft':'#e9ddf6','--line':'#ddccef','--sat':'#efe8f8','--hol':'#f7f2fc','--grid':'#c4a9e0'}},
+    {name:'כחול ים', sw:['#1e4e8c','#eef2f8','#ffffff','#0f1c2e'], vars:{'--bg':'#eef2f8','--card':'#ffffff','--ink':'#0f1c2e','--muted':'#5a6b86','--accent':'#1e4e8c','--accent2':'#163a6b','--soft':'#dbe6f5','--line':'#c9d8ee','--sat':'#e6edf7','--hol':'#f2f6fb','--grid':'#a9c0e0'}},
+    {name:'חום קפה', sw:['#6f4e37','#f3ece2','#fffaf3','#2a201a'], vars:{'--bg':'#f3ece2','--card':'#fffaf3','--ink':'#2a201a','--muted':'#8a7558','--accent':'#6f4e37','--accent2':'#553a28','--soft':'#e9dcc9','--line':'#ddccb5','--sat':'#f0e7d7','--hol':'#faf4ea','--grid':'#c9b48f'}},
+    {name:'מצב כהה', sw:['#d6b069','#1f2228','#2a2e36','#e8e6e1'], vars:{'--bg':'#1f2228','--card':'#2a2e36','--ink':'#e8e6e1','--muted':'#9aa0a8','--accent':'#d6b069','--accent2':'#c49a4f','--soft':'#363b44','--line':'#3d434d','--sat':'#2d323b','--hol':'#2a2e36','--grid':'#4a515c','--sam':'#7fc99a','--sam-bg':'#22382b','--jew':'#8fb0e0','--jew-bg':'#1f2c40','--sab':'#bba6e0','--sab-bg':'#2e2640','--moed':'#6fc3d0','--moed-bg':'#1c333a'}}
+  ];
   const COLOR_KEY='shomron-colors';
   const cssVal=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
   const setVar=(v,val)=>document.documentElement.style.setProperty(v,val);
@@ -759,11 +793,22 @@ async function init(){
     const s=document.createElement('span'); s.style.color=c; document.body.appendChild(s);
     const m=getComputedStyle(s).color.match(/\d+/g); s.remove();
     return m? '#'+m.slice(0,3).map(n=>(+n).toString(16).padStart(2,'0')).join(''):'#000000'; }
-  let DEFAULT_COLORS=null, colorSnapshot=null;
-  function captureDefaults(){ if(!DEFAULT_COLORS) DEFAULT_COLORS=Object.fromEntries(COLOR_DEFS.map(([v])=>[v,cssVal(v)])); }
+  let DEFAULT_THEME=null, colorSnapshot=null;
+  function captureDefaults(){ if(!DEFAULT_THEME) DEFAULT_THEME=Object.fromEntries(THEME_VARS.map(v=>[v,cssVal(v)])); }
+  function syncPickers(){ for(const [v] of COLOR_DEFS){ const i=document.getElementById('c_'+v); if(i) i.value=toHex(cssVal(v)); } }
+  function applyTheme(map){ for(const v of THEME_VARS) setVar(v,(map&&map[v])||DEFAULT_THEME[v]); }
+  function applyPalette(p){ applyTheme(p.vars); syncPickers(); }
+  function openPalettes(){
+    const g=document.getElementById('palette-grid'); g.innerHTML='';
+    PALETTES.forEach(p=>{ const card=document.createElement('button'); card.className='palette-card';
+      card.innerHTML='<span class="palette-name">'+p.name+'</span><span class="palette-sw">'+p.sw.map(c=>'<i style="background:'+c+'"></i>').join('')+'</span>';
+      card.onclick=()=>{ applyPalette(p); document.getElementById('palette-modal').hidden=true; };
+      g.appendChild(card); });
+    document.getElementById('palette-modal').hidden=false;
+  }
   function openColors(){
     captureDefaults();
-    colorSnapshot=Object.fromEntries(COLOR_DEFS.map(([v])=>[v,cssVal(v)]));   // for revert on cancel
+    colorSnapshot=Object.fromEntries(THEME_VARS.map(v=>[v,cssVal(v)]));   // for revert on cancel
     const grid=document.getElementById('color-grid'); grid.innerHTML='';
     for(const [v,label] of COLOR_DEFS){
       const row=document.createElement('div'); row.className='color-row';
@@ -778,7 +823,7 @@ async function init(){
   }
   function closeColors(save){
     if(save){
-      const out={}; for(const [v] of COLOR_DEFS){ const i=document.getElementById('c_'+v); if(i) out[v]=i.value; }
+      const out=Object.fromEntries(THEME_VARS.map(v=>[v,cssVal(v)]));            // whole theme, not just pickers
       try{ sessionStorage.setItem(COLOR_KEY,JSON.stringify(out)); }catch(e){}     // always remember for this session
       document.getElementById('color-modal').hidden=true;
       if(document.getElementById('colors-persist').checked){
@@ -791,13 +836,12 @@ async function init(){
       }
       return;
     }
-    for(const [v,val] of Object.entries(colorSnapshot||{})) setVar(v,val);        // cancel -> revert preview
+    applyTheme(colorSnapshot);                                                    // cancel -> revert preview
     document.getElementById('color-modal').hidden=true;
   }
   function resetColors(){
-    captureDefaults();
-    for(const [v,val] of Object.entries(DEFAULT_COLORS)){ setVar(v,val); const i=document.getElementById('c_'+v); if(i) i.value=toHex(val); }
-    colorSnapshot={...DEFAULT_COLORS};        // reset is final — a later cancel must not undo it
+    captureDefaults(); applyTheme(DEFAULT_THEME); syncPickers();
+    colorSnapshot={...DEFAULT_THEME};         // reset is final — a later cancel must not undo it
     const cb=document.getElementById('colors-persist'); if(cb) cb.checked=false;
     try{ sessionStorage.removeItem(COLOR_KEY); localStorage.removeItem(COLOR_KEY); }catch(e){}  // back to default -> delete the saved device copy
   }
@@ -810,6 +854,9 @@ async function init(){
   document.getElementById('colors-close').onclick=()=>closeColors(false);
   document.getElementById('colors-reset').onclick=resetColors;
   document.getElementById('color-modal').onclick=e=>{ if(e.target.id==='color-modal') closeColors(false); };
+  document.getElementById('colors-palettes').onclick=openPalettes;
+  document.getElementById('palette-close').onclick=()=>document.getElementById('palette-modal').hidden=true;
+  document.getElementById('palette-modal').onclick=e=>{ if(e.target.id==='palette-modal') document.getElementById('palette-modal').hidden=true; };
   document.getElementById('share').onclick=shareMenu;
   document.getElementById('shortcut').onclick=createShortcut;
   document.getElementById('dialog').onclick=e=>{ if(e.target.id==='dialog') document.getElementById('dialog').hidden=true; };
