@@ -77,6 +77,19 @@
   .nav{background:var(--soft);color:var(--accent);border:none;border-radius:9px;padding:6px 10px;cursor:pointer;font-size:.95rem;font-weight:700}
   .nav:hover{background:#e3d4b4}
   .yhint{font-size:.82rem;color:var(--muted)}
+  .filter-wrap{position:relative;display:inline-flex}
+  .month-filter-panel{position:absolute;top:calc(100% + 5px);right:0;z-index:30;background:var(--card);
+    border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.2);
+    padding:7px;min-width:200px;max-height:60vh;overflow:auto}
+  .month-filter-panel[hidden]{display:none}
+  .mf-row{display:flex;align-items:center;gap:8px;padding:5px 7px;border-radius:7px;cursor:pointer;
+    font-size:.82rem;color:var(--ink);white-space:nowrap}
+  .mf-row:hover{background:var(--soft)}
+  .mf-row input{width:15px;height:15px;cursor:pointer;accent-color:var(--accent)}
+  .date-input{font-size:.84rem;width:140px;padding:6px 8px;border:1px solid var(--line);border-radius:9px;
+    background:#fff;color:var(--ink);text-align:center}
+  .cell.flash{outline:3px solid #e0a020;outline-offset:-3px;animation:cellflash 2s ease-out 1}
+  @keyframes cellflash{0%,65%{outline-color:#e0a020}100%{outline-color:transparent}}
 
   .legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin:6px 0 18px}
   .chip{display:inline-flex;align-items:center;gap:5px}
@@ -270,6 +283,13 @@
       <button class="nav" id="next" title="שנה הבאה">◀</button>
       <span class="yhint" id="yhint"></span>
       <button class="nav" id="today" title="עבור ליום הנוכחי">היום</button>
+      <span class="filter-wrap">
+        <button class="nav" id="month-filter-btn" title="הצגת חודשים נבחרים בלבד">סינון חודשים ▾</button>
+        <div class="month-filter-panel" id="month-filter-panel" hidden></div>
+      </span>
+      <button class="nav" id="clear-filter" title="הצגת כל חודשי השנה">נקה סינון</button>
+      <input type="text" id="date-input" class="date-input" placeholder="הזן תאריך לועזי" inputmode="numeric" maxlength="10" autocomplete="off">
+      <button class="nav" id="date-go" title="הצגת התאריך שהוזן">הצג</button>
     </span>
     <span class="actions">
       <button class="act" id="moadim" title="רשימת כל המועדים והחגים">📋 רשימת מועדים וחגים</button>
@@ -445,14 +465,14 @@ function monthCard(canaan, changeMonth, mo){
     // has centre content (festivals or the Gregorian-month-rollover label) so nothing is covered
     const per = (!isSat && !center) ? winterPeriod(rec.greg) : null;
     const period = per ? `<div class="period">${per}</div>` : '';
-    cells += `<div class="${cls}">
+    cells += `<div class="${cls}" data-g="${rec.greg}">
         <span class="hd">${rec.heb_label}</span>
         <span class="gd">${rec.greg_day}</span>
         ${fest}${sun}${period}
         <span class="syr"><span class="syr-lbl">מז.</span>${rec.syriac_day}</span>
       </div>`;
   }
-  return `<div class="month">
+  return `<div class="month" data-mi="${mo.index}">
     <div class="mhead">
       <div class="idx">חודש ${mo.index}</div>
       <div class="briah">${(mo.index>=changeMonth?canaan+1:canaan)+2800} לבריאת העולם</div>
@@ -468,6 +488,7 @@ function monthCard(canaan, changeMonth, mo){
   </div>`;
 }
 
+let monthFilter = new Set();   // selected month indices for the month filter (empty = show all)
 async function buildYear(greg){
   const box = document.getElementById('result'), meta = document.getElementById('meta');
   const [lo,hi] = INDEX.greg_range;
@@ -476,6 +497,7 @@ async function buildYear(greg){
   try{ yc = JSON.parse(decodeData(await (await fetch(`cal/${greg}.dat`)).text())); }
   catch(e){ box.innerHTML=`<div class="err">לא נטען cal/${greg}.dat (הרץ build_calendars.py)</div>`; return; }
   DATA_YC = yc;
+  monthFilter.clear();   // a fresh year starts unfiltered
   box.innerHTML = `<div class="months">${yc.months.map(mo=>monthCard(yc.canaan_year,yc.year_change_month||6,mo)).join('')}</div>`;
   meta.innerHTML = `<b>שנה לועזית ${yc.greg_year}</b> · <b>כנען ${yc.canaan_year}</b> ·
      ${yc.n_months} חודשים ${yc.leap?'(מעוברת)':'(פשוטה)'} ·
@@ -745,6 +767,67 @@ async function init(){
       if(t){ t.scrollIntoView({block:'center',behavior:'smooth'}); break; }
     }
   };
+
+  // ---- month filter: show only the selected month(s) of the current year ----
+  function applyMonthFilter(){
+    document.querySelectorAll('.month').forEach(m=>{
+      m.style.display = (!monthFilter.size || monthFilter.has(+m.dataset.mi)) ? '' : 'none';
+    });
+  }
+  function buildFilterPanel(){
+    const panel=document.getElementById('month-filter-panel'); panel.innerHTML='';
+    if(!DATA_YC){ panel.innerHTML='<div class="mf-row">בנו לוח תחילה</div>'; return; }
+    DATA_YC.months.forEach(mo=>{
+      const row=document.createElement('label'); row.className='mf-row';
+      const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=monthFilter.has(mo.index);
+      cb.onchange=()=>{ cb.checked?monthFilter.add(mo.index):monthFilter.delete(mo.index); applyMonthFilter(); };
+      const span=document.createElement('span'); span.textContent='חודש '+mo.index+' — '+mo.name;
+      row.append(cb,span); panel.appendChild(row);
+    });
+  }
+  document.getElementById('month-filter-btn').onclick=e=>{
+    e.stopPropagation();
+    const panel=document.getElementById('month-filter-panel');
+    if(panel.hidden){ buildFilterPanel(); panel.hidden=false; } else panel.hidden=true;
+  };
+  document.addEventListener('click',e=>{
+    const panel=document.getElementById('month-filter-panel');
+    if(panel && !panel.hidden && !e.target.closest('.filter-wrap')) panel.hidden=true;
+  });
+  document.getElementById('clear-filter').onclick=()=>{
+    monthFilter.clear(); applyMonthFilter();
+    document.getElementById('month-filter-panel').hidden=true;
+  };
+
+  // ---- date box: force DD/MM/YYYY, then jump to that day (build its year if needed) ----
+  const dateInput=document.getElementById('date-input');
+  dateInput.oninput=()=>{
+    const v=dateInput.value.replace(/\D/g,'').slice(0,8);
+    let out=v.slice(0,2);
+    if(v.length>=3) out+='/'+v.slice(2,4);
+    if(v.length>=5) out+='/'+v.slice(4,8);
+    dateInput.value=out;
+  };
+  async function gotoDate(){
+    const mt=dateInput.value.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+    if(!mt){ dialog({title:'תאריך לא תקין', html:'יש להזין תאריך לועזי בפורמט DD/MM/YYYY', buttons:[{label:'סגור',primary:true}]}); return; }
+    let d=+mt[1], mo=+mt[2], y=+mt[3];
+    if(y<100) y+=2000;
+    if(d<1||d>31||mo<1||mo>12){ dialog({title:'תאריך לא תקין', html:'יום או חודש מחוץ לתחום.', buttons:[{label:'סגור',primary:true}]}); return; }
+    const iso=y+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    for(const cand of [y, y-1]){              // the date lives in greg-year cand's Samaritan calendar
+      if(!DATA_YC || DATA_YC.greg_year!==cand){
+        document.getElementById('year').value = mode==='greg'?cand:cand+INDEX.canaan_offset;
+        await buildYear(cand);
+      }
+      const cell=document.querySelector('.cell[data-g="'+iso+'"]');
+      if(cell){ applyMonthFilter(); cell.scrollIntoView({block:'center',behavior:'smooth'});
+        cell.classList.add('flash'); setTimeout(()=>cell.classList.remove('flash'),2100); return; }
+    }
+    dialog({title:'מחוץ לטווח', html:'התאריך '+iso+' אינו בטווח הלוח (1900–3000).', buttons:[{label:'סגור',primary:true}]});
+  }
+  document.getElementById('date-go').onclick=gotoDate;
+  dateInput.addEventListener('keydown',e=>{ if(e.key==='Enter') gotoDate(); });
   let zoom=1;
   const applyZoom=()=>{document.getElementById('result').style.zoom=zoom;};
   document.getElementById('zoomin').onclick=()=>{zoom=Math.min(1.8,zoom+0.1);applyZoom();};
