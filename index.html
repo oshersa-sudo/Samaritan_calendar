@@ -142,8 +142,10 @@
   .cell .syr{position:absolute;bottom:3px;right:6px;color:#a98f6a;font-weight:800;font-size:.92rem;
     text-align:center;line-height:1}
   .cell .syr .syr-lbl{display:block;font-size:.56rem;font-weight:600;opacity:.85}
-  .cell .period{position:absolute;bottom:2px;left:30px;right:34px;text-align:center;font-size:.55rem;
-    color:#8a7a5a;font-weight:700;line-height:1;pointer-events:none}
+  /* winter period: vertical text down the LEFT edge, between the corner day-number and the sun times */
+  .cell .period{position:absolute;left:3px;top:26px;bottom:31px;
+    writing-mode:vertical-rl;white-space:nowrap;overflow:hidden;
+    font-size:.45rem;color:#8a7a5a;font-weight:700;letter-spacing:.01em;line-height:1.05;pointer-events:none}
 
   .meta{margin-top:20px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;font-size:.82rem;color:var(--muted)}
   .err{color:#a33;text-align:center;margin-top:30px;font-weight:700}
@@ -215,7 +217,7 @@
     .cell .fest{margin-top:15px;margin-bottom:22px;line-height:1.2}
     .cell .fest .f{font-size:.56rem;padding:1px 2px;margin:1px 0;border-radius:4px}
     .cell .fest .f.period,.cell .fest .f.community{font-size:.5rem}
-    .cell .period{font-size:.46rem;left:20px;right:22px;bottom:1px}
+    .cell .period{font-size:.38rem;left:1px;top:17px;bottom:22px}
     .cell .fest .gmonth{font-size:.6rem}
     .cell .sun{font-size:.5rem;bottom:2px;left:3px;line-height:1.15}
     .cell .syr{font-size:.66rem;bottom:2px;right:3px}
