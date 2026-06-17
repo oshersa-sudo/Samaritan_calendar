@@ -1010,10 +1010,9 @@ async function init(){
   }
   async function buildExport(format){
     const yc=DATA_YC; if(!yc){ dialog({title:'אין לוח',html:'בנו לוח תחילה.',buttons:[{label:'סגור',primary:true}]}); return null; }
-    const font=await samFontCss();
     const body=yc.months.map(mo=> format==='donation'?donationMonth(yc,mo):gridMonth(yc,mo)).join('');
     const compact = format==='donation';   // donation = up to 31 rows -> must fit one A4 page
-    const css=`${font}
+    const css=`
       @page{size:A4 ${compact?'portrait':'landscape'};margin:0.8cm}
       body{font-family:Arial,sans-serif;direction:rtl;margin:0}
       .page{page-break-after:always} .page:last-of-type{page-break-after:auto}
@@ -1023,7 +1022,7 @@ async function init(){
       th,td{border:1px solid #999;text-align:center;vertical-align:middle}
       th{background:#efe6d3;color:#735a30}
       .num{font-family:Arial} .dot{font-family:Arial;color:#8a6d3b;margin:0 1px}
-      .samx{font-family:'SAMX',Arial}
+      .samx{font-family:'Ben_nor_m',Arial}
       .tbl{font-size:8pt} .tbl th,.tbl td{padding:0 4px;line-height:1.25}
       .tbl .evt{text-align:right;width:40%} .tbl td.samx{font-size:11pt}
       .grid{font-size:9pt} .grid th,.grid td{padding:2px}
@@ -1033,11 +1032,18 @@ async function init(){
     return `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset=utf-8><style>${css}</style></head><body dir=rtl>${body}</body></html>`;
   }
   function dlOffice(html,fn,mime){ const b=new Blob(['﻿'+html],{type:mime}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=fn; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); }
+  function installFont(){   // browsers can't auto-install; download the .ttf + one-click install guide
+    const a=document.createElement('a'); a.href='Sam_font.ttf'; a.download='Sam_font.ttf';
+    document.body.appendChild(a); a.click(); a.remove();
+    dialog({ title:'התקנת הפונט השומרוני', html:'הקובץ <b>Sam_font.ttf</b> ירד. פִּתחו אותו בלחיצה כפולה ולחצו <b>"התקן" (Install)</b>. לאחר ההתקנה פִּתחו מחדש את קובץ הלוח — הטקסט יוצג בכתב השומרוני.', buttons:[{label:'הבנתי',primary:true}] });
+  }
   async function exportTo(app,format){
     const html=await buildExport(format); if(!html) return;
     const base=`לוח-${DATA_YC.canaan_year}-${format==='donation'?'תרומה':'שנה'}`;
     if(app==='word') dlOffice(html, base+'.doc', 'application/msword');
     else dlOffice(html, base+'.xls', 'application/vnd.ms-excel');
+    setTimeout(()=>dialog({ title:'הקובץ יוצא ✓', html:'כדי שהכתב השומרוני יוצג ב-Word/Excel יש להתקין את הפונט במחשב פעם אחת. (לאחר ההתקנה הקובץ יציג שומרוני; אחרת — עברית רגילה.)',
+      buttons:[ {label:'הורד והתקן פונט', primary:true, act:installFont}, {label:'הפונט כבר מותקן'} ] }), 350);
   }
   function chooseFormat(app){
     dialog({ title: app==='word'?'ייצוא ל-Word':'ייצוא ל-Excel', html:'בחרו פורמט:',
