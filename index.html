@@ -77,6 +77,7 @@
   .nav{background:var(--soft);color:var(--accent);border:none;border-radius:9px;padding:6px 10px;cursor:pointer;font-size:.95rem;font-weight:700}
   .nav:hover{background:#e3d4b4}
   .yhint{font-size:.82rem;color:var(--muted)}
+  .oico{width:1.05em;height:1.05em;vertical-align:-3px;margin-inline-end:2px}
   .filter-wrap{position:relative;display:inline-flex}
   .month-filter-panel{position:absolute;top:calc(100% + 5px);right:0;z-index:30;background:var(--card);
     border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.2);
@@ -299,6 +300,8 @@
       <button class="act" id="print" title="הדפסה או שמירה כ-PDF">🖨 הדפס / PDF</button>
       <button class="act" id="ics" title="סנכרון ליומן Google או Outlook">📅 סנכרון ליומן</button>
       <button class="act" id="share" title="שיתוף הלוח — WhatsApp או דוא״ל">📤 שיתוף</button>
+      <button class="act" id="exp-word" title="ייצוא ל-Word"><svg class="oico" viewBox="0 0 24 24"><rect width="24" height="24" rx="3" fill="#2b579a"/><text x="12" y="17" font-size="13" fill="#fff" text-anchor="middle" font-family="Arial" font-weight="bold">W</text></svg> Word</button>
+      <button class="act" id="exp-excel" title="ייצוא ל-Excel"><svg class="oico" viewBox="0 0 24 24"><rect width="24" height="24" rx="3" fill="#217346"/><text x="12" y="17" font-size="13" fill="#fff" text-anchor="middle" font-family="Arial" font-weight="bold">X</text></svg> Excel</button>
       <button class="act" id="shortcut" title="התקנת האפליקציה (במובייל) / קיצור דרך (במחשב)">📲 התקן אפליקציה</button>
       <button class="act" id="colors" title="התאמת צבעי הלוח (לסשן זה בלבד)">🎨 הגדר צבעים</button>
     </span>
@@ -944,6 +947,89 @@ async function init(){
   document.getElementById('share').onclick=shareMenu;
   document.getElementById('shortcut').onclick=createShortcut;
   document.getElementById('dialog').onclick=e=>{ if(e.target.id==='dialog') document.getElementById('dialog').hidden=true; };
+
+  // ---- Word / Excel export (two formats: calendar grid + vertical "donation" rows) ----
+  let _samCss=null;
+  async function samFontCss(){
+    if(_samCss!==null) return _samCss;
+    try{ const b=await (await fetch('Sam_font.ttf')).arrayBuffer(), u=new Uint8Array(b); let s='';
+      for(let i=0;i<u.length;i++) s+=String.fromCharCode(u[i]);
+      _samCss="@font-face{font-family:'SAMX';src:url('data:font/ttf;base64,"+btoa(s)+"');}";
+    }catch(e){ _samCss=''; } return _samCss;
+  }
+  const wdName = iso => WD[new Date(iso+'T00:00:00').getDay()];
+  const SAB_FILL=['#ffffff','#f3b0b0','#bfe3bf','#abe2f2','#6fa8f0'];  // 1לבן 2אדום 3ירוק 4תכלת 5כחול-בוהק
+  const FEST_FILL='#ffe7a0';
+  const evText = rec => (rec.festivals||[]).map(f=>f.name).join(' · ');
+  function expHeader(yc,mo){
+    const cy = mo.index>=(yc.year_change_month||6) ? yc.canaan_year+1 : yc.canaan_year, m=mo.molad;
+    const yrs=[...new Set(mo.days.map(d=>d.greg.slice(0,4)))].join('/');
+    return `<div class=mh><div class=t2>${mo.name} — ${yrs} (${mo.greg_months})</div>`+
+      `<div class=t1>חודש ${mo.index} · שנת ${cy} לכניסה לארץ הקדושה · ${cy+2800} לבריאת העולם${mo.hijri_year?' · '+mo.hijri_year+' להג׳רה':''}</div>`+
+      `<div class=t3>המולד חל ${m.daynight==='לילה'?'בליל':'ביום'} ${m.molad_wd} · ${m.clock} שעות ${m.daynight==='לילה'?'מהליל':'מהיום'}${m.month_type?' · חודש '+m.month_type:''} · ${m.molad_syr} (מזרחי)${m.islamic?' · '+m.islamic+' (מוסלמי)':''}</div></div>`;
+  }
+  function donationMonth(yc,mo){
+    let sab=0, rows='';
+    for(const rec of mo.days){
+      const isSat=wdName(rec.greg)==='שבת'; let fill='';
+      if(isSat){ fill=SAB_FILL[Math.min(sab,4)]; sab++; }
+      else if(rec.festivals&&rec.festivals.length) fill=FEST_FILL;
+      const st=fill?` style="background:${fill}"`:'';
+      const sun=(rec.sunset||rec.sunrise)?`ש ${rec.sunset||'--'} · ז ${rec.sunrise||'--'}`:'';
+      const greg = rec.greg_day===1 ? `${rec.greg_day} ${GMON[+rec.greg.slice(5,7)]}` : rec.greg_day;
+      rows+=`<tr${st}><td>${sun}</td><td>${wdName(rec.greg)}</td><td class=samx>${rec.heb_label}</td><td>${rec.syriac_day}</td><td class=evt>${evText(rec)}</td><td>${greg}</td></tr>`;
+    }
+    return `<div class=page>${expHeader(yc,mo)}<table class=tbl><thead><tr><th>ערב</th><th>יום</th><th>עברי</th><th>מזרחי</th><th>אירוע</th><th>מערבי</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  }
+  function gridMonth(yc,mo){
+    const first=new Date(mo.days[0].greg+'T00:00:00').getDay();
+    let cells=[]; for(let i=0;i<first;i++) cells.push(null); cells=cells.concat(mo.days);
+    let sabFill={},sab=0;
+    for(const rec of mo.days){ if(wdName(rec.greg)==='שבת'){ sabFill[rec.greg]=SAB_FILL[Math.min(sab,4)]; sab++; } }
+    let body='';
+    for(let i=0;i<cells.length;i+=7){ body+='<tr>';
+      for(let j=0;j<7;j++){ const rec=cells[i+j];
+        if(!rec){ body+='<td class=cell></td>'; continue; }
+        const fill = wdName(rec.greg)==='שבת' ? sabFill[rec.greg] : (rec.festivals&&rec.festivals.length?FEST_FILL:'');
+        const st=fill?` style="background:${fill}"`:'';
+        const ev=(rec.festivals||[]).map(f=>f.name).join('<br>');
+        const sun=(rec.sunset||rec.sunrise)?`<div class=sun>ש ${rec.sunset||'--'} ז ${rec.sunrise||'--'}</div>`:'';
+        body+=`<td class=cell${st}><div class=ch><span class=samx>${rec.heb_label}</span><span class=gd>${rec.greg_day}${rec.greg_day===1?' '+GMON[+rec.greg.slice(5,7)]:''}</span></div><div class=ev>${ev}</div>${sun}<div class=syr>מז. ${rec.syriac_day}</div></td>`;
+      } body+='</tr>'; }
+    return `<div class=page>${expHeader(yc,mo)}<table class=grid><thead><tr>${WD.map(w=>'<th>'+w+'</th>').join('')}</tr></thead><tbody>${body}</tbody></table></div>`;
+  }
+  async function buildExport(format){
+    const yc=DATA_YC; if(!yc){ dialog({title:'אין לוח',html:'בנו לוח תחילה.',buttons:[{label:'סגור',primary:true}]}); return null; }
+    const font=await samFontCss();
+    const body=yc.months.map(mo=> format==='donation'?donationMonth(yc,mo):gridMonth(yc,mo)).join('');
+    const css=`${font}
+      @page{size:A4 ${format==='donation'?'portrait':'landscape'};margin:1cm}
+      body{font-family:Arial,sans-serif;direction:rtl} .page{page-break-after:always}
+      .mh{text-align:center;margin-bottom:6px} .mh .t2{font-size:15pt;font-weight:bold;color:#8a6d3b}
+      .mh .t1{font-size:10pt;color:#735a30} .mh .t3{font-size:9pt;color:#6c6253}
+      table{width:100%;border-collapse:collapse;font-size:10pt}
+      th,td{border:1px solid #999;padding:3px 5px;text-align:center;vertical-align:top}
+      th{background:#efe6d3;color:#735a30}
+      .tbl .evt{text-align:right;width:42%} .samx{font-family:'SAMX',Arial;font-size:13pt}
+      .grid td.cell{height:72px;width:14%} .grid .ch{display:flex;justify-content:space-between;font-weight:bold}
+      .grid .gd{color:#888;font-weight:normal} .grid .ev{font-size:8pt;color:#444}
+      .grid .sun{font-size:7pt;color:#999} .grid .syr{font-size:8pt;color:#a98f6a}`;
+    return `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset=utf-8><style>${css}</style></head><body dir=rtl>${body}</body></html>`;
+  }
+  function dlOffice(html,fn,mime){ const b=new Blob(['﻿'+html],{type:mime}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=fn; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); }
+  async function exportTo(app,format){
+    const html=await buildExport(format); if(!html) return;
+    const base=`לוח-${DATA_YC.canaan_year}-${format==='donation'?'תרומה':'שנה'}`;
+    if(app==='word') dlOffice(html, base+'.doc', 'application/msword');
+    else dlOffice(html, base+'.xls', 'application/vnd.ms-excel');
+  }
+  function chooseFormat(app){
+    dialog({ title: app==='word'?'ייצוא ל-Word':'ייצוא ל-Excel', html:'בחרו פורמט:',
+      buttons:[ {label:'לוח שנה', primary:true, act:()=>exportTo(app,'calendar')},
+                {label:'פורמט תרומה', act:()=>exportTo(app,'donation')} ]});
+  }
+  document.getElementById('exp-word').onclick=()=>chooseFormat('word');
+  document.getElementById('exp-excel').onclick=()=>chooseFormat('excel');
 }
 init();
 if('serviceWorker' in navigator){
