@@ -960,26 +960,36 @@ async function init(){
   const wdName = iso => WD[new Date(iso+'T00:00:00').getDay()];
   const SAB_FILL=['#ffffff','#f3b0b0','#bfe3bf','#abe2f2','#6fa8f0'];  // 1לבן 2אדום 3ירוק 4תכלת 5כחול-בוהק
   const FEST_FILL='#ffe7a0';
-  const evText = rec => (rec.festivals||[]).map(f=>f.name).join(' · ');
+  const stripGer = s => String(s==null?'':s).replace(/[׳״'"]/g,'');    // drop gershayim from Hebrew day letters
+  const num = v => `<span class=num>${v}</span>`;
+  // Samaritan-script render: letters in SAM font, numbers stay regular, "·" between words, no trailing dot
+  function sam(s){ if(s==null||s==='') return '';
+    s=String(s).replace(/[.׃]+\s*$/,'').trim();
+    return s.split(/[\s·]+/).filter(Boolean)
+      .map(t=> /^[\d:.,\/()\-–%]+$/.test(t) ? `<span class=num>${t}</span>` : `<span class=samx>${stripGer(t)}</span>`)
+      .join('<i class=dot>·</i>'); }
+  const isHoliday = rec => (rec.festivals||[]).some(f=>!['parasha','period','hijri'].includes(f.kind));  // a real חג, not portion/period
+  const evCell = rec => (rec.festivals||[]).map(f=>sam(f.name)).join('<br>');
   function expHeader(yc,mo){
     const cy = mo.index>=(yc.year_change_month||6) ? yc.canaan_year+1 : yc.canaan_year, m=mo.molad;
     const yrs=[...new Set(mo.days.map(d=>d.greg.slice(0,4)))].join('/');
-    return `<div class=mh><div class=t2>${mo.name} — ${yrs} (${mo.greg_months})</div>`+
-      `<div class=t1>חודש ${mo.index} · שנת ${cy} לכניסה לארץ הקדושה · ${cy+2800} לבריאת העולם${mo.hijri_year?' · '+mo.hijri_year+' להג׳רה':''}</div>`+
-      `<div class=t3>המולד חל ${m.daynight==='לילה'?'בליל':'ביום'} ${m.molad_wd} · ${m.clock} שעות ${m.daynight==='לילה'?'מהליל':'מהיום'}${m.month_type?' · חודש '+m.month_type:''} · ${m.molad_syr} (מזרחי)${m.islamic?' · '+m.islamic+' (מוסלמי)':''}</div></div>`;
+    const t2=`${mo.name} ${yrs} ${mo.greg_months}`;
+    const t1=`חודש ${mo.index} · שנת ${cy} לכניסה לארץ הקדושה · ${cy+2800} לבריאת העולם${mo.hijri_year?' · '+mo.hijri_year+' להג׳רה':''}`;
+    const t3=`המולד חל ${m.daynight==='לילה'?'בליל':'ביום'} ${m.molad_wd} ${m.clock} שעות ${m.daynight==='לילה'?'מהליל':'מהיום'}${m.month_type?' · חודש '+m.month_type:''} · ${m.molad_syr} מזרחי`;
+    return `<div class=mh><div class=t2>${sam(t2)}</div><div class=t1>${sam(t1)}</div><div class=t3>${sam(t3)}</div></div>`;
   }
   function donationMonth(yc,mo){
     let sab=0, rows='';
     for(const rec of mo.days){
       const isSat=wdName(rec.greg)==='שבת'; let fill='';
-      if(isSat){ fill=SAB_FILL[Math.min(sab,4)]; sab++; }
-      else if(rec.festivals&&rec.festivals.length) fill=FEST_FILL;
+      if(isSat){ fill=SAB_FILL[Math.min(sab,4)]; sab++; }       // Sabbaths keep their ordinal colour
+      else if(isHoliday(rec)) fill=FEST_FILL;                   // only real holidays — never plain weekdays
       const st=fill?` style="background:${fill}"`:'';
-      const sun=(rec.sunset||rec.sunrise)?`ש ${rec.sunset||'--'} · ז ${rec.sunrise||'--'}`:'';
-      const greg = rec.greg_day===1 ? `${rec.greg_day} ${GMON[+rec.greg.slice(5,7)]}` : rec.greg_day;
-      rows+=`<tr${st}><td>${sun}</td><td>${wdName(rec.greg)}</td><td class=samx>${rec.heb_label}</td><td>${rec.syriac_day}</td><td class=evt>${evText(rec)}</td><td>${greg}</td></tr>`;
+      const sun=(rec.sunset||rec.sunrise)?`${sam('ש')} ${num(rec.sunset||'--')} ${sam('ז')} ${num(rec.sunrise||'--')}`:'';
+      const greg = rec.greg_day===1 ? `${num(rec.greg_day)} ${sam(GMON[+rec.greg.slice(5,7)])}` : num(rec.greg_day);
+      rows+=`<tr${st}><td>${sun}</td><td>${sam(wdName(rec.greg))}</td><td class=samx>${stripGer(rec.heb_label)}</td><td>${num(rec.syriac_day)}</td><td class=evt>${evCell(rec)}</td><td>${greg}</td></tr>`;
     }
-    return `<div class=page>${expHeader(yc,mo)}<table class=tbl><thead><tr><th>ערב</th><th>יום</th><th>עברי</th><th>מזרחי</th><th>אירוע</th><th>מערבי</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    return `<div class=page>${expHeader(yc,mo)}<table class=tbl><thead><tr><th>${sam('ערב')}</th><th>${sam('יום')}</th><th>${sam('עברי')}</th><th>${sam('מזרחי')}</th><th>${sam('אירוע')}</th><th>${sam('מערבי')}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
   }
   function gridMonth(yc,mo){
     const first=new Date(mo.days[0].greg+'T00:00:00').getDay();
@@ -990,13 +1000,13 @@ async function init(){
     for(let i=0;i<cells.length;i+=7){ body+='<tr>';
       for(let j=0;j<7;j++){ const rec=cells[i+j];
         if(!rec){ body+='<td class=cell></td>'; continue; }
-        const fill = wdName(rec.greg)==='שבת' ? sabFill[rec.greg] : (rec.festivals&&rec.festivals.length?FEST_FILL:'');
+        const fill = wdName(rec.greg)==='שבת' ? sabFill[rec.greg] : (isHoliday(rec)?FEST_FILL:'');
         const st=fill?` style="background:${fill}"`:'';
-        const ev=(rec.festivals||[]).map(f=>f.name).join('<br>');
-        const sun=(rec.sunset||rec.sunrise)?`<div class=sun>ש ${rec.sunset||'--'} ז ${rec.sunrise||'--'}</div>`:'';
-        body+=`<td class=cell${st}><div class=ch><span class=samx>${rec.heb_label}</span><span class=gd>${rec.greg_day}${rec.greg_day===1?' '+GMON[+rec.greg.slice(5,7)]:''}</span></div><div class=ev>${ev}</div>${sun}<div class=syr>מז. ${rec.syriac_day}</div></td>`;
+        const ev=(rec.festivals||[]).map(f=>sam(f.name)).join('<br>');
+        const sun=(rec.sunset||rec.sunrise)?`<div class=sun>${sam('ש')} ${num(rec.sunset||'--')} ${sam('ז')} ${num(rec.sunrise||'--')}</div>`:'';
+        body+=`<td class=cell${st}><div class=ch><span class=samx>${stripGer(rec.heb_label)}</span><span class=gd>${num(rec.greg_day)}${rec.greg_day===1?' '+sam(GMON[+rec.greg.slice(5,7)]):''}</span></div><div class=ev>${ev}</div>${sun}<div class=syr>${sam('מז')} ${num(rec.syriac_day)}</div></td>`;
       } body+='</tr>'; }
-    return `<div class=page>${expHeader(yc,mo)}<table class=grid><thead><tr>${WD.map(w=>'<th>'+w+'</th>').join('')}</tr></thead><tbody>${body}</tbody></table></div>`;
+    return `<div class=page>${expHeader(yc,mo)}<table class=grid><thead><tr>${WD.map(w=>'<th>'+sam(w)+'</th>').join('')}</tr></thead><tbody>${body}</tbody></table></div>`;
   }
   async function buildExport(format){
     const yc=DATA_YC; if(!yc){ dialog({title:'אין לוח',html:'בנו לוח תחילה.',buttons:[{label:'סגור',primary:true}]}); return null; }
@@ -1004,13 +1014,16 @@ async function init(){
     const body=yc.months.map(mo=> format==='donation'?donationMonth(yc,mo):gridMonth(yc,mo)).join('');
     const css=`${font}
       @page{size:A4 ${format==='donation'?'portrait':'landscape'};margin:1cm}
-      body{font-family:Arial,sans-serif;direction:rtl} .page{page-break-after:always}
-      .mh{text-align:center;margin-bottom:6px} .mh .t2{font-size:15pt;font-weight:bold;color:#8a6d3b}
+      body{font-family:Arial,sans-serif;direction:rtl}
+      .page{page-break-before:always} .page:first-of-type{page-break-before:auto}
+      .mh{text-align:center;margin-bottom:6px;page-break-after:avoid} .mh .t2{font-size:15pt;font-weight:bold;color:#8a6d3b}
       .mh .t1{font-size:10pt;color:#735a30} .mh .t3{font-size:9pt;color:#6c6253}
-      table{width:100%;border-collapse:collapse;font-size:10pt}
+      table{width:100%;border-collapse:collapse;font-size:10pt} thead{display:table-header-group}
       th,td{border:1px solid #999;padding:3px 5px;text-align:center;vertical-align:top}
       th{background:#efe6d3;color:#735a30}
-      .tbl .evt{text-align:right;width:42%} .samx{font-family:'SAMX',Arial;font-size:13pt}
+      .num{font-family:Arial} .dot{font-family:Arial;color:#8a6d3b;margin:0 1px}
+      .samx{font-family:'SAMX',Arial;font-size:.92em}
+      .tbl .evt{text-align:right;width:42%} td.samx{font-size:15pt}
       .grid td.cell{height:72px;width:14%} .grid .ch{display:flex;justify-content:space-between;font-weight:bold}
       .grid .gd{color:#888;font-weight:normal} .grid .ev{font-size:8pt;color:#444}
       .grid .sun{font-size:7pt;color:#999} .grid .syr{font-size:8pt;color:#a98f6a}`;
