@@ -968,8 +968,10 @@ async function init(){
     return s.split(/[\s·]+/).filter(Boolean)
       .map(t=> /^[\d:.,\/()\-–%]+$/.test(t) ? `<span class=num>${t}</span>` : `<span class=samx>${stripGer(t)}</span>`)
       .join('<i class=dot>·</i>'); }
+  const MODERN_KINDS = new Set(['jew','community']);   // Jewish holidays + community events -> modern Hebrew, never Samaritan
+  const festName = f => MODERN_KINDS.has(f.kind) ? `<span class=modheb>${f.name}</span>` : sam(f.name);
   const isHoliday = rec => (rec.festivals||[]).some(f=>!['parasha','period','hijri'].includes(f.kind));  // a real חג, not portion/period
-  const evCell = rec => (rec.festivals||[]).map(f=>sam(f.name)).join('<br>');
+  const evCell = rec => (rec.festivals||[]).map(festName).join('<br>');
   function expHeader(yc,mo){
     const cy = mo.index>=(yc.year_change_month||6) ? yc.canaan_year+1 : yc.canaan_year, m=mo.molad;
     const yrs=[...new Set(mo.days.map(d=>d.greg.slice(0,4)))].join('/');
@@ -1002,7 +1004,7 @@ async function init(){
         if(!rec){ body+='<td class=cell></td>'; continue; }
         const fill = wdName(rec.greg)==='שבת' ? sabFill[rec.greg] : (isHoliday(rec)?FEST_FILL:'');
         const st=fill?` style="background:${fill}"`:'';
-        const ev=(rec.festivals||[]).map(f=>sam(f.name)).join('<br>');
+        const ev=(rec.festivals||[]).map(festName).join('<br>');
         const sun=(rec.sunset||rec.sunrise)?`<div class=sun>${sam('ש')} ${num(rec.sunset||'--')} ${sam('ז')} ${num(rec.sunrise||'--')}</div>`:'';
         body+=`<td class=cell${st}><div class=ch><span class=samx>${stripGer(rec.heb_label)}</span><span class=gd>${num(rec.greg_day)}${rec.greg_day===1?' '+sam(GMON[+rec.greg.slice(5,7)]):''}</span></div><div class=ev>${ev}</div>${sun}<div class=syr>${sam('מז')} ${num(rec.syriac_day)}</div></td>`;
       } body+='</tr>'; }
@@ -1019,16 +1021,17 @@ async function init(){
       .mh{text-align:center;margin:0 0 4px} .mh .t2{font-size:13pt;font-weight:bold;color:#8a6d3b}
       .mh .t1{font-size:8.5pt;color:#735a30} .mh .t3{font-size:8pt;color:#6c6253}
       table{width:100%;border-collapse:collapse;table-layout:fixed} thead{display:table-header-group}
-      th,td{border:1px solid #999;text-align:center;vertical-align:middle}
+      th,td{border:1px solid #999;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere}
       th{background:#efe6d3;color:#735a30}
-      .num{font-family:Arial} .dot{font-family:Arial;color:#8a6d3b;margin:0 1px}
-      .samx{font-family:'Ben_nor_m',Arial}
-      .tbl{font-size:8pt} .tbl th,.tbl td{padding:0 4px;line-height:1.25}
+      .num{font-family:Arial} .dot{font-family:Arial;font-style:normal;color:#8a6d3b;margin:0 3px;vertical-align:middle}
+      .samx{font-family:'Ben_nor_m',Arial} .modheb{font-family:Arial}
+      .tbl{font-size:8pt} .tbl th,.tbl td{padding:0 4px;line-height:1.3}
       .tbl .evt{text-align:right;width:40%} .tbl td.samx{font-size:11pt}
       .grid{font-size:9pt} .grid th,.grid td{padding:2px}
       .grid td.cell{height:2.7cm;width:14%} .grid .ch{display:flex;justify-content:space-between;font-weight:bold}
       .grid .gd{color:#888;font-weight:normal} .grid .ev{font-size:8pt;color:#444}
-      .grid .sun{font-size:7pt;color:#999} .grid .syr{font-size:8pt;color:#a98f6a} .grid .samx{font-size:11pt}`;
+      .grid .sun{font-size:7pt;color:#999} .grid .syr{font-size:8pt;color:#a98f6a}
+      .grid .ch .samx{font-size:11pt} .grid .ev .samx{font-size:8pt}`;
     return `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset=utf-8><style>${css}</style></head><body dir=rtl>${body}</body></html>`;
   }
   function dlOffice(html,fn,mime){ const b=new Blob(['﻿'+html],{type:mime}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=fn; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); }
