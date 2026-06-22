@@ -39,6 +39,34 @@
   .actions{display:inline-flex;gap:8px;margin-inline-start:6px}
   .act{background:#fff;border:1px solid var(--line);border-radius:9px;padding:6px 8px;cursor:pointer;
     font-size:.78rem;color:var(--accent);font-weight:600;white-space:nowrap}
+  /* hamburger menu (top-left) + community-events editor */
+  .hamburger{position:fixed;top:10px;left:10px;z-index:60;width:42px;height:42px;border:1px solid var(--line);
+    border-radius:10px;background:var(--card);color:var(--accent);font-size:1.4rem;line-height:1;cursor:pointer}
+  .hamburger:hover{background:var(--soft)}
+  .ham-menu{position:fixed;top:58px;left:10px;z-index:60;background:var(--card);border:1px solid var(--line);
+    border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.18);padding:5px;min-width:200px}
+  .ham-menu button{display:block;width:100%;text-align:right;padding:9px 14px;background:none;border:none;
+    border-radius:7px;cursor:pointer;font-size:.9rem;color:var(--ink);white-space:nowrap}
+  .ham-menu button:hover{background:var(--soft)}
+  @media print{ .hamburger,.ham-menu{display:none!important} }
+  .cevt-login{display:flex;flex-direction:column;gap:10px}
+  .cevt-login label,.cevt-form label{display:flex;flex-direction:column;gap:3px;font-size:.82rem;color:var(--muted);font-weight:600}
+  .cevt-login input{padding:7px 9px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;color:var(--ink)}
+  .cevt-form{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px;padding:4px 0 12px;border-bottom:1px solid var(--line)}
+  .cevt-form input[type=text],.cevt-form input[type=date]{padding:7px 9px;border:1px solid var(--line);border-radius:8px;font-size:.9rem;color:var(--ink)}
+  .cevt-form input#cevt-desc{min-width:280px;flex:1}
+  .cevt-form input[type=color]{width:40px;height:34px;padding:1px;border:1px solid var(--line);border-radius:8px;cursor:pointer}
+  .cevt-bgwrap{flex-direction:row!important;align-items:center;gap:6px}
+  .cevt-bgwrap .none{flex-direction:row;align-items:center;gap:4px;font-weight:400}
+  .cevt-err,.cevt-form-err{color:#c0392b;font-size:.82rem;min-height:1em;flex-basis:100%}
+  .cevt-list{margin:12px 0;max-height:46vh;overflow:auto}
+  .cevt-empty{color:var(--muted);font-size:.85rem;padding:8px 0}
+  .cevt-item{display:flex;align-items:center;gap:10px;padding:6px 4px;border-bottom:1px solid var(--soft)}
+  .cevt-item .cevt-date{font-size:.8rem;color:var(--muted);min-width:84px}
+  .cevt-item .cevt-sw{font-size:.85rem;flex:1}
+  .cevt-del{background:none;border:none;color:#c0392b;cursor:pointer;font-size:.9rem;font-weight:700}
+  .cevt-foot{display:flex;justify-content:flex-end;gap:10px;padding-top:8px;border-top:1px solid var(--line)}
+  .uevt{display:block;line-height:1.2}
   .act:hover{background:var(--soft)}
   @media print{
     .bar,.legend,.modal{display:none!important}
@@ -266,6 +294,11 @@
 </head>
 <body>
 <div class="wrap">
+  <button id="hamburger" class="hamburger" title="תפריט" aria-label="תפריט">☰</button>
+  <div id="ham-menu" class="ham-menu" hidden>
+    <button id="ham-events">עריכת אירועי הקהילה</button>
+  </div>
+
   <header>
     <div class="suptitle">אבני שהם</div>
     <h1>הלוח העברי השומרוני</h1>
@@ -366,6 +399,30 @@
     </div>
   </div>
 
+  <div id="cevt-modal" class="modal" hidden>
+    <div class="modal-box">
+      <div class="modal-head">
+        <span>עריכת אירועי הקהילה</span>
+        <span class="modal-actions"><button class="act" id="cevt-close" title="סגור">✕</button></span>
+      </div>
+      <div class="modal-body">
+        <div class="cevt-form">
+          <label>תאריך<input type="date" id="cevt-date"></label>
+          <label>תיאור האירוע<input type="text" id="cevt-desc" maxlength="150" placeholder="עד 150 תווים"></label>
+          <label>צבע טקסט<input type="color" id="cevt-fg" value="#1f6feb"></label>
+          <label class="cevt-bgwrap">צבע רקע<input type="color" id="cevt-bg" value="#ffeb3b" disabled>
+            <label class="none"><input type="checkbox" id="cevt-bgnone" checked> ללא</label></label>
+          <button class="go" id="cevt-add">הוסף אירוע</button>
+          <div class="cevt-form-err" id="cevt-form-err"></div>
+        </div>
+        <div class="cevt-list" id="cevt-list"></div>
+        <div class="cevt-foot">
+          <button class="go" id="cevt-save">אישור והוספה ללוח</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="color-modal" class="modal" hidden>
     <div class="modal-box">
       <div class="modal-head">
@@ -416,6 +473,14 @@ let INDEX = {greg_range:[1900,3000], canaan_range:[3538,4638], canaan_offset:163
 const TODAY_ISO = (()=>{ const d=new Date();
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })();
 
+// ---- community events added by the admin via the hamburger menu (stored on THIS device) ----
+const UEVT_KEY = 'sam-community-events';
+let USER_EVENTS = [];
+function loadUserEvents(){ try{ USER_EVENTS = JSON.parse(localStorage.getItem(UEVT_KEY)||'[]'); }catch(e){ USER_EVENTS=[]; }
+  if(!Array.isArray(USER_EVENTS)) USER_EVENTS=[]; }
+loadUserEvents();
+function escHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
 function gregOf(val){ return mode==='greg' ? val : val - INDEX.canaan_offset; }
 function dispOf(greg){ return mode==='greg' ? greg : greg + INDEX.canaan_offset; }
 
@@ -462,6 +527,13 @@ function monthCard(canaan, changeMonth, mo){
         const pre = f.kind==='sam' ? 'ש-' : f.kind==='jew' ? 'י-' : '';
         const style = f.kind==='community' && f.color ? ` style="color:${f.color}"` : '';
         return `<span class="f ${f.kind}"${style}>${pre}${f.name}</span>`;   // community: colour from xlsx
+      }).join('');
+    }
+    const uev = USER_EVENTS.filter(e=>e.date===rec.greg);   // admin-added community events
+    if(uev.length){
+      center += uev.map(e=>{
+        const st = `color:${e.fg||'#1f6feb'}`+(e.bg&&e.bg!=='none'?`;background:${e.bg};padding:0 2px;border-radius:3px`:'');
+        return `<span class="f community uevt" style="${st}">${escHtml(e.desc)}</span>`;
       }).join('');
     }
     const fest = center ? `<div class="fest">${center}</div>` : '';
@@ -620,6 +692,76 @@ function dialog(opts){
     bc.appendChild(el);
   });
   document.getElementById('dialog').hidden=false;
+}
+
+// ---- community-events admin editor (hamburger menu) ----
+let cevtDraft = [];
+function communityLogin(){
+  dialog({ title:'כניסת מנהל — עריכת אירועי הקהילה',
+    html:`<div class="cevt-login">
+        <label>שם משתמש<input type="text" id="cevt-user" autocomplete="off" autocapitalize="off"></label>
+        <label>סיסמה<input type="password" id="cevt-pass" autocomplete="off"></label>
+      </div>`,
+    buttons:[
+      {label:'אישור', primary:true, act:()=>{
+        const u=(document.getElementById('cevt-user')||{}).value||'';
+        const p=(document.getElementById('cevt-pass')||{}).value||'';
+        if(u==='oshersa' && p==='Shoamsa29') openCevtEditor();
+        else dialog({ title:'שגיאה', html:'שם משתמש או סיסמה שגויים.',
+          buttons:[{label:'נסה שוב', primary:true, act:communityLogin},{label:'סגור'}] });
+      }},
+      {label:'ביטול'}
+    ]});
+}
+function openCevtEditor(){
+  cevtDraft = USER_EVENTS.map(e=>({...e}));
+  renderCevtList();
+  const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.value=v; };
+  set('cevt-date', TODAY_ISO); set('cevt-desc',''); set('cevt-fg','#1f6feb'); set('cevt-bg','#ffeb3b');
+  const none=document.getElementById('cevt-bgnone'); none.checked=true;
+  document.getElementById('cevt-bg').disabled=true;
+  document.getElementById('cevt-form-err').textContent='';
+  document.getElementById('cevt-modal').hidden=false;
+}
+function renderCevtList(){
+  const box=document.getElementById('cevt-list');
+  if(!cevtDraft.length){ box.innerHTML='<div class="cevt-empty">לא הוזנו אירועים עדיין.</div>'; return; }
+  box.innerHTML = cevtDraft.map((e,i)=>{
+    const sw=`color:${e.fg}`+(e.bg&&e.bg!=='none'?`;background:${e.bg};padding:0 4px;border-radius:3px`:'');
+    const d=(e.date||'').split('-').reverse().join('/');
+    return `<div class="cevt-item"><button class="cevt-del" data-i="${i}" title="מחק">✕</button>
+      <span class="cevt-date">${d}</span><span class="cevt-sw" style="${sw}">${escHtml(e.desc)}</span></div>`;
+  }).join('');
+  box.querySelectorAll('.cevt-del').forEach(b=>b.onclick=()=>{ cevtDraft.splice(+b.dataset.i,1); renderCevtList(); });
+}
+function cevtAdd(){
+  const err=document.getElementById('cevt-form-err');
+  const date=document.getElementById('cevt-date').value;
+  const desc=(document.getElementById('cevt-desc').value||'').trim();
+  if(!date){ err.textContent='יש לבחור תאריך.'; return; }
+  if(!desc){ err.textContent='יש להזין תיאור.'; return; }
+  const fg=document.getElementById('cevt-fg').value;
+  const bg=document.getElementById('cevt-bgnone').checked ? 'none' : document.getElementById('cevt-bg').value;
+  cevtDraft.push({date, desc:desc.slice(0,150), fg, bg});
+  document.getElementById('cevt-desc').value=''; err.textContent='';
+  renderCevtList();
+}
+function cevtSave(){
+  USER_EVENTS = cevtDraft.map(e=>({...e}));
+  try{ localStorage.setItem(UEVT_KEY, JSON.stringify(USER_EVENTS)); }catch(e){}
+  document.getElementById('cevt-modal').hidden=true;
+  if(DATA_YC) buildYear(currentGreg());   // re-render the calendar with the new events
+}
+function setupCommunity(){
+  const ham=document.getElementById('hamburger'), menu=document.getElementById('ham-menu');
+  ham.onclick=e=>{ e.stopPropagation(); menu.hidden=!menu.hidden; };
+  menu.onclick=e=>e.stopPropagation();
+  document.addEventListener('click',()=>{ menu.hidden=true; });
+  document.getElementById('ham-events').onclick=()=>{ menu.hidden=true; communityLogin(); };
+  document.getElementById('cevt-close').onclick=()=>{ document.getElementById('cevt-modal').hidden=true; };
+  document.getElementById('cevt-add').onclick=cevtAdd;
+  document.getElementById('cevt-save').onclick=cevtSave;
+  document.getElementById('cevt-bgnone').onchange=function(){ document.getElementById('cevt-bg').disabled=this.checked; };
 }
 
 // ---- shortcut / install: app on mobile (PWA), .url file on desktop ----
@@ -1057,6 +1199,7 @@ async function init(){
   }
   document.getElementById('exp-word').onclick=()=>chooseFormat('word');
   document.getElementById('exp-excel').onclick=()=>chooseFormat('excel');
+  setupCommunity();
 }
 init();
 if('serviceWorker' in navigator){
