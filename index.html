@@ -135,7 +135,7 @@
 
   .months{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(420px,100%),1fr));gap:18px}
   .month{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)}
-  .mhead{background:linear-gradient(180deg,var(--card),var(--soft));border-bottom:1px solid var(--line);padding:9px 12px;text-align:center;position:relative}
+  .mhead{background:linear-gradient(180deg,var(--card),var(--soft));border-bottom:1px solid var(--line);padding:42px 12px 10px;text-align:center;position:relative}
   .mhead .canaan{font-size:.74rem;color:var(--muted);letter-spacing:.02em}
   .mhead .mname{font-size:1.18rem;font-weight:800;color:var(--accent);margin:1px 0}
   .mhead .greg{position:absolute;top:9px;left:12px;font-size:.74rem;color:var(--muted)}
@@ -255,6 +255,7 @@
   @media (max-width:760px){
     .wrap{padding:14px 8px 48px}
     h1{font-size:1.4rem}
+    .bar{padding-left:50px}   /* reserve the top-left corner for the fixed hamburger */
     .notes-box{padding:6px 10px}
     .note-important,.note-exp{font-size:.82rem}
     .months{grid-template-columns:1fr;gap:14px}
@@ -267,7 +268,7 @@
     .sub{font-size:.8rem}
     .note-important,.note-exp{font-size:.76rem;line-height:1.45}
     /* sticky control bar: let buttons wrap instead of forcing a sideways scroll */
-    .bar{gap:6px;padding:8px}
+    .bar{gap:6px;padding:8px 8px 8px 50px}
     .modes button,.bar .go,.act{font-size:.72rem;padding:6px 7px}
     input[type=number]{width:70px;font-size:.92rem}
     /* on phones: each cluster takes a full row -> clean stacked rows */
@@ -285,7 +286,7 @@
     .bar-group.secondary .date-input{flex:1 1 auto;min-width:96px}
     .legend{gap:7px 10px;font-size:.7rem;margin:6px 0 12px}
     /* month header */
-    .mhead{padding:8px 10px}
+    .mhead{padding:42px 10px 8px}
     .mhead .mname{font-size:1.02rem}
     .mhead .canaan{font-size:.66rem}
     .mhead .greg,.mhead .idx{font-size:.62rem;top:7px}
@@ -330,7 +331,7 @@
       <button class="nav" id="prev" title="שנה קודמת">▶</button>
       <div class="modes">
         <button id="mGreg" class="on"><span class="lbl-long">שנה לועזית</span><span class="lbl-short">לועזית</span></button>
-        <button id="mCanaan"><span class="lbl-long">שנת כניסה לארץ הקדושה</span><span class="lbl-short">כניסה לארץ</span></button>
+        <button id="mCanaan"><span class="lbl-long">שנת כניסה לארץ הקדושה</span><span class="lbl-short">כניסה</span></button>
       </div>
       <input type="number" id="year" step="1">
       <button class="nav" id="next" title="שנה הבאה">◀</button>
@@ -775,14 +776,14 @@ function cevtSave(){
 }
 function setupCommunity(){
   const ham=document.getElementById('hamburger'), menu=document.getElementById('ham-menu');
-  ham.onclick=e=>{ e.stopPropagation(); menu.hidden=!menu.hidden; };
-  menu.onclick=e=>e.stopPropagation();
-  document.addEventListener('click',()=>{ menu.hidden=true; });
-  document.getElementById('ham-events').onclick=()=>{ menu.hidden=true; communityLogin(); };
   const moreBtn=document.getElementById('more-btn'), moreMenu=document.getElementById('more-menu');
-  moreBtn.onclick=e=>{ e.stopPropagation(); moreMenu.hidden=!moreMenu.hidden; };
-  moreMenu.addEventListener('click',e=>{ if(e.target.closest('.act')) moreMenu.hidden=true; });   // close after picking an action
-  document.addEventListener('click',()=>{ moreMenu.hidden=true; });
+  const closeMenus=()=>{ menu.hidden=true; moreMenu.hidden=true; };
+  ham.onclick=e=>{ e.stopPropagation(); const open=menu.hidden; closeMenus(); menu.hidden=!open; };
+  moreBtn.onclick=e=>{ e.stopPropagation(); const open=moreMenu.hidden; closeMenus(); moreMenu.hidden=!open; };
+  menu.onclick=e=>e.stopPropagation();
+  moreMenu.addEventListener('click',e=>{ if(e.target.closest('.act')) closeMenus(); });   // close after picking an action
+  document.addEventListener('click',closeMenus);   // any outside click closes both
+  document.getElementById('ham-events').onclick=()=>{ closeMenus(); communityLogin(); };
   document.getElementById('cevt-close').onclick=()=>{ document.getElementById('cevt-modal').hidden=true; };
   document.getElementById('cevt-add').onclick=cevtAdd;
   document.getElementById('cevt-save').onclick=cevtSave;
