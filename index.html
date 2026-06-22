@@ -16,7 +16,7 @@
   @font-face{ font-family:'SAM_FONT'; src:url('Sam_font.ttf') format('truetype'); font-display:swap; }
   .samf{ font-family:'SAM_FONT'; font-size:0.85em; }   /* Samaritan glyphs run large; scale down a touch */
   .mname .samf{ font-size:0.72em; }                     /* month name in Samaritan: a touch smaller */
-  .samdot{ font-style:normal; font-family:initial; color:var(--accent); margin:0 .18em; }
+  .samdot{ font-style:normal; font-family:initial; color:var(--accent); margin:0 .05em; vertical-align:0.18em; }
   :root{
     --bg:#f4f1ea; --card:#fffdf7; --ink:#2b2620; --muted:#8a8073;
     --accent:#8a6d3b; --accent2:#735a30; --soft:#efe6d3; --line:#e3dac8;
@@ -1826,7 +1826,9 @@ async function init(){
     const dn = m.daynight==='לילה' ? 'ליל' : 'יום';
     const sp = String(m.molad_syr||'').split(/\s+/), julDay=+(sp[0]||0), julMon=sp.slice(1).join(' ');
     const typ = m.month_type ? ` (${sam(m.month_type)})` : '';
-    const molad=`${sam('זבן המולד')} ${num(m.clock)} ${sam('מן')} ${sam(dn)} ${sam(defv(m.molad_wd))} ${sam('לגו')} ${sam(hebNum(julDay))} ${sam('מן')} ${sam(defv(julMon))}${typ}`;
+    // sam() dot-separates the Samaritan words within each run; the time (number) stays space-separated
+    const run2 = `מן ${dn} ${defv(m.molad_wd)} לגו ${hebNum(julDay)} מן ${defv(julMon)}`;
+    const molad=`${sam('זבן המולד')} ${num(m.clock)} ${sam(run2)}${typ}`;
     // Centered stack (tight): entry(canaan) year big · month name · molad · Gregorian month-year.
     return `<div class=cybig>${cy}</div><div class=mh-name>${sam(mo.name)}</div><div class=dmolad>${molad}</div><div class=dgreg>${mo.greg_months.replace(/\s*\/\s*/g,'-')} ${yrs}</div>`;
   }
@@ -1883,7 +1885,7 @@ async function init(){
       table{width:100%;border-collapse:collapse;table-layout:fixed} thead{display:table-header-group}
       th,td{border:1px solid #999;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere}
       th{background:#efe6d3;color:#735a30}
-      .num{font-family:Arial} .dot{font-family:Arial;font-style:normal;color:#8a6d3b;margin:0 3px;vertical-align:middle}
+      .num{font-family:Arial} .dot{font-family:Arial;font-style:normal;color:#8a6d3b;margin:0 1px;vertical-align:0.18em}
       .samx{font-family:'Ben_nor_m',Arial} .modheb{font-family:Arial}
       .tbl{font-size:7pt} .tbl th,.tbl td{padding:0 3px;line-height:1.1}
       .tbl th{font-size:8pt;padding:1px 3px} .tbl .evt{text-align:right;width:40%} .tbl td.samx{font-size:9.5pt}
