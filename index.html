@@ -103,6 +103,10 @@
   .ham-ver{color:var(--accent);font-weight:700}
   /* what's-new + notifications dialogs */
   .wn-body ul{margin:6px 0;padding-inline-start:20px} .wn-body li{margin:5px 0;font-size:.92rem}
+  .wn-intro{margin:0 0 10px;font-size:.9rem;color:var(--muted)}
+  .wn-ver{margin:0 0 10px;padding-inline-start:8px;border-inline-start:3px solid var(--accent,#7a3b9e)}
+  .wn-ver>b{display:block;font-size:.9rem;color:var(--accent,#7a3b9e);margin-bottom:2px}
+  .wn-ver ul{margin:2px 0}
   .help-body{max-height:70vh;overflow:auto}
   .help-body p{font-size:.92rem;line-height:1.6;margin:4px 0 10px}
   .help-body h3{font-size:1rem;color:var(--accent);margin:14px 0 4px;padding-bottom:3px;border-bottom:1px solid var(--line)}
@@ -800,8 +804,22 @@ const I18N = {
   lang_title:{he:'בחירת שפה',en:'Choose language',ar:'اختيار اللغة'}
 };
 const NEWS = {
-  en: `<ul><li><b>Languages</b> — Hebrew, English and Arabic interface.</li><li><b>Private events</b> — personal events on this device, with reminders.</li><li><b>New-moons</b> (rosh chodesh) marked on the calendar.</li><li><b>Notifications</b>, Word/Excel export, community-events editor.</li></ul>`,
-  ar: `<ul><li><b>اللغات</b> — واجهة بالعبرية والإنجليزية والعربية.</li><li><b>أحداث خاصة</b> — أحداث شخصية على هذا الجهاز، مع تنبيهات.</li><li><b>رؤوس الأشهر</b> معلَّمة في التقويم.</li><li><b>التنبيهات</b>، التصدير إلى Word/Excel، محرّر أحداث الطائفة.</li></ul>`
+  en: `<p class="wn-intro">Version history — what was added since 1.0:</p>
+    <div class="wn-ver"><b>Version 2.4</b><ul><li><b>Entry-year change accuracy</b> — a new "solar accumulator" engine for the month in which the year-number changes (replaces the fixed anchor; validated against 28 authentic calendar years).</li></ul></div>
+    <div class="wn-ver"><b>Version 2.3</b><ul><li><b>Languages</b> — Hebrew / English / Arabic interface, saved on the device, with browser auto-translation disabled.</li><li><b>Private events</b> — personal events on this device, with reminders.</li><li><b>Floating month-filter</b> window.</li></ul></div>
+    <div class="wn-ver"><b>Version 2.2</b><ul><li><b>Help screen</b> in the ☰ menu.</li><li><b>New-moons</b> (rosh chodesh) marked on the calendar, with reminders.</li></ul></div>
+    <div class="wn-ver"><b>Version 2.1</b><ul><li><b>Notifications</b> — future events, filter by type, per-event lead time.</li><li><b>Options sub-menu</b> and version-update notice for installed users.</li></ul></div>
+    <div class="wn-ver"><b>Version 2.0</b><ul><li><b>Hamburger ☰ menu</b>, what's-new screen and version badge.</li><li><b>Community-events editor</b> — editable per-year list with colours.</li></ul></div>
+    <div class="wn-ver"><b>Version 1.5</b><ul><li><b>Word/Excel export</b> (calendar / donation) with the Samaritan script.</li><li><b>Calendar accuracy</b> — Julian gap frozen from 2200; exact molad 2009–2100.</li></ul></div>
+    <div class="wn-ver"><b>Version 1.0</b><ul><li>The computed Samaritan calendar: Gregorian / Entry-to-the-Land modes, navigation, Today, filter, jump-to-date.</li><li>Samaritan & Jewish festivals, weekly portions, molad & Arabic clock, share/print/sync.</li></ul></div>`,
+  ar: `<p class="wn-intro">سجلّ الإصدارات — ما أُضيف منذ 1.0:</p>
+    <div class="wn-ver"><b>الإصدار 2.4</b><ul><li><b>دقّة تغيّر سنة الدخول</b> — محرّك «تراكم شمسي» جديد لتحديد الشهر الذي يتغيّر فيه رقم السنة (بدلاً من المرساة الثابتة؛ مُتحقَّق مقابل 28 سنة تقويمية أصلية).</li></ul></div>
+    <div class="wn-ver"><b>الإصدار 2.3</b><ul><li><b>اللغات</b> — واجهة بالعبرية / الإنجليزية / العربية، محفوظة على الجهاز، مع تعطيل الترجمة التلقائية للمتصفّح.</li><li><b>أحداث خاصة</b> — أحداث شخصية على هذا الجهاز، مع تنبيهات.</li><li><b>نافذة تصفية</b> عائمة للأشهر.</li></ul></div>
+    <div class="wn-ver"><b>الإصدار 2.2</b><ul><li><b>شاشة مساعدة</b> في قائمة ☰.</li><li><b>رؤوس الأشهر</b> معلَّمة في التقويم، مع تنبيهات.</li></ul></div>
+    <div class="wn-ver"><b>الإصدار 2.1</b><ul><li><b>التنبيهات</b> — أحداث مستقبلية، تصفية حسب النوع، ومدة لكل حدث.</li><li><b>قائمة فرعية للخيارات</b> وإشعار تحديث للمستخدمين المثبِّتين.</li></ul></div>
+    <div class="wn-ver"><b>الإصدار 2.0</b><ul><li><b>قائمة ☰</b>، شاشة «ما الجديد» وشارة الإصدار.</li><li><b>محرّر أحداث الطائفة</b> — قائمة قابلة للتعديل لكل سنة بالألوان.</li></ul></div>
+    <div class="wn-ver"><b>الإصدار 1.5</b><ul><li><b>التصدير إلى Word/Excel</b> (تقويم / تبرّع) بالخط السامري.</li><li><b>دقّة التقويم</b> — تجميد الفارق اليولياني من 2200؛ مولد دقيق 2009–2100.</li></ul></div>
+    <div class="wn-ver"><b>الإصدار 1.0</b><ul><li>التقويم السامري المحسوب: وضعا الميلادي / الدخول إلى الأرض، التنقّل، اليوم، التصفية، الانتقال إلى تاريخ.</li><li>الأعياد السامرية واليهودية، فصول الأسبوع، المولد والساعة العربية، المشاركة/الطباعة/المزامنة.</li></ul></div>`
 };
 const HELP = {
   en: `<p>This app computes the <b>Samaritan-Hebrew calendar</b> on its own. It is experimental — not a substitute for the official Kushta reckoning. The calendar's day letters, month and festival names remain in Hebrew/Samaritan.</p>
@@ -1219,17 +1237,37 @@ function privSave(){
 }
 
 // ---- app version + "what's new" splash ----
-const APP_VERSION = '2.3';
+const APP_VERSION = '2.4';
 const NEWS_KEY = 'sam-news-seen';
-const APP_NEWS = `<ul>
-  <li><b>אירוע פרטי</b> — הוספת אירועים אישיים (בתפריט ☰), נשמרים במכשיר זה, מופיעים בלוח בקידומת "פרטי-" וניתן לקבל עליהם התראה.</li>
-  <li><b>ראשי חודשים</b> — כל ראש חודש מסומן בלוח, וניתן לקבל עליו התראה.</li>
-  <li><b>מסך עזרה</b> מלא בתפריט ☰.</li>
-  <li><b>ניהול התראות</b> — אירועים עתידיים, סינון לפי סוג, וזמן נפרד לכל אירוע.</li>
-  <li><b>ייצוא ל-Word ו-Excel</b> (פורמט לוח / תרומה) עם הכתב השומרוני.</li>
-  <li><b>עורך אירועי קהילה</b> — רשימה ניתנת לעריכה לפי שנה, עם צבעים.</li>
-  <li><b>דיוק הלוח</b> — הקפאת הפער היוליאני מ-2200; מולד מדויק 2009–2100.</li>
-</ul>`;
+const APP_NEWS = `<p class="wn-intro">היסטוריית הגרסאות — מה התווסף מאז גרסה 1.0:</p>
+  <div class="wn-ver"><b>גרסה 2.4</b><ul>
+    <li><b>דיוק חילוף מניין-כנען</b> — מנוע "מצבר שמשי" חדש לקביעת החודש שבו מתחלף מספר השנה (מחליף את העוגן הקבוע; אומת מול 28 שנות לוח אותנטיות).</li>
+  </ul></div>
+  <div class="wn-ver"><b>גרסה 2.3</b><ul>
+    <li><b>בורר שפה</b> — ממשק בעברית / English / العربية, נשמר במכשיר, עם מניעת תרגום אוטומטי של הדפדפן.</li>
+    <li><b>אירוע פרטי</b> — אירועים אישיים (בתפריט ☰) הנשמרים במכשיר זה, מופיעים בקידומת "פרטי-" וניתן לקבל עליהם התראה.</li>
+    <li><b>חלון סינון צף</b> לבחירת חודשים.</li>
+  </ul></div>
+  <div class="wn-ver"><b>גרסה 2.2</b><ul>
+    <li><b>מסך עזרה</b> מלא בתפריט ☰.</li>
+    <li><b>ראשי חודשים</b> — כל ראש חודש מסומן בלוח, וניתן לקבל עליו התראה.</li>
+  </ul></div>
+  <div class="wn-ver"><b>גרסה 2.1</b><ul>
+    <li><b>ניהול התראות</b> — אירועים עתידיים, סינון לפי סוג, וזמן נפרד לכל אירוע.</li>
+    <li><b>תת-תפריט אפשרויות</b> בהמבורגר, והודעת עדכון-גרסה למשתמשים שהתקינו.</li>
+  </ul></div>
+  <div class="wn-ver"><b>גרסה 2.0</b><ul>
+    <li><b>תפריט המבורגר ☰</b>, מסך "מה חדש" ותג גרסה.</li>
+    <li><b>עורך אירועי קהילה</b> — רשימה ניתנת לעריכה לפי שנה, עם צבעים (כניסת מנהל).</li>
+  </ul></div>
+  <div class="wn-ver"><b>גרסה 1.5</b><ul>
+    <li><b>ייצוא ל-Word ו-Excel</b> (פורמט לוח / תרומה) עם הכתב השומרוני.</li>
+    <li><b>דיוק הלוח</b> — הקפאת הפער היוליאני מ-2200; מולד מדויק 2009–2100.</li>
+  </ul></div>
+  <div class="wn-ver"><b>גרסה 1.0</b><ul>
+    <li>הלוח השומרוני המחושב: מצב לועזי / כניסה-לארץ, ניווט בין שנים, "היום", סינון, וקפיצה לתאריך.</li>
+    <li>חגים שומריים ויהודיים, פרשות השבוע, מולד ושעון ערבי, ושיתוף/הדפסה/סנכרון יומן.</li>
+  </ul></div>`;
 function newsIsNew(){ try{ return localStorage.getItem(NEWS_KEY)!==APP_VERSION; }catch(e){ return true; } }
 function updateNewsDim(){ const b=document.getElementById('ham-whatsnew'); if(b) b.classList.toggle('dim', !newsIsNew()); }
 function showWhatsNew(markSeen){
