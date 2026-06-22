@@ -264,8 +264,13 @@
     .bar{gap:6px;padding:8px}
     .modes button,.bar .go,.act{font-size:.72rem;padding:6px 7px}
     input[type=number]{width:70px;font-size:.92rem}
-    /* on phones: each cluster takes a full row -> two clean stacked rows */
+    /* on phones: each cluster takes a full row -> clean stacked rows */
     .bar-group,.bar .actions{flex-basis:100%;width:100%;gap:5px;margin-inline-start:0}
+    /* primary nav controls stay on ONE top row (scroll sideways if needed) */
+    .bar-group.primary{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+    .bar-group.primary>*{flex:0 0 auto}
+    .bar-group.secondary{justify-content:flex-start}
+    .bar-group.secondary .date-input{flex:1 1 auto;min-width:110px}
     .legend{gap:7px 10px;font-size:.7rem;margin:6px 0 12px}
     /* month header */
     .mhead{padding:8px 10px}
@@ -304,22 +309,23 @@
     <h1>הלוח העברי השומרוני</h1>
     <div class="notes-box">
       <div class="note-important">הערה חשובה — לוח זה אינו תחליף לחשבון הקשט (חשבון האמת) המופץ על ידי הכהן הגדול של הקהילה.</div>
-      <div class="note-exp">שימו לב: מנוע זה מחשב את לוח השנה השומרוני בעצמו ( כן כן !) אך ככזה, עדיין הינו ניסיוני בשלב זה, ולכן יש לבדוק אותו בזהירות טרם ההסתמכות עליו.<br>זמני המולד המצויינים מטה עשויים להיות בסטיה של עד 20 דקות</div>
+      <div class="note-exp">שימו לב: מנוע זה מחשב את לוח השנה השומרוני העברי באופן עצמאי. ככזה, הלוח הינו ניסיוני עדיין בשלב זה, ולכן יש לבדוק אותו בזהירות טרם ההסתמכות עליו.<br>זמני המולד, משנת 2101 ומעלה, עשויים להיות בסטיה של עד 20 דקות.<br>זמני השקיעה והזריחה הינם מתוך הרשת.</div>
     </div>
   </header>
 
   <div class="bar">
-    <span class="bar-group">
+    <span class="bar-group primary">
       <button class="nav" id="prev" title="שנה קודמת">▶</button>
       <div class="modes">
         <button id="mGreg" class="on">שנה לועזית</button>
         <button id="mCanaan">שנת כניסה לארץ הקדושה</button>
       </div>
       <input type="number" id="year" step="1">
-      <button class="go" id="go">בנה לוח</button>
       <button class="nav" id="next" title="שנה הבאה">◀</button>
-      <span class="yhint" id="yhint"></span>
+      <button class="go" id="go">בנה לוח</button>
       <button class="nav" id="today" title="עבור ליום הנוכחי">היום</button>
+    </span>
+    <span class="bar-group secondary">
       <span class="filter-wrap">
         <button class="nav" id="month-filter-btn" title="הצגת חודשים נבחרים בלבד">סינון חודשים ▾</button>
         <div class="month-filter-panel" id="month-filter-panel" hidden></div>
@@ -581,8 +587,6 @@ async function buildYear(greg){
      ${yc.n_months} חודשים ${yc.leap?'(מעוברת)':'(פשוטה)'} ·
      הלוח נפתח ב-1 אביב ונמשך עד החודש שלפני אביב הבא.`;
   document.getElementById('year').value = dispOf(greg);
-  document.getElementById('yhint').textContent =
-    mode==='greg' ? `= כנען ${yc.canaan_year}` : `= לועזי ${yc.greg_year}`;
 }
 
 function currentGreg(){ return gregOf(+document.getElementById('year').value); }
