@@ -1827,13 +1827,8 @@ async function init(){
     const sp = String(m.molad_syr||'').split(/\s+/), julDay=+(sp[0]||0), julMon=sp.slice(1).join(' ');
     const typ = m.month_type ? ` (${sam(m.month_type)})` : '';
     const molad=`${sam('זבן המולד')} ${num(m.clock)} ${sam('מן')} ${sam(dn)} ${sam(defv(m.molad_wd))} ${sam('לגו')} ${sam(hebNum(julDay))} ${sam('מן')} ${sam(defv(julMon))}${typ}`;
-    // Row 1: Gregorian month+year far-LEFT, creation year ("לבריה") far-RIGHT.
-    // Row 2: Hijra (under Gregorian, left) + entry(canaan) year big & centered. Then month name, then molad.
-    const hij = mo.hijri_year ? `<div class=hcorner>${num(mo.hijri_year)} ${sam('היגרה')}</div>` : '';
-    return `<table class=mh-top dir=ltr>
-      <tr><td class=mh-l><div class=greg>${mo.greg_months} ${yrs}</div></td><td class=mh-c></td><td class=mh-r><div class=hcorner>${num(cy+2800)} ${sam('לבריה')}</div></td></tr>
-      <tr><td class=mh-l>${hij}</td><td class=mh-c><div class=cybig>${cy}</div></td><td class=mh-r></td></tr>
-    </table><div class=mh-name>${sam(mo.name)}</div><div class=dmolad>${molad}</div>`;
+    // Centered stack (tight): entry(canaan) year big · month name · molad · Gregorian month-year.
+    return `<div class=cybig>${cy}</div><div class=mh-name>${sam(mo.name)}</div><div class=dmolad>${molad}</div><div class=dgreg>${mo.greg_months.replace(/\s*\/\s*/g,'-')} ${yrs}</div>`;
   }
   function donationMonth(yc,mo){
     let sab=0, rows='';
@@ -1880,13 +1875,11 @@ async function init(){
       .page+.page{page-break-before:always;break-before:page}
       .mh{text-align:center;margin:0 0 4px} .mh .t2{font-size:13pt;font-weight:bold;color:#8a6d3b}
       .mh .t1{font-size:8.5pt;color:#735a30} .mh .t3{font-size:8pt;color:#6c6253}
-      /* donation header — corners on row 1, big canaan year centered on row 2; tight spacing */
-      .mh-top{width:100%;margin:0;border-collapse:collapse} .mh-top td{border:none!important;vertical-align:top;padding:0 2px;line-height:1.02}
-      .mh-l{text-align:left;width:34%} .mh-c{text-align:center;width:32%} .mh-r{text-align:right;width:34%}
-      .cybig{font-size:20pt;font-weight:bold;color:#5b3a86;line-height:1}
-      .greg{font-size:11pt;font-weight:bold;color:#222} .hcorner{font-size:9pt;color:#735a30}
-      .mh-name{text-align:center;font-size:11pt;font-weight:bold;color:#8a6d3b;line-height:1.02;margin:0}
-      .dmolad{text-align:center;font-size:8pt;color:#6c6253;line-height:1.05;margin:0 0 2px}
+      /* donation header — clean centered stack, tight spacing */
+      .cybig{text-align:center;font-size:20pt;font-weight:bold;color:#8a6d3b;line-height:1;margin:0}
+      .mh-name{text-align:center;font-size:12pt;font-weight:bold;color:#8a6d3b;line-height:1.02;margin:0}
+      .dmolad{text-align:center;font-size:8pt;color:#6c6253;line-height:1.05;margin:0}
+      .dgreg{text-align:center;font-size:8.5pt;color:#222;line-height:1.05;margin:0 0 3px}
       table{width:100%;border-collapse:collapse;table-layout:fixed} thead{display:table-header-group}
       th,td{border:1px solid #999;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere}
       th{background:#efe6d3;color:#735a30}
