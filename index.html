@@ -80,6 +80,9 @@
   .cevt-row input[type=color]{width:40px;height:30px;padding:1px;border:1px solid var(--line);border-radius:7px;cursor:pointer}
   .cevt-row input[type=color]:disabled{opacity:.4;cursor:not-allowed}
   .r-bgwrap{display:flex;align-items:center;gap:4px;font-size:.72rem;color:var(--muted)}
+  .priv-row{display:grid;grid-template-columns:128px 1fr 30px;gap:8px;align-items:center;padding:5px 2px;border-bottom:1px solid var(--soft)}
+  .priv-row input{padding:6px 8px;border:1px solid var(--line);border-radius:8px;font-size:.88rem;color:var(--ink);width:100%}
+  @media (max-width:560px){ .priv-row{grid-template-columns:118px 1fr 28px;gap:6px} }
   .cevt-sec{font-size:.78rem;font-weight:700;color:var(--accent);margin:12px 2px 4px;padding-bottom:3px;border-bottom:1px solid var(--line)}
   .cevt-ro{display:flex;align-items:center;gap:10px;padding:5px 4px;border-bottom:1px solid var(--soft);background:rgba(0,0,0,.015)}
   .cevt-ro .ro-date{font-size:.8rem;color:var(--muted);min-width:84px}
@@ -191,7 +194,7 @@
   .chip{display:inline-flex;align-items:center;gap:5px}
   .dot{width:11px;height:11px;border-radius:3px;display:inline-block}
   .dot.sam{background:var(--sam)} .dot.jew{background:var(--jew)} .dot.sat{background:#d8c89c}
-  .dot.sab{background:var(--sab)} .dot.moed{background:var(--moed)} .dot.rosh{background:#0f6e56}
+  .dot.sab{background:var(--sab)} .dot.moed{background:var(--moed)} .dot.rosh{background:#0f6e56} .dot.private{background:#6d28d9}
 
   .months{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(420px,100%),1fr));gap:18px}
   .month{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)}
@@ -231,6 +234,7 @@
   .cell .fest .f.period{background:#f3eee4;color:#8a7a5a;font-weight:600;font-size:.66rem}
   .cell .fest .f.community{background:transparent;font-weight:700;font-size:.6rem;padding:1px 0}
   .cell .fest .f.rosh{background:transparent;color:#0f6e56;font-weight:700;font-size:.6rem;padding:1px 0}
+  .cell .fest .f.private{background:transparent;color:#6d28d9;font-weight:700;font-size:.6rem;padding:1px 0}
   .cell .fest .f.national{background:#e8f0fe;color:#1d4ed8;font-weight:800}
   .cell .fest .f.hijri{background:transparent;color:#7a3b9e;font-weight:800;font-size:.6rem}
   .cell .fest .gmonth{display:block;color:#2563eb;font-weight:800;font-size:.74rem;margin:1px 0}
@@ -388,6 +392,7 @@
       <button data-act="shortcut">📲 התקן אפליקציה</button>
       <button data-act="colors">🎨 הגדר צבעים</button>
     </div>
+    <button id="ham-private">➕ הוסף אירוע פרטי</button>
     <button id="ham-help">❓ עזרה</button>
     <button id="ham-version">גרסה נוכחית: <span class="ham-ver" id="ham-ver"></span></button>
     <button id="ham-install">📲 התקנת אפליקציה</button>
@@ -451,6 +456,7 @@
     <span class="chip"><span class="dot sab"></span> שבת מיוחדת / מופת</span>
     <span class="chip"><span class="dot moed"></span> מעמד הר סיני</span>
     <span class="chip"><span class="dot rosh"></span> ראש חודש</span>
+    <span class="chip"><span class="dot private"></span> אירוע פרטי</span>
     <span class="chip"><span class="dot sat"></span> שבת</span>
     <span class="chip">ז/ש = זריחה/שקיעה מישורית (חולון, שעון ישראל) · בהר גריזים יש להוסיף 5 דקות · מז. = יום בחודש המזרחי</span>
   </div>
@@ -586,8 +592,15 @@
         <ul>
           <li><b>מה חדש?</b> — חידושי הגרסה (מעומעם אם כבר נצפו).</li>
           <li><b>תפריט אפשרויות נוספות</b> — אותן פעולות כמו ⋯.</li>
+          <li><b>הוסף אירוע פרטי</b> — ראו למטה.</li>
           <li><b>עזרה</b> — מסך זה. <b>גרסה נוכחית</b> — מוצגת גם בפינה הימנית-העליונה.</li>
           <li><b>התקנת אפליקציה</b> · <b>עדכון אירועי הקהילה</b> (למנהל).</li>
+        </ul>
+
+        <h3>➕ אירוע פרטי</h3>
+        <ul>
+          <li>הוסיפו אירועים אישיים (תאריך + תיאור) — הם <b>נשמרים במכשיר זה בלבד</b> ואינם נראים לאחרים.</li>
+          <li>הם מופיעים בלוח בקידומת <b>"פרטי-"</b> (בסגול), וניתן לקבל עליהם <b>התראות</b> (קטגוריה "אירועים פרטיים" בניהול ההתראות).</li>
         </ul>
 
         <h3>🔔 ניהול התראות</h3>
@@ -642,10 +655,31 @@
           <label><input type="checkbox" class="ncat" value="sabbath" checked> שבתות מיוחדות</label>
           <label><input type="checkbox" class="ncat" value="national" checked> ימים לאומיים</label>
           <label><input type="checkbox" class="ncat" value="rosh" checked> ראשי חודשים</label>
+          <label><input type="checkbox" class="ncat" value="private" checked> אירועים פרטיים</label>
         </div>
         <div class="notif-list" id="notif-list"></div>
         <div class="notif-note" id="notif-note"></div>
         <div class="cevt-foot"><button class="go" id="notif-save">אישור התראות</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="priv-modal" class="modal" hidden>
+    <div class="modal-box">
+      <div class="modal-head">
+        <span>➕ אירוע פרטי (נשמר במכשיר זה בלבד)</span>
+        <span class="modal-actions"><button class="act" id="priv-close" title="סגור">✕</button></span>
+      </div>
+      <div class="modal-body">
+        <div class="cevt-yearbar">
+          <label>שנה <input type="number" id="priv-year" step="1"></label>
+          <button class="go" id="priv-show">הצג</button>
+          <button class="nav" id="priv-add">＋ הוסף אירוע</button>
+          <span class="cevt-form-err" id="priv-err"></span>
+        </div>
+        <div class="cevt-listhead" style="grid-template-columns:128px 1fr 30px"><span>תאריך</span><span>תיאור האירוע</span><span></span></div>
+        <div class="cevt-list" id="priv-list"></div>
+        <div class="cevt-foot"><button class="go" id="priv-save">שמירה ללוח</button></div>
       </div>
     </div>
   </div>
@@ -706,6 +740,12 @@ let USER_EVENTS = [];
 function loadUserEvents(){ try{ USER_EVENTS = JSON.parse(localStorage.getItem(UEVT_KEY)||'[]'); }catch(e){ USER_EVENTS=[]; }
   if(!Array.isArray(USER_EVENTS)) USER_EVENTS=[]; }
 loadUserEvents();
+// private events — personal, stored on THIS device only
+const PRIV_KEY = 'sam-private-events';
+let PRIVATE_EVENTS = [];
+function loadPrivateEvents(){ try{ PRIVATE_EVENTS = JSON.parse(localStorage.getItem(PRIV_KEY)||'[]'); }catch(e){ PRIVATE_EVENTS=[]; }
+  if(!Array.isArray(PRIVATE_EVENTS)) PRIVATE_EVENTS=[]; }
+loadPrivateEvents();
 function escHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 function gregOf(val){ return mode==='greg' ? val : val - INDEX.canaan_offset; }
@@ -763,6 +803,10 @@ function monthCard(canaan, changeMonth, mo){
         const st = `color:${e.fg||'#1f6feb'}`+(e.bg&&e.bg!=='none'?`;background:${e.bg};padding:0 2px;border-radius:3px`:'');
         return `<span class="f community uevt" style="${st}">${escHtml(e.desc)}</span>`;
       }).join('');
+    }
+    const pev = PRIVATE_EVENTS.filter(e=>e.date===rec.greg);   // personal events (this device)
+    if(pev.length){
+      center += pev.map(e=>`<span class="f private">פרטי- ${escHtml(e.desc)}</span>`).join('');
     }
     const fest = center ? `<div class="fest">${center}</div>` : '';
     const sun = (rec.sunrise||rec.sunset)
@@ -1021,10 +1065,52 @@ function cevtSave(){
   document.getElementById('cevt-modal').hidden = true;
   if(DATA_YC) buildYear(currentGreg());   // re-render the calendar with the new events
 }
+
+// ---- private events editor (personal, this device only) ----
+let privDraft = [], privUID = 0;
+function openPrivEditor(){
+  privDraft = PRIVATE_EVENTS.map(e=>({...e, id:++privUID}));
+  document.getElementById('priv-year').value = (DATA_YC && DATA_YC.greg_year) || new Date().getFullYear();
+  document.getElementById('priv-err').textContent = '';
+  renderPrivList();
+  document.getElementById('priv-modal').hidden = false;
+}
+function renderPrivList(){
+  const year = document.getElementById('priv-year').value;
+  const box = document.getElementById('priv-list');
+  const rows = privDraft.filter(e => (e.date||'').slice(0,4) === String(year));
+  if(!rows.length){ box.innerHTML = `<div class="cevt-empty">אין אירועים פרטיים לשנת ${year}. לחצו “＋ הוסף אירוע”.</div>`; return; }
+  box.innerHTML = rows.map(e=>`<div class="priv-row" data-id="${e.id}">
+      <input type="date" class="p-date" value="${e.date||''}">
+      <input type="text" class="p-desc" maxlength="150" placeholder="תיאור האירוע" value="${escHtml(e.desc)}">
+      <button class="cevt-del" title="מחק אירוע">✕</button>
+    </div>`).join('');
+  box.querySelectorAll('.priv-row').forEach(row=>{
+    const ent = privDraft.find(x=>x.id === +row.dataset.id); if(!ent) return;
+    row.querySelector('.p-date').onchange = e=>{ ent.date = e.target.value; };
+    row.querySelector('.p-desc').oninput  = e=>{ ent.desc = e.target.value.slice(0,150); };
+    row.querySelector('.cevt-del').onclick = ()=>{ const i=privDraft.indexOf(ent); if(i>=0) privDraft.splice(i,1); renderPrivList(); };
+  });
+}
+function privAddRow(){
+  const year = document.getElementById('priv-year').value || new Date().getFullYear();
+  privDraft.push({ id:++privUID, date:`${year}-01-01`, desc:'' });
+  renderPrivList();
+  const last = document.querySelector('#priv-list .priv-row:last-child .p-desc'); if(last) last.focus();
+}
+function privSave(){
+  PRIVATE_EVENTS = privDraft.filter(e => (e.desc||'').trim() && e.date).map(({id,...e})=>e);
+  try{ localStorage.setItem(PRIV_KEY, JSON.stringify(PRIVATE_EVENTS)); }catch(e){}
+  notifEventsCache = {};   // event list changed
+  document.getElementById('priv-modal').hidden = true;
+  if(DATA_YC) buildYear(currentGreg());
+}
+
 // ---- app version + "what's new" splash ----
-const APP_VERSION = '2.1';
+const APP_VERSION = '2.2';
 const NEWS_KEY = 'sam-news-seen';
 const APP_NEWS = `<ul>
+  <li><b>אירוע פרטי</b> — הוספת אירועים אישיים (בתפריט ☰), נשמרים במכשיר זה, מופיעים בלוח בקידומת "פרטי-" וניתן לקבל עליהם התראה.</li>
   <li><b>ראשי חודשים</b> — כל ראש חודש מסומן בלוח, וניתן לקבל עליו התראה.</li>
   <li><b>מסך עזרה</b> מלא בתפריט ☰.</li>
   <li><b>ניהול התראות</b> — אירועים עתידיים, סינון לפי סוג, וזמן נפרד לכל אירוע.</li>
@@ -1070,6 +1156,7 @@ async function notifEventsForYear(year){   // FUTURE notable calendar events for
     }catch(e){}
   }
   for(const e of USER_EVENTS) if((e.date||'').slice(0,4)===year && e.date>=TODAY_ISO){ const k=e.date+'|'+e.desc; if(!map.has(k)) map.set(k,{date:e.date,name:e.desc,cat:'community'}); }
+  for(const e of PRIVATE_EVENTS) if((e.date||'').slice(0,4)===year && e.date>=TODAY_ISO){ const nm='פרטי- '+e.desc; const k=e.date+'|'+nm; if(!map.has(k)) map.set(k,{date:e.date,name:nm,cat:'private'}); }
   const arr=[...map.values()].sort((a,b)=>a.date<b.date?-1:1);
   notifEventsCache[year]=arr; return arr;
 }
@@ -1173,6 +1260,12 @@ function setupCommunity(){
   document.getElementById('ham-help').onclick=()=>{ closeMenus(); document.getElementById('help-modal').hidden=false; };
   document.getElementById('help-close').onclick=()=>{ document.getElementById('help-modal').hidden=true; };
   document.getElementById('help-ok').onclick=()=>{ document.getElementById('help-modal').hidden=true; };
+  document.getElementById('ham-private').onclick=()=>{ closeMenus(); openPrivEditor(); };
+  document.getElementById('priv-close').onclick=()=>{ document.getElementById('priv-modal').hidden=true; };
+  document.getElementById('priv-show').onclick=renderPrivList;
+  document.getElementById('priv-add').onclick=privAddRow;
+  document.getElementById('priv-save').onclick=privSave;
+  document.getElementById('priv-year').addEventListener('keydown',e=>{ if(e.key==='Enter') renderPrivList(); });
   document.getElementById('wn-close').onclick=()=>{ document.getElementById('whatsnew-modal').hidden=true; };
   document.getElementById('wn-ok').onclick=()=>{ document.getElementById('whatsnew-modal').hidden=true; };
   // notifications
