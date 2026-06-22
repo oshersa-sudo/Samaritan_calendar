@@ -800,7 +800,7 @@ async function buildYear(greg){
   const [lo,hi] = INDEX.greg_range;
   if(greg<lo||greg>hi){ box.innerHTML=`<div class="err">השנה מחוץ לטווח (לועזי ${lo}–${hi} · כנען ${INDEX.canaan_range[0]}–${INDEX.canaan_range[1]})</div>`; meta.innerHTML=''; return; }
   let yc;
-  try{ yc = JSON.parse(decodeData(await (await fetch(`cal/${greg}.dat`)).text())); }
+  try{ yc = JSON.parse(decodeData(await (await fetch(`cal/${greg}.dat`,{cache:'no-cache'})).text())); }
   catch(e){ box.innerHTML=`<div class="err">לא נטען cal/${greg}.dat (הרץ build_calendars.py)</div>`; return; }
   DATA_YC = yc;
   monthFilter.clear();   // a fresh year starts unfiltered
@@ -956,7 +956,7 @@ async function bakedCommunityFor(year){   // community events baked into the cal
   for(const y of [+year-1, +year]){   // a Gregorian year spans two Samaritan-year files
     try{
       const yc = (DATA_YC && DATA_YC.greg_year===y) ? DATA_YC
-               : JSON.parse(decodeData(await (await fetch(`cal/${y}.dat`)).text()));
+               : JSON.parse(decodeData(await (await fetch(`cal/${y}.dat`,{cache:'no-cache'})).text()));
       for(const mo of yc.months) for(const rec of mo.days){
         if((rec.greg||'').slice(0,4)!==year) continue;
         for(const f of (rec.festivals||[])) if(f.kind==='community')
@@ -1022,13 +1022,14 @@ function cevtSave(){
   if(DATA_YC) buildYear(currentGreg());   // re-render the calendar with the new events
 }
 // ---- app version + "what's new" splash ----
-const APP_VERSION = '2.0';
+const APP_VERSION = '2.1';
 const NEWS_KEY = 'sam-news-seen';
 const APP_NEWS = `<ul>
-  <li><b>ניהול התראות</b> — קבלת תזכורת על אירועים נבחרים, זמן מוגדר מראש.</li>
+  <li><b>ראשי חודשים</b> — כל ראש חודש מסומן בלוח, וניתן לקבל עליו התראה.</li>
+  <li><b>מסך עזרה</b> מלא בתפריט ☰.</li>
+  <li><b>ניהול התראות</b> — אירועים עתידיים, סינון לפי סוג, וזמן נפרד לכל אירוע.</li>
   <li><b>ייצוא ל-Word ו-Excel</b> (פורמט לוח / תרומה) עם הכתב השומרוני.</li>
   <li><b>עורך אירועי קהילה</b> — רשימה ניתנת לעריכה לפי שנה, עם צבעים.</li>
-  <li><b>תפריט המבורגר</b> ותפריט "אפשרויות נוספות", וכפתור "היום" מודגש.</li>
   <li><b>דיוק הלוח</b> — הקפאת הפער היוליאני מ-2200; מולד מדויק 2009–2100.</li>
 </ul>`;
 function newsIsNew(){ try{ return localStorage.getItem(NEWS_KEY)!==APP_VERSION; }catch(e){ return true; } }
@@ -1061,7 +1062,7 @@ async function notifEventsForYear(year){   // FUTURE notable calendar events for
   const map=new Map();
   for(const y of [+year-1,+year]){
     try{
-      const yc=(DATA_YC&&DATA_YC.greg_year===y)?DATA_YC:JSON.parse(decodeData(await (await fetch(`cal/${y}.dat`)).text()));
+      const yc=(DATA_YC&&DATA_YC.greg_year===y)?DATA_YC:JSON.parse(decodeData(await (await fetch(`cal/${y}.dat`,{cache:'no-cache'})).text()));
       for(const mo of yc.months) for(const rec of mo.days){
         if((rec.greg||'').slice(0,4)!==year || rec.greg<TODAY_ISO) continue;   // this year + future only
         for(const f of (rec.festivals||[])) if(!SKIP.has(f.kind)){ const k=rec.greg+'|'+f.name; if(!map.has(k)) map.set(k,{date:rec.greg,name:f.name,cat:kindCat(f.kind)}); }
