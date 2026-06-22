@@ -82,6 +82,28 @@
   .cevt-ro .ro-date{font-size:.8rem;color:var(--muted);min-width:84px}
   .cevt-ro .ro-desc{font-size:.88rem;flex:1;font-weight:600}
   .cevt-ro .ro-tag{font-size:.62rem;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+  /* highlighted "today" button */
+  #today{background:#ffcf33;color:#5a4413;font-weight:800;box-shadow:0 0 0 2px rgba(245,179,1,.45)}
+  #today:hover{background:#ffc300}
+  /* version badge (extreme top-right) */
+  .verbadge{position:fixed;top:12px;right:12px;z-index:55;font-size:.66rem;color:var(--muted);
+    background:var(--card);border:1px solid var(--line);border-radius:8px;padding:3px 8px;cursor:pointer}
+  @media print{ .verbadge{display:none!important} }
+  .ham-sep{border:none;border-top:1px solid var(--line);margin:4px 2px}
+  .ham-menu button.dim{opacity:.45}
+  .ham-ver{color:var(--accent);font-weight:700}
+  /* what's-new + notifications dialogs */
+  .wn-body ul{margin:6px 0;padding-inline-start:20px} .wn-body li{margin:5px 0;font-size:.92rem}
+  .wn-ver{font-size:.8rem;color:var(--muted)}
+  .notif-lead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0 12px;border-bottom:1px solid var(--line)}
+  .notif-lead label{font-size:.82rem;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:4px}
+  .notif-lead input{width:60px;padding:6px 6px;border:1px solid var(--line);border-radius:8px;text-align:center;font-size:.92rem}
+  .notif-list{max-height:46vh;overflow:auto;margin:8px 0}
+  .notif-item{display:flex;align-items:center;gap:9px;padding:6px 4px;border-bottom:1px solid var(--soft);font-size:.88rem}
+  .notif-item input[type=checkbox]{width:18px;height:18px;flex:0 0 auto}
+  .notif-item .ni-date{color:var(--muted);font-size:.78rem;min-width:78px}
+  .notif-item .ni-name{flex:1}
+  .notif-note{font-size:.78rem;color:var(--muted);background:var(--soft);border-radius:8px;padding:8px 10px;margin-top:8px}
   @media (max-width:560px){
     .cevt-listhead{display:none}
     .cevt-row{grid-template-columns:1fr 1fr;gap:6px}
@@ -335,8 +357,14 @@
 <div class="wrap">
   <button id="hamburger" class="hamburger" title="תפריט" aria-label="תפריט">☰</button>
   <div id="ham-menu" class="ham-menu" hidden>
+    <button id="ham-whatsnew">✨ מה חדש?</button>
+    <button id="ham-more">⋯ תפריט אפשרויות נוספות</button>
+    <button id="ham-version">גרסה נוכחית: <span class="ham-ver" id="ham-ver"></span></button>
+    <button id="ham-install">📲 התקנת אפליקציה</button>
+    <hr class="ham-sep">
     <button id="ham-events">עריכת אירועי הקהילה</button>
   </div>
+  <div class="verbadge" id="verbadge" title="גרסה / מה חדש"></div>
 
   <header>
     <div class="suptitle">אבני שהם</div>
@@ -375,6 +403,7 @@
         <button class="act" id="more-btn" title="אפשרויות נוספות">⋯ אפשרויות נוספות ▾</button>
         <div class="more-menu" id="more-menu" hidden>
           <button class="act" id="moadim" title="רשימת כל המועדים והחגים">📋 רשימת מועדים וחגים</button>
+          <button class="act" id="notif" title="ניהול התראות על אירועים">🔔 ניהול התראות</button>
           <button class="act" id="print" title="הדפסה או שמירה כ-PDF">🖨 הדפס / PDF</button>
           <button class="act" id="ics" title="סנכרון ליומן Google או Outlook">📅 סנכרון ליומן</button>
           <button class="act" id="share" title="שיתוף הלוח — WhatsApp או דוא״ל">📤 שיתוף</button>
@@ -462,6 +491,46 @@
         <div class="cevt-foot">
           <button class="go" id="cevt-save">אישור ושמירה ללוח</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="whatsnew-modal" class="modal" hidden>
+    <div class="modal-box">
+      <div class="modal-head">
+        <span>✨ מה חדש באפליקציה</span>
+        <span class="modal-actions"><button class="act" id="wn-close" title="סגור">✕</button></span>
+      </div>
+      <div class="modal-body">
+        <div class="wn-ver">גרסה <span id="wn-version"></span></div>
+        <div class="wn-body" id="wn-body"></div>
+        <div class="cevt-foot"><button class="go" id="wn-ok">הבנתי</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="notif-modal" class="modal" hidden>
+    <div class="modal-box">
+      <div class="modal-head">
+        <span>🔔 ניהול התראות</span>
+        <span class="modal-actions"><button class="act" id="notif-close" title="סגור">✕</button></span>
+      </div>
+      <div class="modal-body">
+        <div class="notif-lead">
+          <span style="font-weight:600;font-size:.85rem">להתריע</span>
+          <label><input type="number" id="notif-d" min="0" value="1"> ימים</label>
+          <label><input type="number" id="notif-h" min="0" max="23" value="0"> שעות</label>
+          <label><input type="number" id="notif-m" min="0" max="59" value="0"> דקות</label>
+          <span style="font-weight:600;font-size:.85rem">לפני האירוע</span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;padding:6px 0">
+          <label style="font-size:.85rem;color:var(--muted);font-weight:600">שנה <input type="number" id="notif-year" step="1" style="width:84px;padding:5px;border:1px solid var(--line);border-radius:8px"></label>
+          <button class="go" id="notif-show">הצג אירועים</button>
+          <span style="font-size:.78rem;color:var(--muted)">סמנו אילו אירועים לקבל בהתראה</span>
+        </div>
+        <div class="notif-list" id="notif-list"></div>
+        <div class="notif-note" id="notif-note"></div>
+        <div class="cevt-foot"><button class="go" id="notif-save">אישור התראות</button></div>
       </div>
     </div>
   </div>
@@ -836,6 +905,105 @@ function cevtSave(){
   document.getElementById('cevt-modal').hidden = true;
   if(DATA_YC) buildYear(currentGreg());   // re-render the calendar with the new events
 }
+// ---- app version + "what's new" splash ----
+const APP_VERSION = '2.0';
+const NEWS_KEY = 'sam-news-seen';
+const APP_NEWS = `<ul>
+  <li><b>ניהול התראות</b> — קבלת תזכורת על אירועים נבחרים, זמן מוגדר מראש.</li>
+  <li><b>ייצוא ל-Word ו-Excel</b> (פורמט לוח / תרומה) עם הכתב השומרוני.</li>
+  <li><b>עורך אירועי קהילה</b> — רשימה ניתנת לעריכה לפי שנה, עם צבעים.</li>
+  <li><b>תפריט המבורגר</b> ותפריט "אפשרויות נוספות", וכפתור "היום" מודגש.</li>
+  <li><b>דיוק הלוח</b> — הקפאת הפער היוליאני מ-2200; מולד מדויק 2009–2100.</li>
+</ul>`;
+function newsIsNew(){ try{ return localStorage.getItem(NEWS_KEY)!==APP_VERSION; }catch(e){ return true; } }
+function updateNewsDim(){ const b=document.getElementById('ham-whatsnew'); if(b) b.classList.toggle('dim', !newsIsNew()); }
+function showWhatsNew(markSeen){
+  document.getElementById('wn-version').textContent=APP_VERSION;
+  document.getElementById('wn-body').innerHTML=APP_NEWS;
+  document.getElementById('whatsnew-modal').hidden=false;
+  if(markSeen){ try{ localStorage.setItem(NEWS_KEY,APP_VERSION); }catch(e){} updateNewsDim(); }
+}
+
+// ---- notifications (foreground reminders; background/closed-app push needs a server) ----
+const NOTIF_KEY = 'sam-notifications';
+function loadNotifPrefs(){ try{ return JSON.parse(localStorage.getItem(NOTIF_KEY)||'null') || {lead:{d:1,h:0,m:0},events:[]}; }catch(e){ return {lead:{d:1,h:0,m:0},events:[]}; } }
+let notifEventsCache = {};
+async function notifEventsForYear(year){   // all notable calendar events for a Gregorian year
+  year=String(year);
+  if(notifEventsCache[year]) return notifEventsCache[year];
+  const SKIP=new Set(['parasha','period','hijri']);
+  const map=new Map();
+  for(const y of [+year-1,+year]){
+    try{
+      const yc=(DATA_YC&&DATA_YC.greg_year===y)?DATA_YC:JSON.parse(decodeData(await (await fetch(`cal/${y}.dat`)).text()));
+      for(const mo of yc.months) for(const rec of mo.days){
+        if((rec.greg||'').slice(0,4)!==year) continue;
+        for(const f of (rec.festivals||[])) if(!SKIP.has(f.kind)){ const k=rec.greg+'|'+f.name; if(!map.has(k)) map.set(k,{date:rec.greg,name:f.name}); }
+      }
+    }catch(e){}
+  }
+  for(const e of USER_EVENTS) if((e.date||'').slice(0,4)===year){ const k=e.date+'|'+e.desc; if(!map.has(k)) map.set(k,{date:e.date,name:e.desc}); }
+  const arr=[...map.values()].sort((a,b)=>a.date<b.date?-1:1);
+  notifEventsCache[year]=arr; return arr;
+}
+function openNotifManager(){
+  const p=loadNotifPrefs();
+  document.getElementById('notif-d').value=p.lead.d; document.getElementById('notif-h').value=p.lead.h; document.getElementById('notif-m').value=p.lead.m;
+  document.getElementById('notif-year').value=(DATA_YC&&DATA_YC.greg_year)||new Date().getFullYear();
+  document.getElementById('notif-note').textContent='';
+  renderNotifList();
+  document.getElementById('notif-modal').hidden=false;
+}
+async function renderNotifList(){
+  const year=document.getElementById('notif-year').value;
+  const box=document.getElementById('notif-list');
+  const evs=await notifEventsForYear(year);
+  const sel=new Set(loadNotifPrefs().events);
+  if(!evs.length){ box.innerHTML='<div class="cevt-empty">אין אירועים לשנה זו.</div>'; return; }
+  box.innerHTML=evs.map(e=>{ const k=e.date+'|'+e.name, d=e.date.split('-').reverse().join('/');
+    return `<label class="notif-item"><input type="checkbox" class="ni-cb" data-key="${escHtml(k)}" ${sel.has(k)?'checked':''}><span class="ni-date">${d}</span><span class="ni-name">${escHtml(e.name)}</span></label>`;
+  }).join('');
+}
+function fireNotif(title,body){
+  try{
+    if('serviceWorker' in navigator && navigator.serviceWorker.ready){
+      navigator.serviceWorker.ready.then(r=>r.showNotification(title,{body})).catch(()=>{ try{new Notification(title,{body});}catch(e){} });
+      return;
+    }
+    new Notification(title,{body});
+  }catch(e){}
+}
+function checkNotifications(){
+  if(!('Notification' in window) || Notification.permission!=='granted') return;
+  const p=loadNotifPrefs(); if(!p.events || !p.events.length) return;
+  const leadMs=(((p.lead.d*24)+p.lead.h)*60 + p.lead.m)*60000;
+  let fired={}; try{ fired=JSON.parse(localStorage.getItem('sam-notif-fired')||'{}'); }catch(e){}
+  const now=Date.now();
+  for(const key of p.events){
+    const date=key.split('|')[0], name=key.slice(date.length+1);
+    const evTime=new Date(date+'T09:00:00').getTime(); if(isNaN(evTime)) continue;
+    if(now>=evTime-leadMs && now<evTime && !fired[key]){
+      fireNotif('תזכורת — '+name, 'האירוע "'+name+'" יחול בתאריך '+date.split('-').reverse().join('/'));
+      fired[key]=now;
+    }
+  }
+  try{ localStorage.setItem('sam-notif-fired',JSON.stringify(fired)); }catch(e){}
+}
+function saveNotif(){
+  const lead={ d:+document.getElementById('notif-d').value||0, h:+document.getElementById('notif-h').value||0, m:+document.getElementById('notif-m').value||0 };
+  const events=[...document.querySelectorAll('#notif-list .ni-cb:checked')].map(c=>c.dataset.key);
+  try{ localStorage.setItem(NOTIF_KEY, JSON.stringify({lead,events})); }catch(e){}
+  const note=document.getElementById('notif-note');
+  if(!('Notification' in window)){ note.textContent='הדפדפן אינו תומך בהתראות.'; return; }
+  const done=perm=>{
+    if(perm==='granted'){ note.innerHTML='✅ ההתראות נשמרו ('+events.length+' אירועים). תזכורות יופיעו כשהאפליקציה פתוחה.<br><b>הערה:</b> לקבלת התראות כשהאפליקציה סגורה נדרש שרת — אינו זמין באתר סטטי.'; checkNotifications(); }
+    else{ note.innerHTML='⚠️ לא ניתנה הרשאה להתראות. כדי לאפשר: לחצו על מנעול האתר → התראות → "אפשר". במובייל: התקינו את האפליקציה למסך הבית (אפשרויות נוספות → התקן), ואז אפשרו התראות בהגדרות האפליקציה.'; }
+  };
+  if(Notification.permission==='granted') done('granted');
+  else if(Notification.permission==='denied') done('denied');
+  else Notification.requestPermission().then(done);
+}
+
 function setupCommunity(){
   const ham=document.getElementById('hamburger'), menu=document.getElementById('ham-menu');
   const moreBtn=document.getElementById('more-btn'), moreMenu=document.getElementById('more-menu');
@@ -851,6 +1019,25 @@ function setupCommunity(){
   document.getElementById('cevt-add').onclick=cevtAddRow;
   document.getElementById('cevt-save').onclick=cevtSave;
   document.getElementById('cevt-year').addEventListener('keydown',e=>{ if(e.key==='Enter') cevtShow(); });
+  // version + what's-new + hamburger options
+  document.getElementById('ham-ver').textContent=APP_VERSION;
+  const vb=document.getElementById('verbadge'); vb.textContent='גרסה '+APP_VERSION; vb.onclick=()=>showWhatsNew(true);
+  updateNewsDim();
+  document.getElementById('ham-whatsnew').onclick=()=>{ closeMenus(); showWhatsNew(true); };
+  document.getElementById('ham-more').onclick=()=>{ menu.hidden=true; const open=moreMenu.hidden; moreMenu.hidden=!open; };
+  document.getElementById('ham-version').onclick=()=>{ closeMenus(); dialog({title:'גרסה נוכחית',html:'גרסה <b>'+APP_VERSION+'</b>',buttons:[{label:'מה חדש?',primary:true,act:()=>showWhatsNew(true)},{label:'סגור'}]}); };
+  document.getElementById('ham-install').onclick=()=>{ closeMenus(); createShortcut(); };
+  document.getElementById('wn-close').onclick=()=>{ document.getElementById('whatsnew-modal').hidden=true; };
+  document.getElementById('wn-ok').onclick=()=>{ document.getElementById('whatsnew-modal').hidden=true; };
+  // notifications
+  document.getElementById('notif').onclick=openNotifManager;
+  document.getElementById('notif-close').onclick=()=>{ document.getElementById('notif-modal').hidden=true; };
+  document.getElementById('notif-show').onclick=renderNotifList;
+  document.getElementById('notif-save').onclick=saveNotif;
+  document.getElementById('notif-year').addEventListener('keydown',e=>{ if(e.key==='Enter') renderNotifList(); });
+  // first run after an update -> show what's new once; start foreground reminder loop
+  if(newsIsNew()) setTimeout(()=>showWhatsNew(true), 500);
+  checkNotifications(); setInterval(checkNotifications, 60000);
 }
 
 // ---- shortcut / install: app on mobile (PWA), .url file on desktop ----
