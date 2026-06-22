@@ -1810,12 +1810,12 @@ async function init(){
   const WDLET=['א','ב','ג','ד','ה','ו','ז'];                       // weekday as a letter: Sun=א … Sat=ז
   const DON_MODERN=new Set(['jew','community','national','private']); // modern Hebrew, never Samaritan
   const donFestName = f => DON_MODERN.has(f.kind) ? `<span class=modheb>${f.name}</span>` : sam(f.name);
-  const evCellDon = rec => (rec.festivals||[]).map(donFestName).join('<br>');
+  const evCellDon = rec => (rec.festivals||[]).map(f=>`<div class=evln>${donFestName(f)}</div>`).join('');   // each event on its own line
   const _O=['','א','ב','ג','ד','ה','ו','ז','ח','ט'], _T=['','י','כ','ל'];
   const hebNum = n => { const t=Math.floor(n/10),o=n%10; return _T[t]+_O[o]; };   // 1–31 → letters, no geresh
-  // defective spelling (כתיב חסר) for day/Julian-month names — best-effort, pending the user's confirmation
-  const DEFECTIVE={'ראשון':'ראשן','שני':'שני','שלישי':'שלשי','רביעי':'רבעי','חמישי':'חמשי','שישי':'ששי','שבת':'שבת',
-    'ניסן':'נסן','אייר':'איר','סיון':'סון','תמוז':'תמז','אב':'אב','אלול':'אלל','תשרי':'תשרי','מרחשון':'מרחשן','כסלו':'כסל','טבת':'טבת','שבט':'שבט','אדר':'אדר'};
+  // Samaritan spelling of Syriac month names (per the user): full forms, with these three differing
+  // from the engine's names. Weekday names stay full (ראשון…שבת). אדר→הדר, סיון→סיוון, אלול→אילול.
+  const DEFECTIVE={'אדר':'הדר','סיון':'סיוון','אלול':'אילול'};
   const defv = s => DEFECTIVE[s]||s;
   function donationHeader(yc,mo){
     const cy = mo.index>=(yc.year_change_month||6) ? yc.canaan_year+1 : yc.canaan_year, m=mo.molad;
@@ -1840,7 +1840,7 @@ async function init(){
       if(isSat){ fill=SAB_FILL[Math.min(sab,4)]; sab++; }       // Sabbaths keep their ordinal colour
       else if(isHoliday(rec)) fill=FEST_FILL;                   // only real holidays — never plain weekdays
       const st=fill?` style="background:${fill}"`:'';
-      const sun=rec.sunset?`${sam('ש')} ${num(rec.sunset)}`:'';  // sunset only (sunrise omitted)
+      const sun=rec.sunset?num(rec.sunset):'';  // sunset only, no "ש" label, no sunrise
       const greg = rec.greg_day===1 ? `${num(rec.greg_day)} <span class=modheb>${GMON[+rec.greg.slice(5,7)]}</span>` : num(rec.greg_day);
       rows+=`<tr${st}><td>${sun}</td><td class=samx>${WDLET[wd]}</td><td class=samx>${stripGer(rec.heb_label)}</td><td>${num(rec.syriac_day)}</td><td class=evt>${evCellDon(rec)}</td><td>${greg}</td></tr>`;
     }
@@ -1887,8 +1887,11 @@ async function init(){
       th{background:#efe6d3;color:#735a30}
       .num{font-family:Arial} .dot{font-family:Arial;font-style:normal;color:#8a6d3b;margin:0 1px;vertical-align:0.18em}
       .samx{font-family:'Ben_nor_m',Arial} .modheb{font-family:Arial}
-      .tbl{font-size:7pt} .tbl th,.tbl td{padding:0 3px;line-height:1.1}
-      .tbl th{font-size:8pt;padding:1px 3px} .tbl .evt{text-align:right;width:40%} .tbl td.samx{font-size:9.5pt}
+      /* donation table: 12pt fonts, exact 16pt line spacing (rows grow for multi-event days) */
+      .tbl{font-size:12pt} .tbl th,.tbl td{padding:0 4px;line-height:16pt;mso-line-height-rule:exactly}
+      .tbl th{padding:2px 4px} .tbl .evt{text-align:right;width:40%}
+      .tbl .num,.tbl .modheb,.tbl .samx,.tbl td.samx{font-size:12pt}
+      .tbl .evln{line-height:16pt;mso-line-height-rule:exactly;margin:0}
       .grid{font-size:9pt} .grid th,.grid td{padding:2px}
       .grid td.cell{height:2.7cm;width:14%} .grid .ch{display:flex;justify-content:space-between;font-weight:bold}
       .grid .gd{color:#888;font-weight:normal} .grid .ev{font-size:8pt;color:#444}
