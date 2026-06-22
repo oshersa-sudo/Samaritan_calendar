@@ -107,10 +107,14 @@
   .notif-cats .nc-lbl{font-size:.8rem;color:var(--muted);font-weight:700}
   .notif-cats label{display:flex;align-items:center;gap:4px;font-size:.8rem;color:var(--ink)}
   .notif-list{max-height:42vh;overflow:auto;margin:8px 0}
-  .notif-item{display:flex;align-items:center;gap:9px;padding:6px 4px;border-bottom:1px solid var(--soft);font-size:.88rem}
+  .notif-item{display:flex;align-items:center;gap:9px;padding:6px 4px;border-bottom:1px solid var(--soft);font-size:.88rem;flex-wrap:wrap}
   .notif-item input[type=checkbox]{width:18px;height:18px;flex:0 0 auto}
+  .notif-item .ni-main{display:flex;align-items:center;gap:9px;flex:1;min-width:150px;cursor:pointer}
   .notif-item .ni-date{color:var(--muted);font-size:.78rem;min-width:78px}
   .notif-item .ni-name{flex:1}
+  .notif-lead select,.ni-lead select{padding:4px 5px;border:1px solid var(--line);border-radius:7px;font-size:.82rem;color:var(--ink);background:#fff}
+  .ni-lead{display:flex;align-items:center;gap:3px;font-size:.72rem;color:var(--muted)}
+  .ni-lead i{font-style:normal;margin-inline-end:3px}
   .notif-note{font-size:.78rem;color:var(--muted);background:var(--soft);border-radius:8px;padding:8px 10px;margin-top:8px}
   @media (max-width:560px){
     .cevt-listhead{display:none}
@@ -535,11 +539,11 @@
       </div>
       <div class="modal-body">
         <div class="notif-lead">
-          <span style="font-weight:600;font-size:.85rem">להתריע</span>
-          <label><input type="number" id="notif-d" min="0" value="1"> ימים</label>
-          <label><input type="number" id="notif-h" min="0" max="23" value="0"> שעות</label>
-          <label><input type="number" id="notif-m" min="0" max="59" value="0"> דקות</label>
-          <span style="font-weight:600;font-size:.85rem">לפני האירוע</span>
+          <span style="font-weight:600;font-size:.85rem">ברירת מחדל — להתריע</span>
+          <label><select id="notif-d"></select> ימים</label>
+          <label><select id="notif-h"></select> שעות</label>
+          <label><select id="notif-m"></select> דקות</label>
+          <span style="font-weight:600;font-size:.85rem">לפני</span>
         </div>
         <div style="display:flex;gap:10px;align-items:center;padding:6px 0;flex-wrap:wrap">
           <label style="font-size:.85rem;color:var(--muted);font-weight:600">שנה <input type="number" id="notif-year" step="1" style="width:84px;padding:5px;border:1px solid var(--line);border-radius:8px"></label>
@@ -952,7 +956,16 @@ function showWhatsNew(markSeen){
 
 // ---- notifications (foreground reminders; background/closed-app push needs a server) ----
 const NOTIF_KEY = 'sam-notifications';
-function loadNotifPrefs(){ try{ return JSON.parse(localStorage.getItem(NOTIF_KEY)||'null') || {lead:{d:1,h:0,m:0},events:[]}; }catch(e){ return {lead:{d:1,h:0,m:0},events:[]}; } }
+function loadNotifPrefs(){
+  let p=null; try{ p=JSON.parse(localStorage.getItem(NOTIF_KEY)||'null'); }catch(e){}
+  if(!p) return {lead:{d:1,h:0,m:0}, events:[]};
+  if(!p.lead) p.lead={d:1,h:0,m:0};
+  p.events=(p.events||[]).map(e=> typeof e==='string'   // old format: bare key -> use global lead
+    ? {key:e, d:p.lead.d, h:p.lead.h, m:p.lead.m}
+    : {key:e.key, d:+e.d||0, h:+e.h||0, m:+e.m||0});
+  return p;
+}
+function selOpts(max, sel){ let s=''; for(let i=0;i<=max;i++) s+=`<option value="${i}"${i===+sel?' selected':''}>${i}</option>`; return s; }
 function kindCat(k){ return (k==='sam'||k==='moed')?'sam' : k==='jew'?'jew' : k==='community'?'community' : k==='national'?'national' : k==='sabbath'?'sabbath' : 'other'; }
 let notifEventsCache = {};
 async function notifEventsForYear(year){   // FUTURE notable calendar events for a Gregorian year
@@ -975,7 +988,9 @@ async function notifEventsForYear(year){   // FUTURE notable calendar events for
 }
 function openNotifManager(){
   const p=loadNotifPrefs();
-  document.getElementById('notif-d').value=p.lead.d; document.getElementById('notif-h').value=p.lead.h; document.getElementById('notif-m').value=p.lead.m;
+  document.getElementById('notif-d').innerHTML=selOpts(30,p.lead.d);
+  document.getElementById('notif-h').innerHTML=selOpts(23,p.lead.h);
+  document.getElementById('notif-m').innerHTML=selOpts(59,p.lead.m);
   document.getElementById('notif-year').value=(DATA_YC&&DATA_YC.greg_year)||new Date().getFullYear();
   document.getElementById('notif-note').textContent='';
   renderNotifList();
@@ -986,10 +1001,18 @@ async function renderNotifList(){
   const box=document.getElementById('notif-list');
   const cats=new Set([...document.querySelectorAll('#notif-cats .ncat:checked')].map(c=>c.value));
   const evs=(await notifEventsForYear(year)).filter(e=>cats.has(e.cat));
-  const sel=new Set(loadNotifPrefs().events);
+  const saved={}; loadNotifPrefs().events.forEach(e=>saved[e.key]=e);
+  const gd=+document.getElementById('notif-d').value||0, gh=+document.getElementById('notif-h').value||0, gm=+document.getElementById('notif-m').value||0;
   if(!evs.length){ box.innerHTML='<div class="cevt-empty">אין אירועים עתידיים לשנה זו (לפי הסינון).</div>'; return; }
-  box.innerHTML=evs.map(e=>{ const k=e.date+'|'+e.name, d=e.date.split('-').reverse().join('/');
-    return `<label class="notif-item"><input type="checkbox" class="ni-cb" data-key="${escHtml(k)}" ${sel.has(k)?'checked':''}><span class="ni-date">${d}</span><span class="ni-name">${escHtml(e.name)}</span></label>`;
+  box.innerHTML=evs.map((e,i)=>{
+    const k=e.date+'|'+e.name, d=e.date.split('-').reverse().join('/');
+    const sv=saved[k]; const checked=!!sv;
+    const dd=sv?sv.d:gd, hh=sv?sv.h:gh, mm=sv?sv.m:gm;
+    return `<div class="notif-item">
+      <input type="checkbox" class="ni-cb" id="nicb${i}" data-key="${escHtml(k)}" ${checked?'checked':''}>
+      <label class="ni-main" for="nicb${i}"><span class="ni-date">${d}</span><span class="ni-name">${escHtml(e.name)}</span></label>
+      <span class="ni-lead"><select class="ni-d">${selOpts(30,dd)}</select><i>י׳</i><select class="ni-h">${selOpts(23,hh)}</select><i>ש׳</i><select class="ni-m">${selOpts(59,mm)}</select><i>ד׳ לפני</i></span>
+    </div>`;
   }).join('');
 }
 function fireNotif(title,body){
@@ -1004,22 +1027,25 @@ function fireNotif(title,body){
 function checkNotifications(){
   if(!('Notification' in window) || Notification.permission!=='granted') return;
   const p=loadNotifPrefs(); if(!p.events || !p.events.length) return;
-  const leadMs=(((p.lead.d*24)+p.lead.h)*60 + p.lead.m)*60000;
   let fired={}; try{ fired=JSON.parse(localStorage.getItem('sam-notif-fired')||'{}'); }catch(e){}
   const now=Date.now();
-  for(const key of p.events){
-    const date=key.split('|')[0], name=key.slice(date.length+1);
+  for(const ev of p.events){
+    const date=ev.key.split('|')[0], name=ev.key.slice(date.length+1);
+    const leadMs=(((ev.d*24)+ev.h)*60 + ev.m)*60000;   // per-event lead time
     const evTime=new Date(date+'T09:00:00').getTime(); if(isNaN(evTime)) continue;
-    if(now>=evTime-leadMs && now<evTime && !fired[key]){
+    if(now>=evTime-leadMs && now<evTime && !fired[ev.key]){
       fireNotif('תזכורת — '+name, 'האירוע "'+name+'" יחול בתאריך '+date.split('-').reverse().join('/'));
-      fired[key]=now;
+      fired[ev.key]=now;
     }
   }
   try{ localStorage.setItem('sam-notif-fired',JSON.stringify(fired)); }catch(e){}
 }
 function saveNotif(){
   const lead={ d:+document.getElementById('notif-d').value||0, h:+document.getElementById('notif-h').value||0, m:+document.getElementById('notif-m').value||0 };
-  const events=[...document.querySelectorAll('#notif-list .ni-cb:checked')].map(c=>c.dataset.key);
+  const events=[...document.querySelectorAll('#notif-list .notif-item')].filter(it=>it.querySelector('.ni-cb').checked).map(it=>({
+    key: it.querySelector('.ni-cb').dataset.key,
+    d:+it.querySelector('.ni-d').value||0, h:+it.querySelector('.ni-h').value||0, m:+it.querySelector('.ni-m').value||0
+  }));
   try{ localStorage.setItem(NOTIF_KEY, JSON.stringify({lead,events})); }catch(e){}
   const note=document.getElementById('notif-note');
   if(!('Notification' in window)){ note.textContent='הדפדפן אינו תומך בהתראות.'; return; }
@@ -1066,6 +1092,7 @@ function setupCommunity(){
   document.getElementById('notif-save').onclick=saveNotif;
   document.getElementById('notif-year').addEventListener('keydown',e=>{ if(e.key==='Enter') renderNotifList(); });
   document.querySelectorAll('#notif-cats .ncat').forEach(c=>c.onchange=renderNotifList);
+  ['notif-d','notif-h','notif-m'].forEach(id=>document.getElementById(id).onchange=renderNotifList);   // new default -> re-apply to unsaved rows
   // first run after an update -> notify installed users + show what's new once; start reminder loop
   if(newsIsNew()){
     if('Notification' in window && Notification.permission==='granted')
