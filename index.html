@@ -49,6 +49,11 @@
     border-radius:7px;cursor:pointer;font-size:.9rem;color:var(--ink);white-space:nowrap}
   .ham-menu button:hover{background:var(--soft)}
   @media print{ .hamburger,.ham-menu{display:none!important} }
+  .more-wrap{position:relative;display:inline-flex}
+  .more-menu{position:absolute;top:calc(100% + 5px);left:0;z-index:40;background:var(--card);border:1px solid var(--line);
+    border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.18);padding:5px;display:flex;flex-direction:column;gap:3px;min-width:210px}
+  .more-menu .act{display:block;width:100%;text-align:right;border:none;background:none;border-radius:7px}
+  .more-menu .act:hover{background:var(--soft)}
   .cevt-login{display:flex;flex-direction:column;gap:10px}
   .cevt-login label,.cevt-form label{display:flex;flex-direction:column;gap:3px;font-size:.82rem;color:var(--muted);font-weight:600}
   .cevt-login input{padding:7px 9px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;color:var(--ink)}
@@ -275,8 +280,9 @@
     .bar .go{padding:6px 7px}
     .nav{padding:6px 7px}
     input[type=number]{width:56px}
-    .bar-group.secondary{justify-content:flex-start}
-    .bar-group.secondary .date-input{flex:1 1 auto;min-width:110px}
+    .bar-group.secondary{flex-wrap:nowrap;justify-content:center;gap:4px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .bar-group.secondary>*{flex:0 0 auto}
+    .bar-group.secondary .date-input{flex:1 1 auto;min-width:96px}
     .legend{gap:7px 10px;font-size:.7rem;margin:6px 0 12px}
     /* month header */
     .mhead{padding:8px 10px}
@@ -333,7 +339,7 @@
     </span>
     <span class="bar-group secondary">
       <span class="filter-wrap">
-        <button class="nav" id="month-filter-btn" title="הצגת חודשים נבחרים בלבד">סינון חודשים ▾</button>
+        <button class="nav" id="month-filter-btn" title="הצגת חודשים נבחרים בלבד">סינון ▾</button>
         <div class="month-filter-panel" id="month-filter-panel" hidden></div>
       </span>
       <button class="nav" id="clear-filter" title="הצגת כל חודשי השנה">נקה סינון</button>
@@ -341,16 +347,21 @@
       <button class="nav" id="date-go" title="הצגת התאריך שהוזן">הצג</button>
     </span>
     <span class="actions">
-      <button class="act" id="moadim" title="רשימת כל המועדים והחגים">📋 רשימת מועדים וחגים</button>
       <button class="act" id="zoomout" title="הקטן תצוגה">➖</button>
       <button class="act" id="zoomin" title="הגדל תצוגה">➕</button>
-      <button class="act" id="print" title="הדפסה או שמירה כ-PDF">🖨 הדפס / PDF</button>
-      <button class="act" id="ics" title="סנכרון ליומן Google או Outlook">📅 סנכרון ליומן</button>
-      <button class="act" id="share" title="שיתוף הלוח — WhatsApp או דוא״ל">📤 שיתוף</button>
-      <button class="act" id="exp-word" title="ייצוא ל-Word"><svg class="oico" viewBox="0 0 24 24"><rect width="24" height="24" rx="3" fill="#2b579a"/><text x="12" y="17" font-size="13" fill="#fff" text-anchor="middle" font-family="Arial" font-weight="bold">W</text></svg> Word</button>
-      <button class="act" id="exp-excel" title="ייצוא ל-Excel"><svg class="oico" viewBox="0 0 24 24"><rect width="24" height="24" rx="3" fill="#217346"/><text x="12" y="17" font-size="13" fill="#fff" text-anchor="middle" font-family="Arial" font-weight="bold">X</text></svg> Excel</button>
-      <button class="act" id="shortcut" title="התקנת האפליקציה (במובייל) / קיצור דרך (במחשב)">📲 התקן אפליקציה</button>
-      <button class="act" id="colors" title="התאמת צבעי הלוח (לסשן זה בלבד)">🎨 הגדר צבעים</button>
+      <span class="more-wrap">
+        <button class="act" id="more-btn" title="אפשרויות נוספות">⋯ אפשרויות נוספות ▾</button>
+        <div class="more-menu" id="more-menu" hidden>
+          <button class="act" id="moadim" title="רשימת כל המועדים והחגים">📋 רשימת מועדים וחגים</button>
+          <button class="act" id="print" title="הדפסה או שמירה כ-PDF">🖨 הדפס / PDF</button>
+          <button class="act" id="ics" title="סנכרון ליומן Google או Outlook">📅 סנכרון ליומן</button>
+          <button class="act" id="share" title="שיתוף הלוח — WhatsApp או דוא״ל">📤 שיתוף</button>
+          <button class="act" id="exp-word" title="ייצוא ל-Word"><svg class="oico" viewBox="0 0 24 24"><rect width="24" height="24" rx="3" fill="#2b579a"/><text x="12" y="17" font-size="13" fill="#fff" text-anchor="middle" font-family="Arial" font-weight="bold">W</text></svg> ייצוא ל-Word</button>
+          <button class="act" id="exp-excel" title="ייצוא ל-Excel"><svg class="oico" viewBox="0 0 24 24"><rect width="24" height="24" rx="3" fill="#217346"/><text x="12" y="17" font-size="13" fill="#fff" text-anchor="middle" font-family="Arial" font-weight="bold">X</text></svg> ייצוא ל-Excel</button>
+          <button class="act" id="shortcut" title="התקנת האפליקציה (במובייל) / קיצור דרך (במחשב)">📲 התקן אפליקציה</button>
+          <button class="act" id="colors" title="התאמת צבעי הלוח (לסשן זה בלבד)">🎨 הגדר צבעים</button>
+        </div>
+      </span>
     </span>
   </div>
 
@@ -768,6 +779,10 @@ function setupCommunity(){
   menu.onclick=e=>e.stopPropagation();
   document.addEventListener('click',()=>{ menu.hidden=true; });
   document.getElementById('ham-events').onclick=()=>{ menu.hidden=true; communityLogin(); };
+  const moreBtn=document.getElementById('more-btn'), moreMenu=document.getElementById('more-menu');
+  moreBtn.onclick=e=>{ e.stopPropagation(); moreMenu.hidden=!moreMenu.hidden; };
+  moreMenu.addEventListener('click',e=>{ if(e.target.closest('.act')) moreMenu.hidden=true; });   // close after picking an action
+  document.addEventListener('click',()=>{ moreMenu.hidden=true; });
   document.getElementById('cevt-close').onclick=()=>{ document.getElementById('cevt-modal').hidden=true; };
   document.getElementById('cevt-add').onclick=cevtAdd;
   document.getElementById('cevt-save').onclick=cevtSave;
