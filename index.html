@@ -1813,9 +1813,11 @@ async function init(){
   const evCellDon = rec => (rec.festivals||[]).map(f=>`<div class=evln>${donFestName(f)}</div>`).join('');   // each event on its own line
   const _O=['','א','ב','ג','ד','ה','ו','ז','ח','ט'], _T=['','י','כ','ל'];
   const hebNum = n => { const t=Math.floor(n/10),o=n%10; return _T[t]+_O[o]; };   // 1–31 → letters, no geresh
-  // Samaritan spelling of Syriac month names (per the user): full forms, with these three differing
-  // from the engine's names. Weekday names stay full (ראשון…שבת). אדר→הדר, סיון→סיוון, אלול→אילול.
-  const DEFECTIVE={'אדר':'הדר','סיון':'סיוון','אלול':'אילול'};
+  // Samaritan spelling for the molad line: weekday names in DEFECTIVE spelling (כתיב חסר);
+  // Syriac month names per the user (mostly full, with אדר→הדר, סיון→סיוון, אלול→אילול).
+  const DEFECTIVE={
+    'ראשון':'ראשן','שני':'שני','שלישי':'שלשי','רביעי':'רבעי','חמישי':'חמשי','שישי':'ששי','שבת':'שבת',
+    'אדר':'הדר','סיון':'סיוון','אלול':'אילול'};
   const defv = s => DEFECTIVE[s]||s;
   function donationHeader(yc,mo){
     const cy = mo.index>=(yc.year_change_month||6) ? yc.canaan_year+1 : yc.canaan_year, m=mo.molad;
