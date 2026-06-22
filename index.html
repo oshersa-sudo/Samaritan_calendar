@@ -174,9 +174,9 @@
   .yhint{font-size:.82rem;color:var(--muted)}
   .oico{width:1.05em;height:1.05em;vertical-align:-3px;margin-inline-end:2px}
   .filter-wrap{position:relative;display:inline-flex}
-  .month-filter-panel{position:absolute;top:calc(100% + 5px);right:0;z-index:30;background:var(--card);
-    border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.2);
-    padding:7px;min-width:200px;max-height:60vh;overflow:auto}
+  .month-filter-panel{position:fixed;z-index:70;background:var(--card);
+    border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.25);
+    padding:7px;min-width:200px;max-height:70vh;overflow:auto}
   .month-filter-panel[hidden]{display:none}
   .mf-row{display:flex;align-items:center;gap:8px;padding:5px 7px;border-radius:7px;cursor:pointer;
     font-size:.82rem;color:var(--ink);white-space:nowrap}
@@ -1364,7 +1364,14 @@ async function init(){
   document.getElementById('month-filter-btn').onclick=e=>{
     e.stopPropagation();
     const panel=document.getElementById('month-filter-panel');
-    if(panel.hidden){ buildFilterPanel(); panel.hidden=false; } else panel.hidden=true;
+    if(panel.hidden){
+      buildFilterPanel();
+      const r=e.currentTarget.getBoundingClientRect();          // float below the button (escapes the sticky bar's clipping)
+      panel.style.top=Math.round(r.bottom+5)+'px';
+      panel.style.right=Math.round(window.innerWidth-r.right)+'px';
+      panel.style.left='auto';
+      panel.hidden=false;
+    } else panel.hidden=true;
   };
   document.addEventListener('click',e=>{
     const panel=document.getElementById('month-filter-panel');
