@@ -395,6 +395,7 @@
     <button id="ham-private">➕ הוסף אירוע פרטי</button>
     <button id="ham-help">❓ עזרה</button>
     <button id="ham-version">גרסה נוכחית: <span class="ham-ver" id="ham-ver"></span></button>
+    <button id="ham-lang">🌐 שנה שפה</button>
     <button id="ham-install">📲 התקנת אפליקציה</button>
     <hr class="ham-sep">
     <button id="ham-events">עריכת אירועי הקהילה</button>
@@ -551,7 +552,7 @@
         <span>❓ עזרה — מדריך לשימוש באפליקציה</span>
         <span class="modal-actions"><button class="act" id="help-close" title="סגור">✕</button></span>
       </div>
-      <div class="modal-body help-body">
+      <div class="modal-body help-body"><div id="help-content">
         <p>אפליקציה זו מחשבת את <b>לוח השנה השומרוני-העברי</b> בעצמה, וממירה בין שיטות-הספירה. הלוח ניסיוני — אינו תחליף לחשבון הקשט הרשמי של הכהן הגדול.</p>
 
         <h3>ניווט ובחירת שנה (הסרגל העליון)</h3>
@@ -623,7 +624,7 @@
           <li><b>התקנת אפליקציה</b> — במובייל: "הוסף למסך הבית"; במחשב: קיצור דרך / התקנה.</li>
         </ul>
 
-        <div class="cevt-foot"><button class="go" id="help-ok">הבנתי</button></div>
+        </div><div class="cevt-foot"><button class="go" id="help-ok">הבנתי</button></div>
       </div>
     </div>
   </div>
@@ -747,6 +748,116 @@ function loadPrivateEvents(){ try{ PRIVATE_EVENTS = JSON.parse(localStorage.getI
   if(!Array.isArray(PRIVATE_EVENTS)) PRIVATE_EVENTS=[]; }
 loadPrivateEvents();
 function escHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// ---- i18n: interface language (he/en/ar). The calendar grid content stays Hebrew/Samaritan. ----
+let LANG = (()=>{ try{ return localStorage.getItem('sam-lang')||'he'; }catch(e){ return 'he'; } })();
+const I18N = {
+  suptitle:{he:'אבני שהם',en:'Avney Shoham',ar:'أبني شوهم'},
+  title:{he:'הלוח העברי השומרוני',en:'The Samaritan Hebrew Calendar',ar:'التقويم العبري السامري'},
+  mode_greg:{he:'שנה לועזית',en:'Gregorian year',ar:'السنة الميلادية'},
+  mode_greg_s:{he:'לועזית',en:'Greg.',ar:'ميلادي'},
+  mode_canaan:{he:'שנת כניסה לארץ הקדושה',en:'Entry-to-the-Land year',ar:'سنة الدخول إلى الأرض المقدسة'},
+  mode_canaan_s:{he:'כניסה',en:'Entry',ar:'دخول'},
+  build:{he:'בנה לוח',en:'Build',ar:'إنشاء'},
+  today:{he:'היום',en:'Today',ar:'اليوم'},
+  filter:{he:'סינון ▾',en:'Filter ▾',ar:'تصفية ▾'},
+  clear_filter:{he:'נקה סינון',en:'Clear',ar:'مسح'},
+  date_ph:{he:'הזן תאריך לועזי',en:'Enter a date',ar:'أدخل تاريخًا'},
+  show:{he:'הצג',en:'Show',ar:'عرض'},
+  more:{he:'⋯ אפשרויות נוספות ▾',en:'⋯ More options ▾',ar:'⋯ خيارات إضافية ▾'},
+  m_moadim:{he:'📋 רשימת מועדים וחגים',en:'📋 Festivals list',ar:'📋 قائمة الأعياد'},
+  m_notif:{he:'🔔 ניהול התראות',en:'🔔 Notifications',ar:'🔔 إدارة التنبيهات'},
+  m_print:{he:'🖨 הדפס / PDF',en:'🖨 Print / PDF',ar:'🖨 طباعة / PDF'},
+  m_sync:{he:'📅 סנכרון ליומן',en:'📅 Sync to calendar',ar:'📅 مزامنة مع التقويم'},
+  m_share:{he:'📤 שיתוף',en:'📤 Share',ar:'📤 مشاركة'},
+  m_word:{he:'ייצוא ל-Word',en:'Export to Word',ar:'تصدير إلى Word'},
+  m_excel:{he:'ייצוא ל-Excel',en:'Export to Excel',ar:'تصدير إلى Excel'},
+  m_install:{he:'📲 התקן אפליקציה',en:'📲 Install app',ar:'📲 تثبيت التطبيق'},
+  m_colors:{he:'🎨 הגדר צבעים',en:'🎨 Colours',ar:'🎨 الألوان'},
+  h_whatsnew:{he:'✨ מה חדש?',en:"✨ What's new?",ar:'✨ ما الجديد؟'},
+  h_more:{he:'⋯ תפריט אפשרויות נוספות ▾',en:'⋯ More options ▾',ar:'⋯ خيارات إضافية ▾'},
+  h_private:{he:'➕ הוסף אירוע פרטי',en:'➕ Add private event',ar:'➕ إضافة حدث خاص'},
+  h_lang:{he:'🌐 שנה שפה',en:'🌐 Language',ar:'🌐 اللغة'},
+  h_help:{he:'❓ עזרה',en:'❓ Help',ar:'❓ مساعدة'},
+  h_version:{he:'גרסה נוכחית: ',en:'Version: ',ar:'الإصدار: '},
+  h_install:{he:'📲 התקנת אפליקציה',en:'📲 Install app',ar:'📲 تثبيت التطبيق'},
+  h_events:{he:'עריכת אירועי הקהילה',en:'Edit community events',ar:'تحرير أحداث الطائفة'},
+  ok:{he:'הבנתי',en:'Got it',ar:'حسنًا'},
+  t_help:{he:'❓ עזרה — מדריך לשימוש באפליקציה',en:'❓ Help — using the app',ar:'❓ مساعدة — استخدام التطبيق'},
+  t_whatsnew:{he:'✨ מה חדש באפליקציה',en:"✨ What's new",ar:'✨ ما الجديد'},
+  t_notif:{he:'🔔 ניהול התראות',en:'🔔 Notifications',ar:'🔔 إدارة التنبيهات'},
+  t_priv:{he:'➕ אירוע פרטי (נשמר במכשיר זה בלבד)',en:'➕ Private event (this device only)',ar:'➕ حدث خاص (على هذا الجهاز فقط)'},
+  t_comm:{he:'עריכת אירועי הקהילה',en:'Edit community events',ar:'تحرير أحداث الطائفة'},
+  t_colors:{he:'🎨 הגדרת צבעים',en:'🎨 Colour settings',ar:'🎨 إعدادات الألوان'},
+  t_moadim:{he:'רשימת מועדים וחגים',en:'Festivals & holidays',ar:'قائمة الأعياد والمواعيد'},
+  t_sync:{he:'סנכרון ליומן',en:'Sync to calendar',ar:'مزامنة مع التقويم'},
+  notif_save:{he:'אישור התראות',en:'Save notifications',ar:'حفظ التنبيهات'},
+  add_event:{he:'＋ הוסף אירוע',en:'＋ Add event',ar:'＋ إضافة حدث'},
+  save_cal:{he:'אישור ושמירה ללוח',en:'Save to calendar',ar:'حفظ في التقويم'},
+  save_priv:{he:'שמירה ללוח',en:'Save',ar:'حفظ'},
+  year_lbl:{he:'שנה',en:'Year',ar:'السنة'},
+  lang_title:{he:'בחירת שפה',en:'Choose language',ar:'اختيار اللغة'}
+};
+const NEWS = {
+  en: `<ul><li><b>Languages</b> — Hebrew, English and Arabic interface.</li><li><b>Private events</b> — personal events on this device, with reminders.</li><li><b>New-moons</b> (rosh chodesh) marked on the calendar.</li><li><b>Notifications</b>, Word/Excel export, community-events editor.</li></ul>`,
+  ar: `<ul><li><b>اللغات</b> — واجهة بالعبرية والإنجليزية والعربية.</li><li><b>أحداث خاصة</b> — أحداث شخصية على هذا الجهاز، مع تنبيهات.</li><li><b>رؤوس الأشهر</b> معلَّمة في التقويم.</li><li><b>التنبيهات</b>، التصدير إلى Word/Excel، محرّر أحداث الطائفة.</li></ul>`
+};
+const HELP = {
+  en: `<p>This app computes the <b>Samaritan-Hebrew calendar</b> on its own. It is experimental — not a substitute for the official Kushta reckoning. The calendar's day letters, month and festival names remain in Hebrew/Samaritan.</p>
+    <h3>Navigation</h3><ul><li>Toggle <b>Gregorian / Entry-to-the-Land</b> year, type a year and press <b>Build</b>.</li><li><b>◀ ▶</b> next/previous year · <b>Today</b> jumps to today · <b>Filter</b> shows selected months · enter a date and press <b>Show</b>.</li></ul>
+    <h3>Menus</h3><ul><li><b>⋯ More options</b>: festivals list, notifications, print/PDF, calendar sync, share, Word/Excel export, install, colours.</li><li><b>☰</b>: what's new, options, add private event, language, help, version, install, community-events editor.</li></ul>
+    <h3>Notifications</h3><ul><li>Pick future events (filter by type), set how long before (days/hours/minutes — a default and per-event), and allow notifications. Reminders appear while the app is open; stored on this device.</li></ul>
+    <h3>Private events</h3><ul><li>Personal events (date + description) stored <b>on this device only</b>; shown as “פרטי- …” and available for reminders.</li></ul>`,
+  ar: `<p>يحسب هذا التطبيق <b>التقويم العبري السامري</b> بنفسه. وهو تجريبي — ليس بديلاً عن حساب الكشطة الرسمي. تبقى حروف الأيام وأسماء الأشهر والأعياد بالعبرية/السامرية.</p>
+    <h3>التنقّل</h3><ul><li>بدّل بين سنة <b>ميلادية / الدخول إلى الأرض</b>، اكتب سنة واضغط <b>إنشاء</b>.</li><li><b>◀ ▶</b> السنة التالية/السابقة · <b>اليوم</b> · <b>تصفية</b> لعرض أشهر مختارة · أدخل تاريخًا واضغط <b>عرض</b>.</li></ul>
+    <h3>القوائم</h3><ul><li><b>⋯ خيارات إضافية</b>: قائمة الأعياد، التنبيهات، طباعة/PDF، مزامنة التقويم، مشاركة، تصدير Word/Excel، تثبيت، الألوان.</li><li><b>☰</b>: ما الجديد، الخيارات، إضافة حدث خاص، اللغة، المساعدة، الإصدار، التثبيت، محرّر أحداث الطائفة.</li></ul>
+    <h3>التنبيهات</h3><ul><li>اختر أحداثًا مستقبلية (مع تصفية حسب النوع)، وحدّد المدة قبل الحدث (أيام/ساعات/دقائق — افتراضي ولكل حدث)، واسمح بالتنبيهات. تظهر التذكيرات عندما يكون التطبيق مفتوحًا؛ وتُحفظ على هذا الجهاز.</li></ul>
+    <h3>الأحداث الخاصة</h3><ul><li>أحداث شخصية (تاريخ + وصف) تُحفظ <b>على هذا الجهاز فقط</b>؛ تظهر بالبادئة «פרטי- …» ويمكن ضبط تنبيهات لها.</li></ul>`
+};
+function t(k){ const e=I18N[k]; return e ? (e[LANG]||e.he) : k; }
+function translateUI(){
+  if(HELP.he===undefined){ const hc=document.getElementById('help-content'); if(hc) HELP.he=hc.innerHTML; }   // capture static Hebrew help once
+  const set=(id,k)=>{ const el=document.getElementById(id); if(el) el.textContent=t(k); };
+  const setSel=(sel,k)=>{ const el=document.querySelector(sel); if(el) el.textContent=t(k); };
+  setSel('.suptitle','suptitle'); setSel('header h1','title');
+  setSel('#mGreg .lbl-long','mode_greg'); setSel('#mGreg .lbl-short','mode_greg_s');
+  setSel('#mCanaan .lbl-long','mode_canaan'); setSel('#mCanaan .lbl-short','mode_canaan_s');
+  set('go','build'); set('today','today'); set('month-filter-btn','filter'); set('clear-filter','clear_filter');
+  const di=document.getElementById('date-input'); if(di) di.placeholder=t('date_ph');
+  set('date-go','show'); set('more-btn','more');
+  set('moadim','m_moadim'); set('notif','m_notif'); set('print','m_print'); set('ics','m_sync'); set('share','m_share');
+  set('shortcut','m_install'); set('colors','m_colors');
+  const ew=document.getElementById('exp-word'), ex=document.getElementById('exp-excel');   // keep the SVG icon
+  if(ew) ew.lastChild.textContent=' '+t('m_word'); if(ex) ex.lastChild.textContent=' '+t('m_excel');
+  set('ham-whatsnew','h_whatsnew'); set('ham-more','h_more'); set('ham-private','h_private');
+  set('ham-lang','h_lang'); set('ham-help','h_help'); set('ham-install','h_install'); set('ham-events','h_events');
+  const hv=document.getElementById('ham-version'); if(hv){ hv.firstChild.textContent=t('h_version'); }
+  // sub-menu proxy buttons
+  document.querySelectorAll('#ham-more-sub button').forEach(b=>{ const m={moadim:'m_moadim',notif:'m_notif',print:'m_print',ics:'m_sync',share:'m_share','exp-word':'m_word','exp-excel':'m_excel',shortcut:'m_install',colors:'m_colors'}[b.dataset.act]; if(m) b.textContent=t(m); });
+  // modal titles + key buttons
+  setSel('#help-modal .modal-head span','t_help'); set('help-ok','ok');
+  setSel('#whatsnew-modal .modal-head span','t_whatsnew'); set('wn-ok','ok');
+  setSel('#notif-modal .modal-head span','t_notif'); set('notif-save','notif_save');
+  setSel('#priv-modal .modal-head span','t_priv'); set('priv-add','add_event'); set('priv-save','save_priv'); set('priv-show','show');
+  setSel('#cevt-modal .modal-head span','t_comm'); set('cevt-add','add_event'); set('cevt-save','save_cal'); set('cevt-show','show');
+  setSel('#color-modal .modal-head span','t_colors');
+  setSel('#modal .modal-head span','t_moadim'); setSel('#sync-modal .modal-head span','t_sync');
+  // what's-new + help bodies
+  const wb=document.getElementById('wn-body'); if(wb) wb.innerHTML = NEWS[LANG] || (typeof APP_NEWS!=='undefined'?APP_NEWS:'');
+  const hc=document.getElementById('help-content'); if(hc) hc.innerHTML = HELP[LANG] || HELP.he || '';
+}
+function applyLang(lang){
+  LANG=lang; try{ localStorage.setItem('sam-lang',lang); }catch(e){}
+  document.documentElement.lang=lang; document.documentElement.dir = (lang==='en') ? 'ltr' : 'rtl';
+  document.body.dir = document.documentElement.dir;
+  translateUI();
+}
+function chooseLang(){
+  dialog({ title:t('lang_title'), html:'',
+    buttons:[ {label:'עברית',primary:LANG==='he',act:()=>applyLang('he')},
+              {label:'English',primary:LANG==='en',act:()=>applyLang('en')},
+              {label:'العربية',primary:LANG==='ar',act:()=>applyLang('ar')} ]});
+}
 
 function gregOf(val){ return mode==='greg' ? val : val - INDEX.canaan_offset; }
 function dispOf(greg){ return mode==='greg' ? greg : greg + INDEX.canaan_offset; }
@@ -1107,7 +1218,7 @@ function privSave(){
 }
 
 // ---- app version + "what's new" splash ----
-const APP_VERSION = '2.2';
+const APP_VERSION = '2.3';
 const NEWS_KEY = 'sam-news-seen';
 const APP_NEWS = `<ul>
   <li><b>אירוע פרטי</b> — הוספת אירועים אישיים (בתפריט ☰), נשמרים במכשיר זה, מופיעים בלוח בקידומת "פרטי-" וניתן לקבל עליהם התראה.</li>
@@ -1122,7 +1233,7 @@ function newsIsNew(){ try{ return localStorage.getItem(NEWS_KEY)!==APP_VERSION; 
 function updateNewsDim(){ const b=document.getElementById('ham-whatsnew'); if(b) b.classList.toggle('dim', !newsIsNew()); }
 function showWhatsNew(markSeen){
   document.getElementById('wn-version').textContent=APP_VERSION;
-  document.getElementById('wn-body').innerHTML=APP_NEWS;
+  document.getElementById('wn-body').innerHTML=NEWS[LANG]||APP_NEWS;
   document.getElementById('whatsnew-modal').hidden=false;
   if(markSeen){ try{ localStorage.setItem(NEWS_KEY,APP_VERSION); }catch(e){} updateNewsDim(); }
 }
@@ -1257,6 +1368,7 @@ function setupCommunity(){
   moreSub.querySelectorAll('button').forEach(b=>b.onclick=()=>{ closeMenus(); const t=document.getElementById(b.dataset.act); if(t) t.click(); });
   document.getElementById('ham-version').onclick=()=>{ closeMenus(); dialog({title:'גרסה נוכחית',html:'גרסה <b>'+APP_VERSION+'</b>',buttons:[{label:'מה חדש?',primary:true,act:()=>showWhatsNew(true)},{label:'סגור'}]}); };
   document.getElementById('ham-install').onclick=()=>{ closeMenus(); createShortcut(); };
+  document.getElementById('ham-lang').onclick=()=>{ closeMenus(); chooseLang(); };
   document.getElementById('ham-help').onclick=()=>{ closeMenus(); document.getElementById('help-modal').hidden=false; };
   document.getElementById('help-close').onclick=()=>{ document.getElementById('help-modal').hidden=true; };
   document.getElementById('help-ok').onclick=()=>{ document.getElementById('help-modal').hidden=true; };
@@ -1276,6 +1388,7 @@ function setupCommunity(){
   document.getElementById('notif-year').addEventListener('keydown',e=>{ if(e.key==='Enter') renderNotifList(); });
   document.querySelectorAll('#notif-cats .ncat').forEach(c=>c.onchange=renderNotifList);
   ['notif-d','notif-h','notif-m'].forEach(id=>document.getElementById(id).onchange=renderNotifList);   // new default -> re-apply to unsaved rows
+  applyLang(LANG);   // apply the saved interface language
   // first run after an update -> notify installed users + show what's new once; start reminder loop
   if(newsIsNew()){
     if('Notification' in window && Notification.permission==='granted')
