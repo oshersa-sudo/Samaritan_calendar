@@ -147,8 +147,10 @@
     /* force colour output even when the browser's "Background graphics" is off */
     html,body,*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
     .mhead,.cell,.cell.sat,.cell.hol,.fest .f{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-    .months{grid-template-columns:repeat(2,1fr);gap:8px}
-    .month{break-inside:avoid;box-shadow:none;border:1pt solid #2b2620}
+    /* one month per printed page (page break between months) */
+    .months{display:block}
+    .month{break-inside:avoid;break-after:page;page-break-after:always;box-shadow:none;border:1pt solid #2b2620;margin:0 0 0 0}
+    .month:last-of-type{break-after:auto;page-break-after:auto}
     /* STRONG gridlines in BOTH directions — explicit cell borders print reliably (gap+bg does not) */
     .grid{background:transparent;gap:0;padding:0}
     .cell{border:0.6pt solid #2b2620}
@@ -1841,7 +1843,11 @@ async function init(){
     const css=`
       @page{size:A4 ${compact?'portrait':'landscape'};margin:0.8cm}
       body{font-family:Arial,sans-serif;direction:rtl;margin:0}
-      .page{page-break-after:always} .page:last-of-type{page-break-after:auto}
+      /* one month per page (calendar AND donation): break after every month, and before each
+         month from the second on — belt-and-suspenders so Word/print always paginate per month */
+      .page{page-break-after:always;break-after:page;page-break-inside:avoid;break-inside:avoid}
+      .page:last-of-type{page-break-after:auto;break-after:auto}
+      .page+.page{page-break-before:always;break-before:page}
       .mh{text-align:center;margin:0 0 4px} .mh .t2{font-size:13pt;font-weight:bold;color:#8a6d3b}
       .mh .t1{font-size:8.5pt;color:#735a30} .mh .t3{font-size:8pt;color:#6c6253}
       table{width:100%;border-collapse:collapse;table-layout:fixed} thead{display:table-header-group}
