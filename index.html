@@ -1846,7 +1846,7 @@ async function init(){
       const greg = rec.greg_day===1 ? `${num(rec.greg_day)} <span class=modheb>${GMON[+rec.greg.slice(5,7)]}</span>` : num(rec.greg_day);
       rows+=`<tr${st}><td>${sun}</td><td class=samx>${WDLET[wd]}</td><td class=samx>${stripGer(rec.heb_label)}</td><td>${num(rec.syriac_day)}</td><td class=evt>${evCellDon(rec)}</td><td>${greg}</td></tr>`;
     }
-    return `<div class=page>${donationHeader(yc,mo)}<table class=tbl><thead><tr><th>${sam('ערב')}</th><th>${sam('יום')}</th><th>${sam('עברי')}</th><th>${sam('מזרחי')}</th><th></th><th>${sam('מערבי')}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    return `<div class=page>${donationHeader(yc,mo)}<table class=tbl align=center><thead><tr><th>${sam('ערב')}</th><th>${sam('יום')}</th><th>${sam('עברי')}</th><th>${sam('מזרחי')}</th><th></th><th>${sam('מערבי')}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
   }
   function gridMonth(yc,mo){
     const first=new Date(mo.days[0].greg+'T00:00:00').getDay();
@@ -1867,33 +1867,35 @@ async function init(){
   }
   async function buildExport(format){
     const yc=DATA_YC; if(!yc){ dialog({title:'אין לוח',html:'בנו לוח תחילה.',buttons:[{label:'סגור',primary:true}]}); return null; }
-    const body=yc.months.map(mo=> format==='donation'?donationMonth(yc,mo):gridMonth(yc,mo)).join('');
+    const body=yc.months.map((mo,i)=>{
+      let h = format==='donation'?donationMonth(yc,mo):gridMonth(yc,mo);
+      if(i>0) h = h.replace('<div class=page>','<div class="page" style="page-break-before:always">');   // break before every month (incl. each entry-year header)
+      return h;
+    }).join('');
     const compact = format==='donation';   // donation = up to 31 rows -> must fit one A4 page
     const css=`
       @page{size:A4 ${compact?'portrait':'landscape'};margin:0.8cm}
       body{font-family:Arial,sans-serif;direction:rtl;margin:0}
-      /* one month per page (calendar AND donation): break after every month, and before each
-         month from the second on — belt-and-suspenders so Word/print always paginate per month */
-      .page{page-break-after:always;break-after:page;page-break-inside:avoid;break-inside:avoid}
-      .page:last-of-type{page-break-after:auto;break-after:auto}
-      .page+.page{page-break-before:always;break-before:page}
+      /* one month per page: a hard page-break-before each month (set inline above, 2nd month on) —
+         single break only, so Word paginates exactly once before each entry-year header */
+      .page{page-break-inside:avoid;break-inside:avoid}
       .mh{text-align:center;margin:0 0 4px} .mh .t2{font-size:13pt;font-weight:bold;color:#8a6d3b}
       .mh .t1{font-size:8.5pt;color:#735a30} .mh .t3{font-size:8pt;color:#6c6253}
-      /* donation header — clean centered stack, tight spacing */
-      .cybig{text-align:center;font-size:20pt;font-weight:bold;color:#8a6d3b;line-height:1;margin:0}
-      .mh-name{text-align:center;font-size:12pt;font-weight:bold;color:#8a6d3b;line-height:1.02;margin:0}
-      .dmolad{text-align:center;font-size:8pt;color:#6c6253;line-height:1.05;margin:0}
-      .dgreg{text-align:center;font-size:8.5pt;color:#222;line-height:1.05;margin:0 0 3px}
+      /* donation header — centered stack, uniform exact 16pt line spacing */
+      .cybig{text-align:center;font-size:20pt;font-weight:bold;color:#8a6d3b;line-height:16pt;mso-line-height-rule:exactly;margin:0}
+      .mh-name{text-align:center;font-size:12pt;font-weight:bold;color:#8a6d3b;line-height:16pt;mso-line-height-rule:exactly;margin:0}
+      .dmolad{text-align:center;font-size:11pt;color:#6c6253;line-height:16pt;mso-line-height-rule:exactly;margin:0}
+      .dgreg{text-align:center;font-size:12pt;color:#222;line-height:16pt;mso-line-height-rule:exactly;margin:0 0 3px}
       table{width:100%;border-collapse:collapse;table-layout:fixed} thead{display:table-header-group}
       th,td{border:1px solid #999;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere}
       th{background:#efe6d3;color:#735a30}
       .num{font-family:Arial} .dot{font-family:Arial;font-style:normal;color:#8a6d3b;margin:0 1px;vertical-align:0.18em}
       .samx{font-family:'Ben_nor_m',Arial} .modheb{font-family:Arial}
-      /* donation table: 12pt fonts, exact 16pt line spacing (rows grow for multi-event days) */
-      .tbl{font-size:12pt} .tbl th,.tbl td{padding:0 4px;line-height:16pt;mso-line-height-rule:exactly}
-      .tbl th{padding:2px 4px} .tbl .evt{text-align:right;width:40%}
-      .tbl .num,.tbl .modheb,.tbl .samx,.tbl td.samx{font-size:12pt}
-      .tbl .evln{line-height:16pt;mso-line-height-rule:exactly;margin:0}
+      /* donation table: 12pt numbers/Hebrew, 11pt Samaritan, exact 16pt line spacing; centered on page */
+      .tbl{font-size:12pt;margin-left:auto;margin-right:auto} .tbl th,.tbl td{padding:0 4px;line-height:16pt;mso-line-height-rule:exactly}
+      .tbl th{padding:2px 4px} .tbl .evt{text-align:center;width:40%}
+      .tbl .num,.tbl .modheb{font-size:12pt} .tbl .samx,.tbl td.samx{font-size:11pt}
+      .tbl .evln{line-height:16pt;mso-line-height-rule:exactly;margin:0;text-align:center}
       .grid{font-size:9pt} .grid th,.grid td{padding:2px}
       .grid td.cell{height:2.7cm;width:14%} .grid .ch{display:flex;justify-content:space-between;font-weight:bold}
       .grid .gd{color:#888;font-weight:normal} .grid .ev{font-size:8pt;color:#444}
