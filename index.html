@@ -1814,18 +1814,21 @@ async function init(){
   function donationHeader(yc,mo){
     const cy = mo.index>=(yc.year_change_month||6) ? yc.canaan_year+1 : yc.canaan_year, m=mo.molad;
     const yrs=[...new Set(mo.days.map(d=>d.greg.slice(0,4)))].join('/');
-    // line 1: month name (Samaritan) · Gregorian years · Gregorian month in Hebrew font (no month number)
-    const l1=`${sam(mo.name)} ${num(yrs)} <span class=modheb>${mo.greg_months}</span>`;
-    // line 2: entry-year (Samaritan wording) · creation year · Hijra (number Hebrew + word "היגרה" Samaritan)
-    const hij = mo.hijri_year ? ` <i class=dot>·</i> ${num(mo.hijri_year)} ${sam('היגרה')}` : '';
-    const l2=`${sam('שנת')} ${num(cy)} ${sam('למובא בני ישראל לארץ הקדושה')} <i class=dot>·</i> ${num(cy+2800)} ${sam('לבריאת העולם')}${hij}`;
-    // line 3 (molad), Samaritan font except the time which stays Hebrew; no Islamic month, no "מדויק":
+    // molad line (Samaritan font, time stays Hebrew; no Islamic month, no "מדויק"):
     // "זבן המולד <שעה> מן <יום/ליל> <יום> לגו <יום יוליאני> מן <חודש יוליאני> חדש <ירחי/שמשי>"
     const dn = m.daynight==='לילה' ? 'ליל' : 'יום';
     const sp = String(m.molad_syr||'').split(/\s+/), julDay=sp[0]||'', julMon=sp.slice(1).join(' ');
     const mtype = m.month_type ? ` ${sam('חדש')} ${sam(m.month_type)}` : '';
-    const l3=`${sam('זבן המולד')} ${num(m.clock)} ${sam('מן')} ${sam(dn)} ${sam(m.molad_wd)} ${sam('לגו')} ${num(julDay)} ${sam('מן')} ${sam(julMon)}${mtype}`;
-    return `<div class=mh><div class=t2>${l1}</div><div class=t1>${l2}</div><div class=t3>${l3}</div></div>`;
+    const molad=`${sam('זבן המולד')} ${num(m.clock)} ${sam('מן')} ${sam(dn)} ${sam(m.molad_wd)} ${sam('לגו')} ${num(julDay)} ${sam('מן')} ${sam(julMon)}${mtype}`;
+    // 3-zone top header: LEFT = Gregorian month/year (Hebrew, bold) + Hijra (number Hebrew, word Samaritan);
+    // CENTER = canaan year (big) + month name + entry wording (Samaritan); RIGHT = creation year (Samaritan).
+    // dir=ltr fixes physical placement (left/center/right) the way Word renders the data table.
+    const hij = mo.hijri_year ? `<div class=hcorner>${num(mo.hijri_year)} ${sam('היגרה')}</div>` : '';
+    return `<table class=mh-top dir=ltr><tr>
+      <td class=mh-l dir=rtl><div class=greg>${mo.greg_months} ${yrs}</div>${hij}</td>
+      <td class=mh-c dir=rtl><div class=cybig>${cy}</div><div class=cyttl>${sam(mo.name)}</div><div class=cysub>${sam('שנת')} ${sam('למובא בני ישראל לארץ הקדושה')}</div></td>
+      <td class=mh-r dir=rtl><div class=hcorner>${num(cy+2800)} ${sam('לבריאת העולם')}</div></td>
+    </tr></table><div class=dmolad>${molad}</div>`;
   }
   function donationMonth(yc,mo){
     let sab=0, rows='';
@@ -1872,6 +1875,13 @@ async function init(){
       .page+.page{page-break-before:always;break-before:page}
       .mh{text-align:center;margin:0 0 4px} .mh .t2{font-size:13pt;font-weight:bold;color:#8a6d3b}
       .mh .t1{font-size:8.5pt;color:#735a30} .mh .t3{font-size:8pt;color:#6c6253}
+      /* donation 3-zone header */
+      .mh-top{width:100%;margin:0 0 2px} .mh-top td{border:none!important;vertical-align:top;padding:0 4px}
+      .mh-l{text-align:left;width:33%} .mh-c{text-align:center;width:34%} .mh-r{text-align:right;width:33%}
+      .cybig{font-size:18pt;font-weight:bold;color:#5b3a86;line-height:1.05}
+      .cyttl{font-size:12pt;font-weight:bold;color:#8a6d3b} .cysub{font-size:8pt;color:#735a30}
+      .greg{font-size:11pt;font-weight:bold;color:#222} .hcorner{font-size:8.5pt;color:#735a30}
+      .dmolad{text-align:center;font-size:8pt;color:#6c6253;margin:0 0 4px}
       table{width:100%;border-collapse:collapse;table-layout:fixed} thead{display:table-header-group}
       th,td{border:1px solid #999;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere}
       th{background:#efe6d3;color:#735a30}
@@ -1892,11 +1902,25 @@ async function init(){
     document.body.appendChild(a); a.click(); a.remove();
     dialog({ title:'התקנת הפונט השומרוני', html:'הקובץ <b>Sam_font.ttf</b> ירד. פִּתחו אותו בלחיצה כפולה ולחצו <b>"התקן" (Install)</b>. לאחר ההתקנה פִּתחו מחדש את קובץ הלוח — הטקסט יוצג בכתב השומרוני.', buttons:[{label:'הבנתי',primary:true}] });
   }
+  // detect whether the Samaritan export font ('Ben_nor_m') is installed on the system —
+  // canvas width comparison vs generic fallbacks using Hebrew letters (the font maps Hebrew→Samaritan glyphs)
+  function fontInstalled(fam){
+    try{
+      const txt='אבגדהוזחטיכלמנסעפצקרשת', sz='72px';
+      const ctx=document.createElement('canvas').getContext('2d');
+      const w=f=>{ ctx.font=sz+' '+f; return ctx.measureText(txt).width; };
+      for(const base of ['monospace','sans-serif','serif']){
+        if(Math.abs(w(`'${fam}',${base}`)-w(base))>0.5) return true;   // different metrics ⇒ font present
+      }
+      return false;
+    }catch(e){ return true; }   // on any error, assume present (don't nag)
+  }
   async function exportTo(app,format){
     const html=await buildExport(format); if(!html) return;
     const base=`לוח-${DATA_YC.canaan_year}-${format==='donation'?'תרומה':'שנה'}`;
     if(app==='word') dlOffice(html, base+'.doc', 'application/msword');
     else dlOffice(html, base+'.xls', 'application/vnd.ms-excel');
+    if(fontInstalled('Ben_nor_m')) return;   // font already installed → no nag, just download
     setTimeout(()=>dialog({ title:'הקובץ יוצא ✓', html:'כדי שהכתב השומרוני יוצג ב-Word/Excel יש להתקין את הפונט במחשב פעם אחת. (לאחר ההתקנה הקובץ יציג שומרוני; אחרת — עברית רגילה.)',
       buttons:[ {label:'הורד והתקן פונט', primary:true, act:installFont}, {label:'הפונט כבר מותקן'} ] }), 350);
   }
