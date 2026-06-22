@@ -99,6 +99,7 @@
   .modes{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
   .modes button{background:#fff;border:none;padding:6px 9px;cursor:pointer;font-size:.8rem;color:var(--muted);white-space:nowrap}
   .modes button.on{background:var(--accent);color:#fff;font-weight:700}
+  .lbl-short{display:none}   /* short mode labels appear only on phones */
   input[type=number]{font-size:1rem;width:82px;padding:6px 6px;text-align:center;
     border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)}
   .bar .go{font-size:.9rem;padding:7px 12px;border:none;border-radius:9px;background:var(--accent);color:#fff;cursor:pointer;font-weight:700;white-space:nowrap}
@@ -266,9 +267,14 @@
     input[type=number]{width:70px;font-size:.92rem}
     /* on phones: each cluster takes a full row -> clean stacked rows */
     .bar-group,.bar .actions{flex-basis:100%;width:100%;gap:5px;margin-inline-start:0}
-    /* primary nav controls stay on ONE top row (scroll sideways if needed) */
-    .bar-group.primary{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+    /* primary nav controls fit on ONE top row (short mode labels, tighter spacing) */
+    .lbl-long{display:none} .lbl-short{display:inline}
+    .bar-group.primary{flex-wrap:nowrap;overflow-x:auto;justify-content:center;gap:3px;padding-bottom:2px;-webkit-overflow-scrolling:touch}
     .bar-group.primary>*{flex:0 0 auto}
+    .modes button{padding:5px 5px;font-size:.7rem}
+    .bar .go{padding:6px 7px}
+    .nav{padding:6px 7px}
+    input[type=number]{width:56px}
     .bar-group.secondary{justify-content:flex-start}
     .bar-group.secondary .date-input{flex:1 1 auto;min-width:110px}
     .legend{gap:7px 10px;font-size:.7rem;margin:6px 0 12px}
@@ -317,8 +323,8 @@
     <span class="bar-group primary">
       <button class="nav" id="prev" title="שנה קודמת">▶</button>
       <div class="modes">
-        <button id="mGreg" class="on">שנה לועזית</button>
-        <button id="mCanaan">שנת כניסה לארץ הקדושה</button>
+        <button id="mGreg" class="on"><span class="lbl-long">שנה לועזית</span><span class="lbl-short">לועזית</span></button>
+        <button id="mCanaan"><span class="lbl-long">שנת כניסה לארץ הקדושה</span><span class="lbl-short">כניסה לארץ</span></button>
       </div>
       <input type="number" id="year" step="1">
       <button class="nav" id="next" title="שנה הבאה">◀</button>
