@@ -99,6 +99,11 @@
   .ham-ver{color:var(--accent);font-weight:700}
   /* what's-new + notifications dialogs */
   .wn-body ul{margin:6px 0;padding-inline-start:20px} .wn-body li{margin:5px 0;font-size:.92rem}
+  .help-body{max-height:70vh;overflow:auto}
+  .help-body p{font-size:.92rem;line-height:1.6;margin:4px 0 10px}
+  .help-body h3{font-size:1rem;color:var(--accent);margin:14px 0 4px;padding-bottom:3px;border-bottom:1px solid var(--line)}
+  .help-body ul{margin:4px 0 8px;padding-inline-start:20px}
+  .help-body li{margin:4px 0;font-size:.9rem;line-height:1.55}
   .wn-ver{font-size:.8rem;color:var(--muted)}
   .notif-lead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0 12px;border-bottom:1px solid var(--line)}
   .notif-lead label{font-size:.82rem;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:4px}
@@ -382,6 +387,7 @@
       <button data-act="shortcut">📲 התקן אפליקציה</button>
       <button data-act="colors">🎨 הגדר צבעים</button>
     </div>
+    <button id="ham-help">❓ עזרה</button>
     <button id="ham-version">גרסה נוכחית: <span class="ham-ver" id="ham-ver"></span></button>
     <button id="ham-install">📲 התקנת אפליקציה</button>
     <hr class="ham-sep">
@@ -527,6 +533,82 @@
         <div class="wn-ver">גרסה <span id="wn-version"></span></div>
         <div class="wn-body" id="wn-body"></div>
         <div class="cevt-foot"><button class="go" id="wn-ok">הבנתי</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="help-modal" class="modal" hidden>
+    <div class="modal-box">
+      <div class="modal-head">
+        <span>❓ עזרה — מדריך לשימוש באפליקציה</span>
+        <span class="modal-actions"><button class="act" id="help-close" title="סגור">✕</button></span>
+      </div>
+      <div class="modal-body help-body">
+        <p>אפליקציה זו מחשבת את <b>לוח השנה השומרוני-העברי</b> בעצמה, וממירה בין שיטות-הספירה. הלוח ניסיוני — אינו תחליף לחשבון הקשט הרשמי של הכהן הגדול.</p>
+
+        <h3>ניווט ובחירת שנה (הסרגל העליון)</h3>
+        <ul>
+          <li><b>שנה לועזית / כניסה</b> — מעבר בין ספירה לועזית (גרגוריאנית) לספירת "כניסה לארץ הקדושה".</li>
+          <li><b>תיבת השנה</b> — הקלידו שנה ולחצו <b>בנה לוח</b>.</li>
+          <li><b>◀ ▶</b> — שנה הבאה / קודמת.</li>
+          <li><b>היום</b> — קפיצה ליום הנוכחי (הכפתור המודגש).</li>
+          <li><b>סינון</b> — הצגת חודשים נבחרים בלבד; <b>נקה סינון</b> — חזרה לכל החודשים.</li>
+          <li><b>הזן תאריך לועזי</b> + <b>הצג</b> — מעבר ישיר לתאריך מסוים.</li>
+        </ul>
+
+        <h3>קריאת יום בלוח</h3>
+        <ul>
+          <li><b>אות עברית גדולה</b> = היום בחודש השומרוני.</li>
+          <li><b>מספר קטן</b> = התאריך הלועזי.</li>
+          <li><b>מז.</b> = היום בחודש המזרחי (סורי / יוליאני).</li>
+          <li><b>ז / ש</b> = זריחה / שקיעה (זמני חולון; בהר גריזים הוסיפו ~5 דקות).</li>
+          <li><b>שורת המולד</b> בכותרת כל חודש — יום המולד, השעה (שעון ערבי), והחודש המזרחי.</li>
+          <li><b>צבעי הימים</b> — ראו את המקרא שמתחת לסרגל.</li>
+        </ul>
+
+        <h3>סוגי אירועים</h3>
+        <ul>
+          <li><b>ש-</b> חג שומרוני · <b>י-</b> חג יהודי · <b>שבת</b> ושבתות מיוחדות / מופתים · מעמד הר סיני · <b>אירועי קהילה</b> (בצבעים).</li>
+        </ul>
+
+        <h3>תפריט "אפשרויות נוספות" (⋯)</h3>
+        <ul>
+          <li><b>רשימת מועדים וחגים</b> — טבלה של כל אירועי השנה (ניתנת להורדה לאקסל).</li>
+          <li><b>🔔 ניהול התראות</b> — ראו למטה.</li>
+          <li><b>הדפס / PDF</b> · <b>סנכרון ליומן</b> (Google / Outlook דרך קובץ ICS) · <b>שיתוף</b> (וואטסאפ / דוא״ל).</li>
+          <li><b>ייצוא ל-Word / Excel</b> — פורמט "לוח שנה" או "תרומה". להצגת הכתב השומרוני יש להתקין פעם אחת את הפונט (כפתור ההורדה בעת הייצוא).</li>
+          <li><b>התקן אפליקציה</b> · <b>הגדר צבעים</b>.</li>
+        </ul>
+
+        <h3>תפריט ☰ (פינה שמאלית-עליונה)</h3>
+        <ul>
+          <li><b>מה חדש?</b> — חידושי הגרסה (מעומעם אם כבר נצפו).</li>
+          <li><b>תפריט אפשרויות נוספות</b> — אותן פעולות כמו ⋯.</li>
+          <li><b>עזרה</b> — מסך זה. <b>גרסה נוכחית</b> — מוצגת גם בפינה הימנית-העליונה.</li>
+          <li><b>התקנת אפליקציה</b> · <b>עדכון אירועי הקהילה</b> (למנהל).</li>
+        </ul>
+
+        <h3>🔔 ניהול התראות</h3>
+        <ul>
+          <li>בחרו שנה, סננו לפי סוג, וסמנו אילו <b>אירועים עתידיים</b> לקבל בהתראה.</li>
+          <li>קבעו <b>כמה זמן לפני</b> (ימים / שעות / דקות) — ברירת-מחדל בכותרת, וניתן לקבוע זמן <b>שונה לכל אירוע</b>.</li>
+          <li><b>אישור התראות</b> מבקש הרשאת-התראות מהמכשיר. ההעדפות נשמרות במכשיר זה.</li>
+          <li><b>הערה:</b> באתר ללא שרת, התזכורות מופיעות כשהאפליקציה פתוחה. להתראות כשהאפליקציה סגורה נדרש שרת.</li>
+        </ul>
+
+        <h3>עורך אירועי הקהילה (למנהל)</h3>
+        <ul>
+          <li>נדרשת כניסה עם שם משתמש וסיסמה. בחרו שנה ולחצו <b>הצג</b>.</li>
+          <li>אירועי האקסל מוצגים לקריאה; ניתן להוסיף/לערוך אירועים משלכם (תאריך, תיאור, צבעי טקסט ורקע). נשמרים <b>במכשיר זה</b>.</li>
+        </ul>
+
+        <h3>צבעים והתקנה</h3>
+        <ul>
+          <li><b>הגדר צבעים</b> — בוחרי צבע + פלטות מוכנות; ניתן לשמור למכשיר.</li>
+          <li><b>התקנת אפליקציה</b> — במובייל: "הוסף למסך הבית"; במחשב: קיצור דרך / התקנה.</li>
+        </ul>
+
+        <div class="cevt-foot"><button class="go" id="help-ok">הבנתי</button></div>
       </div>
     </div>
   </div>
@@ -1083,6 +1165,9 @@ function setupCommunity(){
   moreSub.querySelectorAll('button').forEach(b=>b.onclick=()=>{ closeMenus(); const t=document.getElementById(b.dataset.act); if(t) t.click(); });
   document.getElementById('ham-version').onclick=()=>{ closeMenus(); dialog({title:'גרסה נוכחית',html:'גרסה <b>'+APP_VERSION+'</b>',buttons:[{label:'מה חדש?',primary:true,act:()=>showWhatsNew(true)},{label:'סגור'}]}); };
   document.getElementById('ham-install').onclick=()=>{ closeMenus(); createShortcut(); };
+  document.getElementById('ham-help').onclick=()=>{ closeMenus(); document.getElementById('help-modal').hidden=false; };
+  document.getElementById('help-close').onclick=()=>{ document.getElementById('help-modal').hidden=true; };
+  document.getElementById('help-ok').onclick=()=>{ document.getElementById('help-modal').hidden=true; };
   document.getElementById('wn-close').onclick=()=>{ document.getElementById('whatsnew-modal').hidden=true; };
   document.getElementById('wn-ok').onclick=()=>{ document.getElementById('whatsnew-modal').hidden=true; };
   // notifications
