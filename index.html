@@ -191,7 +191,7 @@
   .chip{display:inline-flex;align-items:center;gap:5px}
   .dot{width:11px;height:11px;border-radius:3px;display:inline-block}
   .dot.sam{background:var(--sam)} .dot.jew{background:var(--jew)} .dot.sat{background:#d8c89c}
-  .dot.sab{background:var(--sab)} .dot.moed{background:var(--moed)}
+  .dot.sab{background:var(--sab)} .dot.moed{background:var(--moed)} .dot.rosh{background:#0f6e56}
 
   .months{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(420px,100%),1fr));gap:18px}
   .month{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)}
@@ -230,6 +230,7 @@
   .cell .fest .f.parasha{background:#efeae0;color:#6b5a3a;font-weight:800}
   .cell .fest .f.period{background:#f3eee4;color:#8a7a5a;font-weight:600;font-size:.66rem}
   .cell .fest .f.community{background:transparent;font-weight:700;font-size:.6rem;padding:1px 0}
+  .cell .fest .f.rosh{background:transparent;color:#0f6e56;font-weight:700;font-size:.6rem;padding:1px 0}
   .cell .fest .f.national{background:#e8f0fe;color:#1d4ed8;font-weight:800}
   .cell .fest .f.hijri{background:transparent;color:#7a3b9e;font-weight:800;font-size:.6rem}
   .cell .fest .gmonth{display:block;color:#2563eb;font-weight:800;font-size:.74rem;margin:1px 0}
@@ -449,6 +450,7 @@
     <span class="chip"><span class="dot jew"></span> חג יהודי (י-)</span>
     <span class="chip"><span class="dot sab"></span> שבת מיוחדת / מופת</span>
     <span class="chip"><span class="dot moed"></span> מעמד הר סיני</span>
+    <span class="chip"><span class="dot rosh"></span> ראש חודש</span>
     <span class="chip"><span class="dot sat"></span> שבת</span>
     <span class="chip">ז/ש = זריחה/שקיעה מישורית (חולון, שעון ישראל) · בהר גריזים יש להוסיף 5 דקות · מז. = יום בחודש המזרחי</span>
   </div>
@@ -568,7 +570,7 @@
 
         <h3>סוגי אירועים</h3>
         <ul>
-          <li><b>ש-</b> חג שומרוני · <b>י-</b> חג יהודי · <b>שבת</b> ושבתות מיוחדות / מופתים · מעמד הר סיני · <b>אירועי קהילה</b> (בצבעים).</li>
+          <li><b>ש-</b> חג שומרוני · <b>י-</b> חג יהודי · <b>שבת</b> ושבתות מיוחדות / מופתים · מעמד הר סיני · <b>ראש חודש</b> (כל ר״ח) · <b>אירועי קהילה</b> (בצבעים).</li>
         </ul>
 
         <h3>תפריט "אפשרויות נוספות" (⋯)</h3>
@@ -639,6 +641,7 @@
           <label><input type="checkbox" class="ncat" value="community" checked> אירועי קהילה</label>
           <label><input type="checkbox" class="ncat" value="sabbath" checked> שבתות מיוחדות</label>
           <label><input type="checkbox" class="ncat" value="national" checked> ימים לאומיים</label>
+          <label><input type="checkbox" class="ncat" value="rosh" checked> ראשי חודשים</label>
         </div>
         <div class="notif-list" id="notif-list"></div>
         <div class="notif-note" id="notif-note"></div>
@@ -742,7 +745,8 @@ function monthCard(canaan, changeMonth, mo){
     const wd = wdOfISO(rec.greg);
     const isSat = wd===6;
     const hasFest = rec.festivals && rec.festivals.length;
-    const cls = 'cell' + (isSat?' sat':'') + (hasFest&&!isSat?' hol':'') + (rec.greg===TODAY_ISO?' today':'');
+    const holFest = (rec.festivals||[]).some(f=>f.kind!=='rosh');   // rosh chodesh shows a label but doesn't tint the cell
+    const cls = 'cell' + (isSat?' sat':'') + (holFest&&!isSat?' hol':'') + (rec.greg===TODAY_ISO?' today':'');
     let center = '';
     if(rec.greg_day===1)   // Gregorian month rolls over inside the Samaritan month
       center += `<span class="gmonth">${GMON[+rec.greg.slice(5,7)]}</span>`;
@@ -818,10 +822,10 @@ function setMode(m){
 }
 
 // ---- category filters (shared by the moadim list + the calendar sync) ----
-const CATS = [['sam','חגים שומרונים'],['jew','חגים יהודים'],['sabbath','אירועי שבת'],['community','אירועי קהילה']];
-const KIND2CAT = {sam:'sam', moed:'sam', period:'sam', jew:'jew', national:'jew', sabbath:'sabbath', community:'community'};
-let moadimCats = new Set(['sam','jew','sabbath','community']);
-let syncCats   = new Set(['sam','jew','sabbath','community']);
+const CATS = [['sam','חגים שומרונים'],['jew','חגים יהודים'],['sabbath','אירועי שבת'],['community','אירועי קהילה'],['rosh','ראשי חודשים']];
+const KIND2CAT = {sam:'sam', moed:'sam', period:'sam', jew:'jew', national:'jew', sabbath:'sabbath', community:'community', rosh:'rosh'};
+let moadimCats = new Set(['sam','jew','sabbath','community','rosh']);
+let syncCats   = new Set(['sam','jew','sabbath','community','rosh']);
 function renderFilters(containerId, activeSet, onChange){
   const c=document.getElementById(containerId);
   c.innerHTML=CATS.map(([k,label])=>`<span class="fchip${activeSet.has(k)?' on':''}" data-cat="${k}">${label}</span>`).join('');
@@ -871,7 +875,7 @@ function _icsEsc(s){ return String(s).replace(/([\\,;])/g,'\\$1').replace(/\n/g,
 function _nextDay(iso){ const [y,m,d]=iso.split('-').map(Number);
   return new Date(Date.UTC(y,m-1,d+1)).toISOString().slice(0,10).replace(/-/g,''); }
 function buildICS(yc, cats){
-  const PFX={sam:'',moed:'',period:'',sabbath:'',community:'',jew:'יהודי: ',national:'',parasha:'פרשה: '};
+  const PFX={sam:'',moed:'',period:'',sabbath:'',community:'',jew:'יהודי: ',national:'',parasha:'פרשה: ',rosh:''};
   const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//the-samaritans.net//Samaritan Calendar//HE','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
   let n=0;
   for(const mo of yc.months) for(const rec of mo.days) for(const f of (rec.festivals||[])){
@@ -1048,7 +1052,7 @@ function loadNotifPrefs(){
   return p;
 }
 function selOpts(max, sel){ let s=''; for(let i=0;i<=max;i++) s+=`<option value="${i}"${i===+sel?' selected':''}>${i}</option>`; return s; }
-function kindCat(k){ return (k==='sam'||k==='moed')?'sam' : k==='jew'?'jew' : k==='community'?'community' : k==='national'?'national' : k==='sabbath'?'sabbath' : 'other'; }
+function kindCat(k){ return (k==='sam'||k==='moed')?'sam' : k==='jew'?'jew' : k==='community'?'community' : k==='national'?'national' : k==='sabbath'?'sabbath' : k==='rosh'?'rosh' : 'other'; }
 let notifEventsCache = {};
 async function notifEventsForYear(year){   // FUTURE notable calendar events for a Gregorian year
   year=String(year);
