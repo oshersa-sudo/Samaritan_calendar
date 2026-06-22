@@ -77,6 +77,11 @@
   .cevt-row input[type=color]{width:40px;height:30px;padding:1px;border:1px solid var(--line);border-radius:7px;cursor:pointer}
   .cevt-row input[type=color]:disabled{opacity:.4;cursor:not-allowed}
   .r-bgwrap{display:flex;align-items:center;gap:4px;font-size:.72rem;color:var(--muted)}
+  .cevt-sec{font-size:.78rem;font-weight:700;color:var(--accent);margin:12px 2px 4px;padding-bottom:3px;border-bottom:1px solid var(--line)}
+  .cevt-ro{display:flex;align-items:center;gap:10px;padding:5px 4px;border-bottom:1px solid var(--soft);background:rgba(0,0,0,.015)}
+  .cevt-ro .ro-date{font-size:.8rem;color:var(--muted);min-width:84px}
+  .cevt-ro .ro-desc{font-size:.88rem;flex:1;font-weight:600}
+  .cevt-ro .ro-tag{font-size:.62rem;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
   @media (max-width:560px){
     .cevt-listhead{display:none}
     .cevt-row{grid-template-columns:1fr 1fr;gap:6px}
@@ -758,25 +763,55 @@ function openCevtEditor(){
   renderCevtList();
   document.getElementById('cevt-modal').hidden = false;
 }
-function renderCevtList(){
+let cevtBakedCache = {};
+async function bakedCommunityFor(year){   // community events baked into the calendar (.dat from the Excel)
+  year = String(year);
+  if(cevtBakedCache[year]) return cevtBakedCache[year];
+  const out = [];
+  for(const y of [+year-1, +year]){   // a Gregorian year spans two Samaritan-year files
+    try{
+      const yc = (DATA_YC && DATA_YC.greg_year===y) ? DATA_YC
+               : JSON.parse(decodeData(await (await fetch(`cal/${y}.dat`)).text()));
+      for(const mo of yc.months) for(const rec of mo.days){
+        if((rec.greg||'').slice(0,4)!==year) continue;
+        for(const f of (rec.festivals||[])) if(f.kind==='community')
+          out.push({date:rec.greg, desc:f.name, fg:f.color||'#1f6feb'});
+      }
+    }catch(e){}
+  }
+  out.sort((a,b)=> a.date<b.date ? -1 : 1);
+  cevtBakedCache[year] = out; return out;
+}
+async function renderCevtList(){
   const year = document.getElementById('cevt-year').value;
   const box = document.getElementById('cevt-list');
-  const rows = cevtDraft.filter(e => (e.date||'').slice(0,4) === String(year));
-  if(!rows.length){
-    box.innerHTML = `<div class="cevt-empty">אין אירועים לשנת ${year}. לחצו “＋ הוסף אירוע” כדי להוסיף.</div>`;
-    return;
+  const baked = await bakedCommunityFor(year);
+  const mine = cevtDraft.filter(e => (e.date||'').slice(0,4) === String(year));
+  let html = '';
+  if(baked.length){
+    html += `<div class="cevt-sec">אירועי הלוח (מקובץ האקסל) — לקריאה בלבד</div>`;
+    html += baked.map(e=>{
+      const d=(e.date||'').split('-').reverse().join('/');
+      return `<div class="cevt-ro"><span class="ro-date">${d}</span><span class="ro-desc" style="color:${e.fg}">${escHtml(e.desc)}</span><span class="ro-tag">אקסל</span></div>`;
+    }).join('');
   }
-  box.innerHTML = rows.map(e=>{
-    const noBg = !e.bg || e.bg==='none';
-    return `<div class="cevt-row" data-id="${e.id}">
-      <input type="date" class="r-date" value="${e.date||''}">
-      <input type="text" class="r-desc" maxlength="150" placeholder="תיאור (עד 150 תווים)" value="${escHtml(e.desc)}">
-      <input type="color" class="r-fg" value="${e.fg||'#1f6feb'}" title="צבע טקסט">
-      <span class="r-bgwrap"><input type="color" class="r-bg" value="${noBg?'#ffeb3b':e.bg}" ${noBg?'disabled':''} title="צבע רקע">
-        <label><input type="checkbox" class="r-bgnone" ${noBg?'checked':''}> ללא</label></span>
-      <button class="cevt-del" title="מחק אירוע">✕</button>
-    </div>`;
-  }).join('');
+  html += `<div class="cevt-sec">אירועים שנוספו במכשיר זה — ניתנים לעריכה</div>`;
+  if(!mine.length){
+    html += `<div class="cevt-empty">אין אירועים משלך לשנת ${year}. לחצו “＋ הוסף אירוע” כדי להוסיף.</div>`;
+  } else {
+    html += mine.map(e=>{
+      const noBg = !e.bg || e.bg==='none';
+      return `<div class="cevt-row" data-id="${e.id}">
+        <input type="date" class="r-date" value="${e.date||''}">
+        <input type="text" class="r-desc" maxlength="150" placeholder="תיאור (עד 150 תווים)" value="${escHtml(e.desc)}">
+        <input type="color" class="r-fg" value="${e.fg||'#1f6feb'}" title="צבע טקסט">
+        <span class="r-bgwrap"><input type="color" class="r-bg" value="${noBg?'#ffeb3b':e.bg}" ${noBg?'disabled':''} title="צבע רקע">
+          <label><input type="checkbox" class="r-bgnone" ${noBg?'checked':''}> ללא</label></span>
+        <button class="cevt-del" title="מחק אירוע">✕</button>
+      </div>`;
+    }).join('');
+  }
+  box.innerHTML = html;
   box.querySelectorAll('.cevt-row').forEach(row=>{
     const ent = cevtDraft.find(x=>x.id === +row.dataset.id); if(!ent) return;
     row.querySelector('.r-date').onchange = e=>{ ent.date = e.target.value; };
