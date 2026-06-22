@@ -1806,18 +1806,40 @@ async function init(){
     const t3=`המולד חל ${m.daynight==='לילה'?'בליל':'ביום'} ${m.molad_wd} ${m.clock} שעות ${m.daynight==='לילה'?'מהליל':'מהיום'}${m.month_type?' · חודש '+m.month_type:''} · ${m.molad_syr} מזרחי`;
     return `<div class=mh><div class=t2>${sam(t2)}</div><div class=t1>${sam(t1)}</div><div class=t3>${sam(t3)}</div></div>`;
   }
+  // ---- DONATION FORMAT ONLY (the calendar/grid format keeps expHeader/festName) ----
+  const WDLET=['א','ב','ג','ד','ה','ו','ז'];                       // weekday as a letter: Sun=א … Sat=ז
+  const DON_MODERN=new Set(['jew','community','national','private']); // modern Hebrew, never Samaritan
+  const donFestName = f => DON_MODERN.has(f.kind) ? `<span class=modheb>${f.name}</span>` : sam(f.name);
+  const evCellDon = rec => (rec.festivals||[]).map(donFestName).join('<br>');
+  function donationHeader(yc,mo){
+    const cy = mo.index>=(yc.year_change_month||6) ? yc.canaan_year+1 : yc.canaan_year, m=mo.molad;
+    const yrs=[...new Set(mo.days.map(d=>d.greg.slice(0,4)))].join('/');
+    // line 1: month name (Samaritan) · Gregorian years · Gregorian month in Hebrew font (no month number)
+    const l1=`${sam(mo.name)} ${num(yrs)} <span class=modheb>${mo.greg_months}</span>`;
+    // line 2: entry-year (Samaritan wording) · creation year · Hijra (number Hebrew + word "היגרה" Samaritan)
+    const hij = mo.hijri_year ? ` <i class=dot>·</i> ${num(mo.hijri_year)} ${sam('היגרה')}` : '';
+    const l2=`${sam('שנת')} ${num(cy)} ${sam('למובא בני ישראל לארץ הקדושה')} <i class=dot>·</i> ${num(cy+2800)} ${sam('לבריאת העולם')}${hij}`;
+    // line 3 (molad), Samaritan font except the time which stays Hebrew; no Islamic month, no "מדויק":
+    // "זבן המולד <שעה> מן <יום/ליל> <יום> לגו <יום יוליאני> מן <חודש יוליאני> חדש <ירחי/שמשי>"
+    const dn = m.daynight==='לילה' ? 'ליל' : 'יום';
+    const sp = String(m.molad_syr||'').split(/\s+/), julDay=sp[0]||'', julMon=sp.slice(1).join(' ');
+    const mtype = m.month_type ? ` ${sam('חדש')} ${sam(m.month_type)}` : '';
+    const l3=`${sam('זבן המולד')} ${num(m.clock)} ${sam('מן')} ${sam(dn)} ${sam(m.molad_wd)} ${sam('לגו')} ${num(julDay)} ${sam('מן')} ${sam(julMon)}${mtype}`;
+    return `<div class=mh><div class=t2>${l1}</div><div class=t1>${l2}</div><div class=t3>${l3}</div></div>`;
+  }
   function donationMonth(yc,mo){
     let sab=0, rows='';
     for(const rec of mo.days){
-      const isSat=wdName(rec.greg)==='שבת'; let fill='';
+      const wd=new Date(rec.greg+'T00:00:00').getDay();
+      const isSat=wd===6; let fill='';
       if(isSat){ fill=SAB_FILL[Math.min(sab,4)]; sab++; }       // Sabbaths keep their ordinal colour
       else if(isHoliday(rec)) fill=FEST_FILL;                   // only real holidays — never plain weekdays
       const st=fill?` style="background:${fill}"`:'';
-      const sun=(rec.sunset||rec.sunrise)?`${sam('ש')} ${num(rec.sunset||'--')} ${sam('ז')} ${num(rec.sunrise||'--')}`:'';
-      const greg = rec.greg_day===1 ? `${num(rec.greg_day)} ${sam(GMON[+rec.greg.slice(5,7)])}` : num(rec.greg_day);
-      rows+=`<tr${st}><td>${sun}</td><td>${sam(wdName(rec.greg))}</td><td class=samx>${stripGer(rec.heb_label)}</td><td>${num(rec.syriac_day)}</td><td class=evt>${evCell(rec)}</td><td>${greg}</td></tr>`;
+      const sun=rec.sunset?`${sam('ש')} ${num(rec.sunset)}`:'';  // sunset only (sunrise omitted)
+      const greg = rec.greg_day===1 ? `${num(rec.greg_day)} <span class=modheb>${GMON[+rec.greg.slice(5,7)]}</span>` : num(rec.greg_day);
+      rows+=`<tr${st}><td>${sun}</td><td class=samx>${WDLET[wd]}</td><td class=samx>${stripGer(rec.heb_label)}</td><td>${num(rec.syriac_day)}</td><td class=evt>${evCellDon(rec)}</td><td>${greg}</td></tr>`;
     }
-    return `<div class=page>${expHeader(yc,mo)}<table class=tbl><thead><tr><th>${sam('ערב')}</th><th>${sam('יום')}</th><th>${sam('עברי')}</th><th>${sam('מזרחי')}</th><th>${sam('אירוע')}</th><th>${sam('מערבי')}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    return `<div class=page>${donationHeader(yc,mo)}<table class=tbl><thead><tr><th>${sam('ערב')}</th><th>${sam('יום')}</th><th>${sam('עברי')}</th><th>${sam('מזרחי')}</th><th>${sam('אירוע')}</th><th>${sam('מערבי')}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
   }
   function gridMonth(yc,mo){
     const first=new Date(mo.days[0].greg+'T00:00:00').getDay();
