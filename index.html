@@ -1846,7 +1846,7 @@ async function init(){
       const greg = rec.greg_day===1 ? `${num(rec.greg_day)} <span class=modheb>${GMON[+rec.greg.slice(5,7)]}</span>` : num(rec.greg_day);
       rows+=`<tr${st}><td>${sun}</td><td class=samx>${WDLET[wd]}</td><td class=samx>${stripGer(rec.heb_label)}</td><td>${num(rec.syriac_day)}</td><td class=evt>${evCellDon(rec)}</td><td>${greg}</td></tr>`;
     }
-    return `<div class=page>${donationHeader(yc,mo)}<table class=tbl align=center><thead><tr><th>${sam('ערב')}</th><th>${sam('יום')}</th><th>${sam('עברי')}</th><th>${sam('מזרחי')}</th><th></th><th>${sam('מערבי')}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    return `<div class=dpage>${donationHeader(yc,mo)}<table class=tbl align=center><thead><tr><th>${sam('ערב')}</th><th>${sam('יום')}</th><th>${sam('עברי')}</th><th>${sam('מזרחי')}</th><th></th><th>${sam('מערבי')}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
   }
   function gridMonth(yc,mo){
     const first=new Date(mo.days[0].greg+'T00:00:00').getDay();
@@ -1869,24 +1869,22 @@ async function init(){
     const yc=DATA_YC; if(!yc){ dialog({title:'אין לוח',html:'בנו לוח תחילה.',buttons:[{label:'סגור',primary:true}]}); return null; }
     const body=yc.months.map((mo,i,arr)=>{
       let h = format==='donation'?donationMonth(yc,mo):gridMonth(yc,mo);
-      if(format==='donation'){            // donation: single hard break BEFORE every month (each entry-year header)
-        if(i>0) h = h.replace('<div class=page>','<div class="page" style="page-break-before:always">');
-      } else {                            // calendar: unchanged — break AFTER each month
-        if(i<arr.length-1) h = h.replace('<div class=page>','<div class="page" style="page-break-after:always">');
-      }
+      // donation: NO automatic page break (was faulty in Word) — months flow; user paginates manually.
+      if(format!=='donation' && i<arr.length-1) h = h.replace('<div class=page>','<div class="page" style="page-break-after:always">');
       return h;
     }).join('');
     const compact = format==='donation';   // donation = up to 31 rows -> must fit one A4 page
     const css=`
       @page{size:A4 ${compact?'portrait':'landscape'};margin:0.8cm}
       body{font-family:Arial,sans-serif;direction:rtl;margin:0}
-      /* one month per page: a hard page-break-before each month (set inline above, 2nd month on) —
-         single break only, so Word paginates exactly once before each entry-year header */
+      /* calendar format: keep each month together + break after (set inline above). */
       .page{page-break-inside:avoid;break-inside:avoid}
+      /* donation format: no automatic page break — months flow continuously, small gap between them */
+      .dpage{margin:0 0 8px}
       .mh{text-align:center;margin:0 0 4px} .mh .t2{font-size:13pt;font-weight:bold;color:#8a6d3b}
       .mh .t1{font-size:8.5pt;color:#735a30} .mh .t3{font-size:8pt;color:#6c6253}
       /* donation header — centered stack, uniform exact 16pt line spacing */
-      .cybig{text-align:center;font-size:20pt;font-weight:bold;color:#8a6d3b;line-height:16pt;mso-line-height-rule:exactly;margin:0}
+      .cybig{text-align:center;font-size:19pt;font-weight:bold;color:#8a6d3b;line-height:16pt;mso-line-height-rule:exactly;margin:0}
       .mh-name{text-align:center;font-size:12pt;font-weight:bold;color:#8a6d3b;line-height:16pt;mso-line-height-rule:exactly;margin:0}
       .dmolad{text-align:center;font-size:11pt;color:#6c6253;line-height:16pt;mso-line-height-rule:exactly;margin:0}
       .dgreg{text-align:center;font-size:12pt;color:#222;line-height:16pt;mso-line-height-rule:exactly;margin:0 0 3px}
