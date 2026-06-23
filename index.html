@@ -757,7 +757,20 @@ loadPrivateEvents();
 function escHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 // ---- i18n: interface language (he/en/ar). The calendar grid content stays Hebrew/Samaritan. ----
-let LANG = (()=>{ try{ return localStorage.getItem('sam-lang')||'he'; }catch(e){ return 'he'; } })();
+function detectDeviceLang(){   // pick the UI language from the device's preferred languages (he/en/ar)
+  try{
+    const list = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language||''];
+    for(const l of list){ const p=String(l).toLowerCase();
+      if(p.indexOf('he')===0||p.indexOf('iw')===0) return 'he';
+      if(p.indexOf('ar')===0) return 'ar';
+      if(p.indexOf('en')===0) return 'en'; }
+  }catch(e){}
+  return 'he';   // fallback (the calendar content is primarily Hebrew)
+}
+// Use the device language on entry; an explicit choice in the language menu (flagged) overrides it.
+let LANG = (()=>{ try{
+  if(localStorage.getItem('sam-lang-explicit')==='1') return localStorage.getItem('sam-lang') || detectDeviceLang();
+}catch(e){} return detectDeviceLang(); })();
 const I18N = {
   suptitle:{he:'אבני שהם',en:'Avney Shoham',ar:'أبني شوهم'},
   title:{he:'הלוח העברי השומרוני',en:'The Samaritan Hebrew Calendar',ar:'التقويم العبري السامري'},
@@ -867,17 +880,18 @@ function translateUI(){
   const wb=document.getElementById('wn-body'); if(wb) wb.innerHTML = NEWS[LANG] || (typeof APP_NEWS!=='undefined'?APP_NEWS:'');
   const hc=document.getElementById('help-content'); if(hc) hc.innerHTML = HELP[LANG] || HELP.he || '';
 }
-function applyLang(lang){
-  LANG=lang; try{ localStorage.setItem('sam-lang',lang); }catch(e){}
+function applyLang(lang, persist){
+  LANG=lang;
+  if(persist){ try{ localStorage.setItem('sam-lang',lang); localStorage.setItem('sam-lang-explicit','1'); }catch(e){} }
   document.documentElement.lang=lang; document.documentElement.dir = (lang==='en') ? 'ltr' : 'rtl';
   document.body.dir = document.documentElement.dir;
   translateUI();
 }
 function chooseLang(){
   dialog({ title:t('lang_title'), html:'',
-    buttons:[ {label:'עברית',primary:LANG==='he',act:()=>applyLang('he')},
-              {label:'English',primary:LANG==='en',act:()=>applyLang('en')},
-              {label:'العربية',primary:LANG==='ar',act:()=>applyLang('ar')} ]});
+    buttons:[ {label:'עברית',primary:LANG==='he',act:()=>applyLang('he',true)},
+              {label:'English',primary:LANG==='en',act:()=>applyLang('en',true)},
+              {label:'العربية',primary:LANG==='ar',act:()=>applyLang('ar',true)} ]});
 }
 
 function gregOf(val){ return mode==='greg' ? val : val - INDEX.canaan_offset; }
@@ -1429,7 +1443,7 @@ function setupCommunity(){
   document.getElementById('notif-year').addEventListener('keydown',e=>{ if(e.key==='Enter') renderNotifList(); });
   document.querySelectorAll('#notif-cats .ncat').forEach(c=>c.onchange=renderNotifList);
   ['notif-d','notif-h','notif-m'].forEach(id=>document.getElementById(id).onchange=renderNotifList);   // new default -> re-apply to unsaved rows
-  applyLang(LANG);   // apply the saved interface language
+  applyLang(LANG);   // apply the device-detected language (or the explicit saved choice); don't persist auto-detect
   // first run after an update -> notify installed users + show what's new once; start reminder loop
   if(newsIsNew()){
     if('Notification' in window && Notification.permission==='granted')
