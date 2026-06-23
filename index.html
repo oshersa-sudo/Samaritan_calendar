@@ -1867,9 +1867,13 @@ async function init(){
   }
   async function buildExport(format){
     const yc=DATA_YC; if(!yc){ dialog({title:'אין לוח',html:'בנו לוח תחילה.',buttons:[{label:'סגור',primary:true}]}); return null; }
-    const body=yc.months.map((mo,i)=>{
+    const body=yc.months.map((mo,i,arr)=>{
       let h = format==='donation'?donationMonth(yc,mo):gridMonth(yc,mo);
-      if(i>0) h = h.replace('<div class=page>','<div class="page" style="page-break-before:always">');   // break before every month (incl. each entry-year header)
+      if(format==='donation'){            // donation: single hard break BEFORE every month (each entry-year header)
+        if(i>0) h = h.replace('<div class=page>','<div class="page" style="page-break-before:always">');
+      } else {                            // calendar: unchanged — break AFTER each month
+        if(i<arr.length-1) h = h.replace('<div class=page>','<div class="page" style="page-break-after:always">');
+      }
       return h;
     }).join('');
     const compact = format==='donation';   // donation = up to 31 rows -> must fit one A4 page
