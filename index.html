@@ -476,7 +476,7 @@
   <div id="modal" class="modal" hidden>
     <div class="modal-box">
       <div class="modal-head">
-        <span>רשימת מועדים וחגים — <span id="modal-year"></span></span>
+        <span><span id="moadim-title">רשימת מועדים וחגים</span> — <span id="modal-year"></span></span>
         <span class="modal-actions">
           <button class="act" id="moadim-xls">⬇ הורד לאקסל</button>
           <button class="act" id="modal-close" title="סגור">✕</button>
@@ -490,7 +490,7 @@
   <div id="sync-modal" class="modal" hidden>
     <div class="modal-box">
       <div class="modal-head">
-        <span>סנכרון ליומן — <span id="sync-year"></span></span>
+        <span><span id="sync-title">סנכרון ליומן</span> — <span id="sync-year"></span></span>
         <span class="modal-actions">
           <button class="act" id="sync-close" title="סגור">✕</button>
         </span>
@@ -875,7 +875,7 @@ function translateUI(){
   setSel('#priv-modal .modal-head span','t_priv'); set('priv-add','add_event'); set('priv-save','save_priv'); set('priv-show','show');
   setSel('#cevt-modal .modal-head span','t_comm'); set('cevt-add','add_event'); set('cevt-save','save_cal'); set('cevt-show','show');
   setSel('#color-modal .modal-head span','t_colors');
-  setSel('#modal .modal-head span','t_moadim'); setSel('#sync-modal .modal-head span','t_sync');
+  set('moadim-title','t_moadim'); set('sync-title','t_sync');   // translate only the label, preserve the nested year span
   // what's-new + help bodies
   const wb=document.getElementById('wn-body'); if(wb) wb.innerHTML = NEWS[LANG] || (typeof APP_NEWS!=='undefined'?APP_NEWS:'');
   const hc=document.getElementById('help-content'); if(hc) hc.innerHTML = HELP[LANG] || HELP.he || '';
