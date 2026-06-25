@@ -222,16 +222,20 @@
   .wdrow{background:var(--soft);border-bottom:1px solid var(--line)}
   .wdrow div{text-align:center;font-size:.72rem;color:var(--muted);padding:4px 0;font-weight:600}
   .grid{gap:1.5px;background:var(--grid);padding:1.5px}
-  .cell{background:var(--card);min-height:108px;padding:5px 6px;position:relative;font-size:.82rem}
+  .cell{background:var(--card);min-height:108px;padding:5px 6px;position:relative;font-size:.82rem;display:flex;flex-direction:column}
+  /* flow rows so nothing overlaps when the calendar is enlarged (font scales, no fixed-px reserves) */
+  .c-top{display:flex;justify-content:space-between;align-items:flex-start;gap:4px}
+  .c-mid{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;text-align:center;min-height:0}
+  .c-bot{display:flex;justify-content:space-between;align-items:flex-end;gap:4px;margin-top:2px}
   .cell.empty{background:var(--soft)}
   .cell.today{box-shadow:inset 0 0 0 2.5px #c0392b;z-index:1}
   .cell.today::after{content:'היום';position:absolute;top:1px;left:50%;transform:translateX(-50%);
     background:transparent;color:#c0392b;font-size:.52rem;font-weight:800;line-height:1.2;pointer-events:none}
   .cell.sat{background:var(--sat)}
   .cell.hol{background:var(--hol)}
-  .cell .hd{position:absolute;top:3px;right:6px;font-weight:800;color:var(--accent);font-size:1.02rem}
-  .cell .gd{position:absolute;top:4px;left:6px;color:var(--muted);font-size:.86rem;font-weight:600}
-  .cell .fest{margin-top:24px;margin-bottom:31px;text-align:center;line-height:1.3}  /* reserve room below for sun/Eastern-day corners */
+  .cell .hd{font-weight:800;color:var(--accent);font-size:1.02rem;line-height:1}
+  .cell .gd{color:var(--muted);font-size:.86rem;font-weight:600;line-height:1}
+  .cell .fest{text-align:center;line-height:1.3}
   .cell .fest .f{display:block;border-radius:6px;padding:2px 3px;margin:2px 1px;font-size:.74rem;font-weight:700}
   .cell .fest .f.sam{background:var(--sam-bg);color:var(--sam)}
   .cell .fest .f.jew{background:var(--jew-bg);color:var(--jew)}
@@ -244,7 +248,7 @@
   .cell .fest .f.private{background:transparent;color:#6d28d9;font-weight:700;font-size:.6rem;padding:1px 0}
   .cell .fest .f.national{background:#e8f0fe;color:#1d4ed8;font-weight:800}
   .cell .fest .f.hijri{background:transparent;color:#7a3b9e;font-weight:800;font-size:.6rem}
-  .cell .fest .gmonth{display:block;color:#7c3aed;font-weight:800;font-size:.74rem;margin:1px 0}
+  .cell .fest .gmonth{display:block;color:#dc2626;font-weight:800;font-size:.74rem;margin:1px 0}
   .mhead .canaan.yearchange{color:#7a3b9e;font-weight:800}
   .print-footer{display:none}
   .modal{position:fixed;inset:0;z-index:50;background:rgba(40,35,28,.55);display:flex;
@@ -262,14 +266,12 @@
   #moadim-table td{padding:6px 8px;border-bottom:1px solid var(--line)}
   #moadim-table td:first-child{white-space:nowrap;color:var(--muted)}
   #moadim-table tr:hover td{background:#faf6ec}
-  .cell .sun{position:absolute;bottom:3px;left:6px;font-size:.64rem;color:#9a8f7d;direction:ltr;text-align:left;line-height:1.25}
-  .cell .syr{position:absolute;bottom:3px;right:6px;color:#a98f6a;font-weight:800;font-size:.92rem;
-    text-align:center;line-height:1}
+  .cell .sun{font-size:.64rem;color:#9a8f7d;direction:ltr;text-align:left;line-height:1.25}
+  .cell .syr{color:#a98f6a;font-weight:800;font-size:.92rem;text-align:center;line-height:1}
   .cell .syr .syr-lbl{display:block;font-size:.56rem;font-weight:600;opacity:.85}
   /* winter period: horizontal label centered in the cell's empty middle (period days carry no
      festivals, so the centre is free — clear of the corner numbers and the sun/Eastern-day rows) */
-  .cell .period{position:absolute;left:3px;right:3px;top:50%;transform:translateY(-50%);
-    text-align:center;font-size:.58rem;color:#8a7a5a;font-weight:700;line-height:1.2;pointer-events:none}
+  .cell .period{text-align:center;font-size:.58rem;color:#8a7a5a;font-weight:700;line-height:1.2;pointer-events:none}
 
   .meta{margin-top:20px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;font-size:.82rem;color:var(--muted)}
   .err{color:#a33;text-align:center;margin-top:30px;font-weight:700}
@@ -962,10 +964,9 @@ function monthCard(canaan, changeMonth, mo){
     const per = (!isSat && !center) ? winterPeriod(rec.greg) : null;
     const period = per ? `<div class="period">${per}</div>` : '';
     cells += `<div class="${cls}" data-g="${rec.greg}">
-        <span class="hd">${rec.heb_label}</span>
-        <span class="gd">${rec.greg_day}</span>
-        ${fest}${sun}${period}
-        <span class="syr"><span class="syr-lbl">מז.</span>${rec.syriac_day}</span>
+        <div class="c-top"><span class="hd">${rec.heb_label}</span><span class="gd">${rec.greg_day}</span></div>
+        <div class="c-mid">${fest}${period}</div>
+        <div class="c-bot"><span class="syr"><span class="syr-lbl">מז.</span>${rec.syriac_day}</span>${sun}</div>
       </div>`;
   }
   return `<div class="month" data-mi="${mo.index}">
