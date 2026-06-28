@@ -249,6 +249,8 @@
   .cell .fest .f.national{background:#e8f0fe;color:#1d4ed8;font-weight:800}
   .cell .fest .f.hijri{background:transparent;color:#7a3b9e;font-weight:800;font-size:.6rem}
   .cell .fest .gmonth{display:block;color:#dc2626;font-weight:800;font-size:.74rem;margin:1px 0}
+  .cell .fest .f.eclipse{background:transparent;color:#4a3327;font-weight:700;font-size:.62rem;display:block;line-height:1.25}
+  .ecl-i{vertical-align:-2px;margin-inline-end:3px}
   .mhead .canaan.yearchange{color:#7a3b9e;font-weight:800}
   .print-footer{display:none}
   .modal{position:fixed;inset:0;z-index:50;background:rgba(40,35,28,.55);display:flex;
@@ -822,6 +824,7 @@ const I18N = {
 };
 const NEWS = {
   en: `<p class="wn-intro">Version history — what was added since 1.0:</p>
+    <div class="wn-ver"><b>Version 2.5</b><ul><li><b>Total solar & lunar eclipses</b> — marked on the calendar with an icon (eclipsed sun / blood moon). Validated 27/28 against NASA data.</li></ul></div>
     <div class="wn-ver"><b>Version 2.4</b><ul><li><b>Entry-year change accuracy</b> — a new "solar accumulator" engine for the month in which the year-number changes (replaces the fixed anchor; validated against 28 authentic calendar years).</li></ul></div>
     <div class="wn-ver"><b>Version 2.3</b><ul><li><b>Languages</b> — Hebrew / English / Arabic interface, saved on the device, with browser auto-translation disabled.</li><li><b>Private events</b> — personal events on this device, with reminders.</li><li><b>Floating month-filter</b> window.</li></ul></div>
     <div class="wn-ver"><b>Version 2.2</b><ul><li><b>Help screen</b> in the ☰ menu.</li><li><b>New-moons</b> (rosh chodesh) marked on the calendar, with reminders.</li></ul></div>
@@ -830,6 +833,7 @@ const NEWS = {
     <div class="wn-ver"><b>Version 1.5</b><ul><li><b>Word/Excel export</b> (calendar / donation) with the Samaritan script.</li><li><b>Calendar accuracy</b> — Julian gap frozen from 2200; exact molad 2009–2100.</li></ul></div>
     <div class="wn-ver"><b>Version 1.0</b><ul><li>The computed Samaritan calendar: Gregorian / Entry-to-the-Land modes, navigation, Today, filter, jump-to-date.</li><li>Samaritan & Jewish festivals, weekly portions, molad & Arabic clock, share/print/sync.</li></ul></div>`,
   ar: `<p class="wn-intro">سجلّ الإصدارات — ما أُضيف منذ 1.0:</p>
+    <div class="wn-ver"><b>الإصدار 2.5</b><ul><li><b>كسوف الشمس وخسوف القمر الكلّيان</b> — معلَّمان في التقويم بأيقونة (شمس مكسوفة / قمر أحمر). مُتحقَّق 27/28 مقابل بيانات NASA.</li></ul></div>
     <div class="wn-ver"><b>الإصدار 2.4</b><ul><li><b>دقّة تغيّر سنة الدخول</b> — محرّك «تراكم شمسي» جديد لتحديد الشهر الذي يتغيّر فيه رقم السنة (بدلاً من المرساة الثابتة؛ مُتحقَّق مقابل 28 سنة تقويمية أصلية).</li></ul></div>
     <div class="wn-ver"><b>الإصدار 2.3</b><ul><li><b>اللغات</b> — واجهة بالعبرية / الإنجليزية / العربية، محفوظة على الجهاز، مع تعطيل الترجمة التلقائية للمتصفّح.</li><li><b>أحداث خاصة</b> — أحداث شخصية على هذا الجهاز، مع تنبيهات.</li><li><b>نافذة تصفية</b> عائمة للأشهر.</li></ul></div>
     <div class="wn-ver"><b>الإصدار 2.2</b><ul><li><b>شاشة مساعدة</b> في قائمة ☰.</li><li><b>رؤوس الأشهر</b> معلَّمة في التقويم، مع تنبيهات.</li></ul></div>
@@ -924,6 +928,10 @@ function winterPeriod(iso){
   if(md>='03-09' && md<='03-20') return 'סעד אל-ח׳באיא';
   return null;
 }
+// total-eclipse icons: solar = dark moon disk over the sun with a gold corona ring;
+// lunar = the moon in Earth's shadow (blood-red disk).
+const ECL_SUN = `<svg class="ecl-i" viewBox="0 0 16 16" width="13" height="13"><circle cx="8" cy="8" r="7.2" fill="#f6c343"/><circle cx="8" cy="8" r="5.4" fill="#23201a"/></svg>`;
+const ECL_MOON = `<svg class="ecl-i" viewBox="0 0 16 16" width="13" height="13"><circle cx="8" cy="8" r="6.6" fill="#9e3325"/><circle cx="8" cy="8" r="6.6" fill="none" stroke="#5e1f15" stroke-width="1.1"/></svg>`;
 function monthCard(canaan, changeMonth, mo){
   const m = mo.molad;
   let cells = '';
@@ -933,13 +941,15 @@ function monthCard(canaan, changeMonth, mo){
     const wd = wdOfISO(rec.greg);
     const isSat = wd===6;
     const hasFest = rec.festivals && rec.festivals.length;
-    const holFest = (rec.festivals||[]).some(f=>f.kind!=='rosh');   // rosh chodesh shows a label but doesn't tint the cell
+    const holFest = (rec.festivals||[]).some(f=>f.kind!=='rosh' && f.kind!=='eclipse');   // rosh chodesh / eclipse show a label but don't tint the cell
     const cls = 'cell' + (isSat?' sat':'') + (holFest&&!isSat?' hol':'') + (rec.greg===TODAY_ISO?' today':'');
     let center = '';
     if(rec.greg_day===1)   // Gregorian month rolls over inside the Samaritan month
       center += `<span class="gmonth">${GMON[+rec.greg.slice(5,7)]}</span>`;
     if(hasFest){
       center += rec.festivals.map(f=>{
+        if(f.kind==='eclipse')   // total eclipse: icon (sun covered by moon / blood-moon) + label
+          return `<span class="f eclipse">${f.ecl==='sun'?ECL_SUN:ECL_MOON}${f.name}</span>`;
         const pre = f.kind==='sam' ? 'ש-' : f.kind==='jew' ? 'י-' : '';
         const style = f.kind==='community' && f.color ? ` style="color:${f.color}"` : '';
         return `<span class="f ${f.kind}"${style}>${pre}${f.name}</span>`;   // community: colour from xlsx
@@ -1254,9 +1264,12 @@ function privSave(){
 }
 
 // ---- app version + "what's new" splash ----
-const APP_VERSION = '2.4';
+const APP_VERSION = '2.5';
 const NEWS_KEY = 'sam-news-seen';
 const APP_NEWS = `<p class="wn-intro">היסטוריית הגרסאות — מה התווסף מאז גרסה 1.0:</p>
+  <div class="wn-ver"><b>גרסה 2.5</b><ul>
+    <li><b>ליקויי חמה ולבנה מלאים</b> — מסומנים בלוח באייקון (שמש מכוסה / ירח אדום). מאומת 27/28 מול נתוני NASA.</li>
+  </ul></div>
   <div class="wn-ver"><b>גרסה 2.4</b><ul>
     <li><b>דיוק חילוף מניין-כנען</b> — מנוע "מצבר שמשי" חדש לקביעת החודש שבו מתחלף מספר השנה (מחליף את העוגן הקבוע; אומת מול 28 שנות לוח אותנטיות).</li>
   </ul></div>
@@ -1809,7 +1822,7 @@ async function init(){
     return s.split(/[\s·]+/).filter(Boolean)
       .map(t=> /^[\d:.,\/()\-–%]+$/.test(t) ? `<span class=num>${t}</span>` : `<span class=samx>${stripGer(t)}</span>`)
       .join('<i class=dot>·</i>'); }
-  const MODERN_KINDS = new Set(['jew','community']);   // Jewish holidays + community events -> modern Hebrew, never Samaritan
+  const MODERN_KINDS = new Set(['jew','community','eclipse']);   // Jewish holidays + community events + eclipses -> modern Hebrew, never Samaritan
   const festName = f => MODERN_KINDS.has(f.kind) ? `<span class=modheb>${f.name}</span>` : sam(f.name);
   const isHoliday = rec => (rec.festivals||[]).some(f=>!['parasha','period','hijri'].includes(f.kind));  // a real חג, not portion/period
   const evCell = rec => (rec.festivals||[]).map(festName).join('<br>');
@@ -1823,7 +1836,7 @@ async function init(){
   }
   // ---- DONATION FORMAT ONLY (the calendar/grid format keeps expHeader/festName) ----
   const WDLET=['א','ב','ג','ד','ה','ו','ז'];                       // weekday as a letter: Sun=א … Sat=ז
-  const DON_MODERN=new Set(['jew','community','national','private']); // modern Hebrew, never Samaritan
+  const DON_MODERN=new Set(['jew','community','national','private','eclipse']); // modern Hebrew, never Samaritan
   const donFestName = f => DON_MODERN.has(f.kind) ? `<span class=modheb>${f.name}</span>` : sam(f.name);
   const evCellDon = rec => (rec.festivals||[]).map(f=>`<div class=evln>${donFestName(f)}</div>`).join('');   // each event on its own line
   const _O=['','א','ב','ג','ד','ה','ו','ז','ח','ט'], _T=['','י','כ','ל'];
