@@ -251,6 +251,31 @@
   .cell .fest .gmonth{display:block;color:#dc2626;font-weight:800;font-size:.74rem;margin:1px 0}
   .cell .fest .f.eclipse{background:transparent;color:#4a3327;font-weight:700;font-size:.62rem;display:block;line-height:1.25}
   .ecl-i{vertical-align:-2px;margin-inline-end:3px}
+  /* Gregorian-month view */
+  .view-toggle.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .greg-head{padding:8px 12px}
+  .greg-head .mname{font-size:1.12rem;font-weight:800;color:var(--accent)}
+  .cell .fest .samstart{display:block;color:#0f6e56;font-weight:800;font-size:.66rem;margin:1px 0}
+  body.gview .filter-wrap{display:none}
+  .cell.flash{animation:cellflash 2.6s ease}
+  @keyframes cellflash{0%,100%{box-shadow:none}15%,55%{box-shadow:inset 0 0 0 3px #f5a623,0 0 14px #f5a623}}
+  /* "Ask the calendar" floating panel */
+  .ask-panel{position:fixed;bottom:16px;left:16px;z-index:65;width:min(390px,92vw);max-height:78vh;
+    display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:14px;
+    box-shadow:0 12px 44px rgba(0,0,0,.38);overflow:hidden}
+  .ask-panel[hidden]{display:none}
+  .ask-head{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--soft);border-bottom:1px solid var(--line);font-weight:700}
+  .ask-head button{background:none;border:none;font-size:1.15rem;cursor:pointer;color:var(--muted);line-height:1}
+  .ask-io{display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line)}
+  .ask-io input{flex:1;padding:7px 9px;border:1px solid var(--line);border-radius:9px;font-size:.9rem;font-family:inherit}
+  .ask-io button{padding:7px 13px;border:none;border-radius:9px;background:var(--accent);color:#fff;font-weight:700;cursor:pointer;white-space:nowrap}
+  .ask-results{overflow-y:auto;padding:6px 8px}
+  .ask-hint{color:var(--muted);font-size:.85rem;line-height:1.7;padding:6px 4px}
+  .ask-res{padding:7px 8px;border-bottom:1px solid var(--line);cursor:pointer;font-size:.85rem;border-radius:8px}
+  .ask-res:last-child{border-bottom:none}
+  .ask-res:hover{background:var(--soft)}
+  .ask-res .ask-ev{color:var(--accent);font-weight:700}
+  @media print{.ask-panel,.view-toggle{display:none!important}}
   .mhead .canaan.yearchange{color:#7a3b9e;font-weight:800}
   .print-footer{display:none}
   .modal{position:fixed;inset:0;z-index:50;background:rgba(40,35,28,.55);display:flex;
@@ -404,6 +429,7 @@
       <button data-act="colors">🎨 הגדר צבעים</button>
     </div>
     <button id="ham-private">➕ הוסף אירוע פרטי</button>
+    <button id="ham-ask">💬 שאל את הלוח</button>
     <button id="ham-help">❓ עזרה</button>
     <button id="ham-version">גרסה נוכחית: <span class="ham-ver" id="ham-ver"></span></button>
     <button id="ham-lang">🌐 שנה שפה</button>
@@ -432,6 +458,7 @@
       <button class="nav" id="next" title="שנה הבאה">◀</button>
       <button class="go" id="go">בנה לוח</button>
       <button class="nav" id="today" title="עבור ליום הנוכחי">היום</button>
+      <button class="nav view-toggle" id="viewToggle" title="החלף בין תצוגה שומרונית ללועזית">📅 תצוגה לועזית</button>
     </span>
     <span class="bar-group secondary">
       <span class="filter-wrap">
@@ -555,6 +582,18 @@
         <div class="cevt-foot"><button class="go" id="wn-ok">הבנתי</button></div>
       </div>
     </div>
+  </div>
+
+  <div id="ask-modal" class="ask-panel" hidden>
+    <div class="ask-head">
+      <span>💬 שאל את הלוח</span>
+      <button id="ask-close" title="סגור">✕</button>
+    </div>
+    <div class="ask-io">
+      <input id="ask-input" type="text" placeholder='למשל: מתי יחול פסח בשבת? · חג הסוכות הבא · בן פרת'>
+      <button id="ask-send">שאל</button>
+    </div>
+    <div class="ask-results" id="ask-results"></div>
   </div>
 
   <div id="help-modal" class="modal" hidden>
@@ -742,7 +781,7 @@
 const WD = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
 const GMON = ['','ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 // Calendar range metadata, inlined (no separate JSON file is shipped).
-let INDEX = {greg_range:[1900,3000], canaan_range:[3538,4638], canaan_offset:1638}, mode = 'greg', DATA_YC = null;
+let INDEX = {greg_range:[1900,3000], canaan_range:[3538,4638], canaan_offset:1638}, mode = 'greg', DATA_YC = null, gregView = false;
 const TODAY_ISO = (()=>{ const d=new Date();
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })();
 
@@ -824,6 +863,7 @@ const I18N = {
 };
 const NEWS = {
   en: `<p class="wn-intro">Version history — what was added since 1.0:</p>
+    <div class="wn-ver"><b>Version 2.6</b><ul><li><b>Gregorian-month view</b> — a toolbar toggle: the same calendar grouped into Jan–Dec; each Samaritan month-start is marked inside the day cell.</li><li><b>Ask the calendar</b> (☰ menu) — a floating window to query calendar events (e.g. "when does Passover fall on Saturday?"); click a result to jump to that day.</li></ul></div>
     <div class="wn-ver"><b>Version 2.5</b><ul><li><b>Total solar & lunar eclipses</b> — marked on the calendar with an icon (eclipsed sun / blood moon). Validated 27/28 against NASA data.</li></ul></div>
     <div class="wn-ver"><b>Version 2.4</b><ul><li><b>Entry-year change accuracy</b> — a new "solar accumulator" engine for the month in which the year-number changes (replaces the fixed anchor; validated against 28 authentic calendar years).</li></ul></div>
     <div class="wn-ver"><b>Version 2.3</b><ul><li><b>Languages</b> — Hebrew / English / Arabic interface, saved on the device, with browser auto-translation disabled.</li><li><b>Private events</b> — personal events on this device, with reminders.</li><li><b>Floating month-filter</b> window.</li></ul></div>
@@ -833,6 +873,7 @@ const NEWS = {
     <div class="wn-ver"><b>Version 1.5</b><ul><li><b>Word/Excel export</b> (calendar / donation) with the Samaritan script.</li><li><b>Calendar accuracy</b> — Julian gap frozen from 2200; exact molad 2009–2100.</li></ul></div>
     <div class="wn-ver"><b>Version 1.0</b><ul><li>The computed Samaritan calendar: Gregorian / Entry-to-the-Land modes, navigation, Today, filter, jump-to-date.</li><li>Samaritan & Jewish festivals, weekly portions, molad & Arabic clock, share/print/sync.</li></ul></div>`,
   ar: `<p class="wn-intro">سجلّ الإصدارات — ما أُضيف منذ 1.0:</p>
+    <div class="wn-ver"><b>الإصدار 2.6</b><ul><li><b>عرض حسب الأشهر الميلادية</b> — زر في الشريط: التقويم نفسه مقسّم إلى يناير–ديسمبر؛ بداية الشهر السامري معلَّمة داخل الخلية.</li><li><b>اسأل التقويم</b> (قائمة ☰) — نافذة عائمة للاستفسار عن أحداث التقويم (مثل "متى يقع الفصح يوم السبت؟")؛ اضغط على نتيجة للانتقال إلى ذلك اليوم.</li></ul></div>
     <div class="wn-ver"><b>الإصدار 2.5</b><ul><li><b>كسوف الشمس وخسوف القمر الكلّيان</b> — معلَّمان في التقويم بأيقونة (شمس مكسوفة / قمر أحمر). مُتحقَّق 27/28 مقابل بيانات NASA.</li></ul></div>
     <div class="wn-ver"><b>الإصدار 2.4</b><ul><li><b>دقّة تغيّر سنة الدخول</b> — محرّك «تراكم شمسي» جديد لتحديد الشهر الذي يتغيّر فيه رقم السنة (بدلاً من المرساة الثابتة؛ مُتحقَّق مقابل 28 سنة تقويمية أصلية).</li></ul></div>
     <div class="wn-ver"><b>الإصدار 2.3</b><ul><li><b>اللغات</b> — واجهة بالعبرية / الإنجليزية / العربية، محفوظة على الجهاز، مع تعطيل الترجمة التلقائية للمتصفّح.</li><li><b>أحداث خاصة</b> — أحداث شخصية على هذا الجهاز، مع تنبيهات.</li><li><b>نافذة تصفية</b> عائمة للأشهر.</li></ul></div>
@@ -932,53 +973,62 @@ function winterPeriod(iso){
 // lunar = the moon in Earth's shadow (blood-red disk).
 const ECL_SUN = `<svg class="ecl-i" viewBox="0 0 16 16" width="13" height="13"><circle cx="8" cy="8" r="7.2" fill="#f6c343"/><circle cx="8" cy="8" r="5.4" fill="#23201a"/></svg>`;
 const ECL_MOON = `<svg class="ecl-i" viewBox="0 0 16 16" width="13" height="13"><circle cx="8" cy="8" r="6.6" fill="#9e3325"/><circle cx="8" cy="8" r="6.6" fill="none" stroke="#5e1f15" stroke-width="1.1"/></svg>`;
+// Render one day cell. Shared by the Samaritan-month view and the Gregorian-month view.
+// In the Gregorian view: no "Gregorian-month rollover" label; instead the Samaritan month
+// START (rosh chodesh) is shown in the cell via rec._samStart (the Samaritan month name).
+function renderDayCell(rec, gregView){
+  const wd = wdOfISO(rec.greg);
+  const isSat = wd===6;
+  const holFest = (rec.festivals||[]).some(f=>f.kind!=='rosh' && f.kind!=='eclipse');
+  const cls = 'cell' + (isSat?' sat':'') + (holFest&&!isSat?' hol':'') + (rec.greg===TODAY_ISO?' today':'');
+  let center = '';
+  if(gregView){
+    if(rec._samStart) center += `<span class="samstart">◐ ${rec._samStart}</span>`;   // Samaritan month begins here
+  } else if(rec.greg_day===1){
+    center += `<span class="gmonth">${GMON[+rec.greg.slice(5,7)]}</span>`;              // Gregorian month rolls over
+  }
+  (rec.festivals||[]).forEach(f=>{
+    if(gregView && f.kind==='rosh') return;   // shown via the samstart marker in the Gregorian view
+    if(f.kind==='eclipse'){ center += `<span class="f eclipse">${f.ecl==='sun'?ECL_SUN:ECL_MOON}${f.name}</span>`; return; }
+    const pre = f.kind==='sam' ? 'ש-' : f.kind==='jew' ? 'י-' : '';
+    const style = f.kind==='community' && f.color ? ` style="color:${f.color}"` : '';
+    center += `<span class="f ${f.kind}"${style}>${pre}${f.name}</span>`;
+  });
+  USER_EVENTS.filter(e=>e.date===rec.greg).forEach(e=>{
+    const st = `color:${e.fg||'#1f6feb'}`+(e.bg&&e.bg!=='none'?`;background:${e.bg};padding:0 2px;border-radius:3px`:'');
+    center += `<span class="f community uevt" style="${st}">${escHtml(e.desc)}</span>`;
+  });
+  PRIVATE_EVENTS.filter(e=>e.date===rec.greg).forEach(e=>{ center += `<span class="f private">פרטי- ${escHtml(e.desc)}</span>`; });
+  const fest = center ? `<div class="fest">${center}</div>` : '';
+  const sun = (rec.sunrise||rec.sunset) ? `<div class="sun">ז ${rec.sunrise||'--'}<br>ש ${rec.sunset||'--'}</div>` : '';
+  const per = (!isSat && !center) ? winterPeriod(rec.greg) : null;
+  const period = per ? `<div class="period">${per}</div>` : '';
+  return `<div class="${cls}" data-g="${rec.greg}">
+      <div class="c-top"><span class="hd">${rec.heb_label}</span><span class="gd">${rec.greg_day}</span></div>
+      <div class="c-mid">${fest}${period}</div>
+      <div class="c-bot"><span class="syr"><span class="syr-lbl">מז.</span>${rec.syriac_day}</span>${sun}</div>
+    </div>`;
+}
+
+// Gregorian-month card: same day cells, no Samaritan header; days grouped into a Gregorian month.
+function gregMonthCard(y, mon, days){
+  const first = new Date(y, mon-1, 1).getDay();
+  let cells = '';
+  for(let i=0;i<first;i++) cells += `<div class="cell empty"></div>`;
+  for(const rec of days) cells += renderDayCell(rec, true);
+  return `<div class="month gcard">
+    <div class="mhead greg-head"><div class="mname">${GMON[mon]} ${y}</div></div>
+    <div class="wdrow">${WD.map(w=>`<div>${w}</div>`).join('')}</div>
+    <div class="grid">${cells}</div>
+  </div>`;
+}
+
 function monthCard(canaan, changeMonth, mo){
   const m = mo.molad;
   let cells = '';
   const firstWd = wdOfISO(mo.days[0].greg);
   for(let i=0;i<firstWd;i++) cells += `<div class="cell empty"></div>`;
-  for(const rec of mo.days){
-    const wd = wdOfISO(rec.greg);
-    const isSat = wd===6;
-    const hasFest = rec.festivals && rec.festivals.length;
-    const holFest = (rec.festivals||[]).some(f=>f.kind!=='rosh' && f.kind!=='eclipse');   // rosh chodesh / eclipse show a label but don't tint the cell
-    const cls = 'cell' + (isSat?' sat':'') + (holFest&&!isSat?' hol':'') + (rec.greg===TODAY_ISO?' today':'');
-    let center = '';
-    if(rec.greg_day===1)   // Gregorian month rolls over inside the Samaritan month
-      center += `<span class="gmonth">${GMON[+rec.greg.slice(5,7)]}</span>`;
-    if(hasFest){
-      center += rec.festivals.map(f=>{
-        if(f.kind==='eclipse')   // total eclipse: icon (sun covered by moon / blood-moon) + label
-          return `<span class="f eclipse">${f.ecl==='sun'?ECL_SUN:ECL_MOON}${f.name}</span>`;
-        const pre = f.kind==='sam' ? 'ש-' : f.kind==='jew' ? 'י-' : '';
-        const style = f.kind==='community' && f.color ? ` style="color:${f.color}"` : '';
-        return `<span class="f ${f.kind}"${style}>${pre}${f.name}</span>`;   // community: colour from xlsx
-      }).join('');
-    }
-    const uev = USER_EVENTS.filter(e=>e.date===rec.greg);   // admin-added community events
-    if(uev.length){
-      center += uev.map(e=>{
-        const st = `color:${e.fg||'#1f6feb'}`+(e.bg&&e.bg!=='none'?`;background:${e.bg};padding:0 2px;border-radius:3px`:'');
-        return `<span class="f community uevt" style="${st}">${escHtml(e.desc)}</span>`;
-      }).join('');
-    }
-    const pev = PRIVATE_EVENTS.filter(e=>e.date===rec.greg);   // personal events (this device)
-    if(pev.length){
-      center += pev.map(e=>`<span class="f private">פרטי- ${escHtml(e.desc)}</span>`).join('');
-    }
-    const fest = center ? `<div class="fest">${center}</div>` : '';
-    const sun = (rec.sunrise||rec.sunset)
-      ? `<div class="sun">ז ${rec.sunrise||'--'}<br>ש ${rec.sunset||'--'}</div>` : '';
-    // winter period, centered in the empty middle — skip Saturdays and any day that already
-    // has centre content (festivals or the Gregorian-month-rollover label) so nothing is covered
-    const per = (!isSat && !center) ? winterPeriod(rec.greg) : null;
-    const period = per ? `<div class="period">${per}</div>` : '';
-    cells += `<div class="${cls}" data-g="${rec.greg}">
-        <div class="c-top"><span class="hd">${rec.heb_label}</span><span class="gd">${rec.greg_day}</span></div>
-        <div class="c-mid">${fest}${period}</div>
-        <div class="c-bot"><span class="syr"><span class="syr-lbl">מז.</span>${rec.syriac_day}</span>${sun}</div>
-      </div>`;
-  }
+  for(const rec of mo.days) cells += renderDayCell(rec, false);
   return `<div class="month" data-mi="${mo.index}">
     <div class="mhead">
       <div class="idx">חודש ${mo.index}</div>
@@ -996,22 +1046,117 @@ function monthCard(canaan, changeMonth, mo){
 }
 
 let monthFilter = new Set();   // selected month indices for the month filter (empty = show all)
+async function fetchYC(greg){
+  const [lo,hi]=INDEX.greg_range; if(greg<lo||greg>hi) return null;
+  try{ return JSON.parse(decodeData(await (await fetch(`cal/${greg}.dat`,{cache:'no-cache'})).text())); }catch(e){ return null; }
+}
 async function buildYear(greg){
   const box = document.getElementById('result'), meta = document.getElementById('meta');
   const [lo,hi] = INDEX.greg_range;
   if(greg<lo||greg>hi){ box.innerHTML=`<div class="err">השנה מחוץ לטווח (לועזי ${lo}–${hi} · כנען ${INDEX.canaan_range[0]}–${INDEX.canaan_range[1]})</div>`; meta.innerHTML=''; return; }
-  let yc;
-  try{ yc = JSON.parse(decodeData(await (await fetch(`cal/${greg}.dat`,{cache:'no-cache'})).text())); }
-  catch(e){ box.innerHTML=`<div class="err">לא נטען cal/${greg}.dat (הרץ build_calendars.py)</div>`; return; }
+  const yc = await fetchYC(greg);
+  if(!yc){ box.innerHTML=`<div class="err">לא נטען cal/${greg}.dat (הרץ build_calendars.py)</div>`; return; }
   DATA_YC = yc;
   monthFilter.clear();   // a fresh year starts unfiltered
+  document.getElementById('year').value = dispOf(greg);
+  if(gregView){ await renderGregView(greg, box, meta); return; }
   box.innerHTML = `<div class="months">${yc.months.map(mo=>monthCard(yc.canaan_year,yc.year_change_month||6,mo)).join('')}</div>`;
   meta.innerHTML = `<b>שנה לועזית ${yc.greg_year}</b> · <b>כנען ${yc.canaan_year}</b> ·
      ${yc.n_months} חודשים ${yc.leap?'(מעוברת)':'(פשוטה)'} ·
      הלוח נפתח ב-1 אביב ונמשך עד החודש שלפני אביב הבא.`;
-  document.getElementById('year').value = dispOf(greg);
+}
+// Gregorian-month view: same calendar data, regrouped into Jan–Dec of `greg`. The Samaritan
+// year data spans Abib→Abib, so we merge the Samaritan years (greg-1, greg) to cover the full
+// Gregorian year, and mark each Samaritan month-start inside its day cell.
+async function renderGregView(greg, box, meta){
+  const seen=new Set(), byMonth={};
+  for(const gy of [greg-1, greg]){
+    const yc = gy===greg ? DATA_YC : await fetchYC(gy);
+    if(!yc) continue;
+    for(const mo of yc.months){
+      mo.days.forEach((rec,idx)=>{
+        if(rec.greg.slice(0,4)!==String(greg) || seen.has(rec.greg)) return;
+        seen.add(rec.greg);
+        const r = Object.assign({}, rec);
+        if(idx===0) r._samStart = mo.name;   // first day of the Samaritan month = rosh chodesh
+        const mon=+rec.greg.slice(5,7);
+        (byMonth[mon]=byMonth[mon]||[]).push(r);
+      });
+    }
+  }
+  let html='<div class="months greg-months">';
+  for(let mon=1;mon<=12;mon++){
+    const days=(byMonth[mon]||[]).sort((a,b)=>a.greg.localeCompare(b.greg));
+    if(days.length) html += gregMonthCard(greg, mon, days);
+  }
+  box.innerHTML = html + '</div>';
+  meta.innerHTML = `<b>תצוגה לפי חודשים לועזיים — ${greg}</b> · הלוח השומרוני (חגים, תאריך מזרחי, זריחה/שקיעה) מפורש בתוך תאי הימים; תחילת כל חודש שומרוני מסומנת בתא.`;
 }
 
+// ---- "Ask the calendar": free-text search over the calendar events, across future years ----
+const _askCache=new Map();
+async function cachedYC(greg){ if(_askCache.has(greg)) return _askCache.get(greg); const yc=await fetchYC(greg); _askCache.set(greg,yc); return yc; }
+function openAsk(){
+  document.getElementById('ask-modal').hidden=false;
+  const inp=document.getElementById('ask-input'); inp.focus();
+  const r=document.getElementById('ask-results');
+  if(!r.innerHTML.trim()) r.innerHTML='<div class="ask-hint">שאל שאלה על אירועי הלוח. לדוגמה:<br>• "מתי יחול פסח בשבת?"<br>• "מתי חג הסוכות הבא?"<br>• "פרשת בן פרת"<br>לחיצה על תוצאה תעביר אותך ליום בלוח.</div>';
+}
+const _WDNAME={'ראשון':0,'שני':1,'שלישי':2,'שלישי':2,'רביעי':3,'חמישי':4,'שישי':5,'ששי':5,'שבת':6};
+const _FILLER=new Set(['מתי','יחול','יחולו','תחול','יחל','חל','חלה','הבא','הבאה','הבאים','בפעם','ביום','את','של','בלוח','שוב','מקיימת','מתקיימת','פעם','יום','על','לפי','הפעם','הקרוב','הקרובה','נפרד','חג','פרשת','פרשה','שנה','בשנה','הבאות']);
+async function runAsk(){
+  const q=(document.getElementById('ask-input').value||'').trim();
+  const rbox=document.getElementById('ask-results');
+  if(!q){ openAsk(); return; }
+  const stripPfx=w=> (w.length>=4 && /^[בלהכמשו]/.test(w)) ? w.slice(1) : w;   // conservative: only strip a prefix if the word is long enough
+  let weekday=null; const kw=[];
+  for(let w of q.replace(/[?.,!״"']/g,' ').split(/\s+/)){
+    if(!w) continue;
+    const b=stripPfx(w);
+    if(w in _WDNAME){ weekday=_WDNAME[w]; continue; }
+    if(b in _WDNAME){ weekday=_WDNAME[b]; continue; }
+    if(_FILLER.has(w) || _FILLER.has(b)) continue;
+    if(w.length>=2) kw.push(w);
+  }
+  if(!kw.length){ rbox.innerHTML='<div class="ask-hint">לא זיהיתי אירוע בשאלה. כתוב שם של חג/פרשה/אירוע — למשל "חג המצות" או "בן פרת".</div>'; return; }
+  rbox.innerHTML='<div class="ask-hint">מחפש…</div>';
+  const cands=kw.map(w=>{ const b=stripPfx(w); return b!==w?[w,b]:[w]; });   // each keyword matches its own form OR the prefix-stripped form
+  const nameHit=n=>{ n=n||''; return cands.every(alts=>alts.some(a=>n.indexOf(a)>=0)); };
+  const startY=currentGreg(), HORIZON=50, CAP=40, BATCH=6;
+  const matches=[], seen=new Set();
+  for(let y=startY; y<startY+HORIZON && matches.length<CAP; y+=BATCH){
+    const ys=[]; for(let i=0;i<BATCH && y+i<startY+HORIZON;i++) ys.push(y+i);
+    const ycs=await Promise.all(ys.map(cachedYC));
+    for(const yc of ycs){ if(!yc) continue;
+      for(const mo of yc.months) for(const rec of mo.days){
+        if(rec.greg<TODAY_ISO || seen.has(rec.greg)) continue;
+        if(weekday!=null && wdOfISO(rec.greg)!==weekday) continue;
+        const hits=[];
+        (rec.festivals||[]).forEach(f=>{ if(nameHit(f.name)) hits.push(f.name); });
+        USER_EVENTS.filter(e=>e.date===rec.greg).forEach(e=>{ if(nameHit(e.desc)) hits.push(e.desc); });
+        PRIVATE_EVENTS.filter(e=>e.date===rec.greg).forEach(e=>{ if(nameHit(e.desc)) hits.push('פרטי- '+e.desc); });
+        if(hits.length){ seen.add(rec.greg); matches.push({date:rec.greg, names:[...new Set(hits)]}); }
+      }
+    }
+  }
+  matches.sort((a,b)=>a.date.localeCompare(b.date));
+  if(!matches.length){ rbox.innerHTML=`<div class="ask-hint">לא נמצאו תוצאות ל‑"${escHtml(q)}" ב‑${HORIZON} השנים הקרובות.</div>`; return; }
+  const more = matches.length>=CAP ? `<div class="ask-hint">מוצגות ${CAP} התוצאות הראשונות.</div>` : '';
+  rbox.innerHTML = matches.slice(0,CAP).map(m=>{
+    const d=new Date(m.date+'T00:00:00');
+    return `<div class="ask-res" data-g="${m.date}"><b>${d.toLocaleDateString('he-IL')}</b> · יום ${WD[d.getDay()]} · <span class="ask-ev">${escHtml(m.names.join(' · '))}</span></div>`;
+  }).join('') + more;
+  rbox.querySelectorAll('.ask-res').forEach(el=>el.onclick=()=>gotoResult(el.dataset.g));
+}
+async function gotoResult(date){
+  const dY=+date.slice(0,4), dM=+date.slice(5,7);
+  if(mode!=='greg') setMode('greg');
+  const target = gregView ? dY : (dM>=4 ? dY : dY-1);   // the year whose view contains this date
+  document.getElementById('year').value=target;
+  await buildYear(target);
+  const cell=document.querySelector(`.cell[data-g="${date}"]`);
+  if(cell){ cell.scrollIntoView({behavior:'smooth',block:'center'}); cell.classList.add('flash'); setTimeout(()=>cell.classList.remove('flash'),2600); }
+}
 function currentGreg(){ return gregOf(+document.getElementById('year').value); }
 function setMode(m){
   mode=m;
@@ -1264,9 +1409,13 @@ function privSave(){
 }
 
 // ---- app version + "what's new" splash ----
-const APP_VERSION = '2.5';
+const APP_VERSION = '2.6';
 const NEWS_KEY = 'sam-news-seen';
 const APP_NEWS = `<p class="wn-intro">היסטוריית הגרסאות — מה התווסף מאז גרסה 1.0:</p>
+  <div class="wn-ver"><b>גרסה 2.6</b><ul>
+    <li><b>תצוגה לפי חודשים לועזיים</b> — כפתור "תצוגה לועזית" בסרגל: אותו לוח, מחולק לחודשי ינואר–דצמבר; תחילת חודש שומרוני מסומנת בתוך התא.</li>
+    <li><b>שאל את הלוח</b> (בתפריט ☰) — חלון צף לשאלות על אירועי הלוח (למשל "מתי פסח בשבת?"); לחיצה על תוצאה מעבירה ליום בלוח.</li>
+  </ul></div>
   <div class="wn-ver"><b>גרסה 2.5</b><ul>
     <li><b>ליקויי חמה ולבנה מלאים</b> — מסומנים בלוח באייקון (שמש מכוסה / ירח אדום). מאומת 27/28 מול נתוני NASA.</li>
   </ul></div>
@@ -1440,6 +1589,19 @@ function setupCommunity(){
   document.getElementById('ham-lang').onclick=()=>{ closeMenus(); chooseLang(); };
   document.getElementById('ham-help').onclick=()=>{ closeMenus(); document.getElementById('help-modal').hidden=false; };
   document.getElementById('help-close').onclick=()=>{ document.getElementById('help-modal').hidden=true; };
+  // Gregorian-month view toggle
+  document.getElementById('viewToggle').onclick=()=>{
+    gregView=!gregView;
+    document.getElementById('viewToggle').classList.toggle('on',gregView);
+    document.getElementById('viewToggle').textContent = gregView ? '📅 תצוגה שומרונית' : '📅 תצוגה לועזית';
+    document.body.classList.toggle('gview',gregView);
+    buildYear(currentGreg());
+  };
+  // "Ask the calendar" chat
+  document.getElementById('ham-ask').onclick=()=>{ closeMenus(); openAsk(); };
+  document.getElementById('ask-close').onclick=()=>{ document.getElementById('ask-modal').hidden=true; };
+  document.getElementById('ask-send').onclick=runAsk;
+  document.getElementById('ask-input').addEventListener('keydown',e=>{ if(e.key==='Enter') runAsk(); });
   document.getElementById('help-ok').onclick=()=>{ document.getElementById('help-modal').hidden=true; };
   document.getElementById('ham-private').onclick=()=>{ closeMenus(); openPrivEditor(); };
   document.getElementById('priv-close').onclick=()=>{ document.getElementById('priv-modal').hidden=true; };
