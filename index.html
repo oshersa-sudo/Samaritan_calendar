@@ -1100,49 +1100,82 @@ function openAsk(){
   document.getElementById('ask-modal').hidden=false;
   const inp=document.getElementById('ask-input'); inp.focus();
   const r=document.getElementById('ask-results');
-  if(!r.innerHTML.trim()) r.innerHTML='<div class="ask-hint">שאל שאלה על אירועי הלוח. לדוגמה:<br>• "מתי יחול פסח בשבת?"<br>• "מתי חג הסוכות הבא?"<br>• "פרשת בן פרת"<br>לחיצה על תוצאה תעביר אותך ליום בלוח.</div>';
+  if(!r.innerHTML.trim()) r.innerHTML='<div class="ask-hint">שאל שאלה על אירועי הלוח. לדוגמה:<br>• "מתי יחול פסח בשבת?"<br>• "מתי חג הסוכות הבא?"<br>• "מתי החג הבא בשבת?"<br>• "פרשת בנים אתם בנפרד"<br>לחיצה על תוצאה תעביר אותך ליום בלוח.</div>';
 }
-const _WDNAME={'ראשון':0,'שני':1,'שלישי':2,'שלישי':2,'רביעי':3,'חמישי':4,'שישי':5,'ששי':5,'שבת':6};
-const _FILLER=new Set(['מתי','יחול','יחולו','תחול','יחל','חל','חלה','הבא','הבאה','הבאים','בפעם','ביום','את','של','בלוח','שוב','מקיימת','מתקיימת','פעם','יום','על','לפי','הפעם','הקרוב','הקרובה','נפרד','חג','פרשת','פרשה','שנה','בשנה','הבאות']);
+// ---- text normalization + fuzzy Hebrew matching (defective/full spelling, prefixes, finals) ----
+const _FIN={'ך':'כ','ם':'מ','ן':'נ','ף':'פ','ץ':'צ'};
+const _normHeb=s=>String(s==null?'':s).replace(/[֑-ׇ׳״'"]/g,'').replace(/[ךםןףץ]/g,c=>_FIN[c]).replace(/\s+/g,' ').trim();
+const _WDNAME={'ראשון':0,'שני':1,'שלישי':2,'רביעי':3,'חמישי':4,'שישי':5,'ששי':5,'שבת':6};
+// hard fillers: question / linking words that carry no event meaning
+const _FILLER=new Set(['מתי','יחול','יחולו','תחול','יחל','חל','חלה','יהיה','יהיו','תהיה','הבא','הבאה','הבאים','הבאות','בפעם','פעם','הפעם','שוב','ביום','את','של','בלוח','על','לפי','הקרוב','הקרובה','הקרובים','הקרובות','מקיימת','מתקיימת','מקיימים','נחוג','נחוגת','חוגגים','לי','לנו','אנא','בבקשה','נא','מה','איזה','אילו','כמה','הם','הן','יש','הבאת','בשנה','בשנים','השנה']);
+// soft context words: dropped only if the query has other, more specific content
+const _SOFT=new Set(['חג','חגים','פרשה','פרשת','פרשיה','מועד','מועדי','יום','ראש','שבתות']);
+// spelling/synonym bridges → substrings that DO occur in the stored names (defective spelling etc.)
+const _ALIAS={'סוכות':['סכות'],'סוכה':['סכות'],'הסוכות':['סכות'],'שבועות':['שבעות'],'הכיפורים':['כפור'],'כיפור':['כפור'],'הסליחות':['סליחות'],'סליחות':['סליחות'],'חודש':['חדש'],'קהילה':['קהלה'],'קהל':['קהלה'],'מכות':['מופת'],'מכה':['מופת'],'ליקוי':['ליקוי'],'עצמאות':['העצמאות'],'זכרון':['הזיכרון']};
+const _PFX='והבכלמש';
+function _forms(w){ const out=[w]; let s=w;                       // the word + up to 2 leading prefixes removed
+  for(let i=0;i<2;i++){ if(s.length>=3 && _PFX.indexOf(s[0])>=0){ s=s.slice(1); if(out.indexOf(s)<0) out.push(s); } else break; }
+  const all=[...out]; out.forEach(f=>{ if(_ALIAS[f]) _ALIAS[f].forEach(a=>{ if(all.indexOf(a)<0) all.push(a); }); });
+  return all; }
 async function runAsk(){
   const q=(document.getElementById('ask-input').value||'').trim();
   const rbox=document.getElementById('ask-results');
   if(!q){ openAsk(); return; }
-  const stripPfx=w=> (w.length>=4 && /^[בלהכמשו]/.test(w)) ? w.slice(1) : w;   // conservative: only strip a prefix if the word is long enough
-  let weekday=null; const kw=[];
-  for(let w of q.replace(/[?.,!״"']/g,' ').split(/\s+/)){
-    if(!w) continue;
-    const b=stripPfx(w);
-    if(w in _WDNAME){ weekday=_WDNAME[w]; continue; }
-    if(b in _WDNAME){ weekday=_WDNAME[b]; continue; }
-    if(_FILLER.has(w) || _FILLER.has(b)) continue;
-    if(w.length>=2) kw.push(w);
+  let weekday=null, separate=false; const content=[], soft=[];
+  for(let raw of _normHeb(q).replace(/[?.,!()׃]/g,' ').split(/\s+/)){
+    if(!raw) continue;
+    const forms=_forms(raw);
+    const wd=forms.find(f=>f in _WDNAME); if(wd!=null){ weekday=_WDNAME[wd]; continue; }   // day of week
+    if(forms.some(f=>f==='נפרד')){ separate=true; continue; }                               // "בנפרד" → separate reading only
+    if(forms.some(f=>_FILLER.has(f))) continue;
+    if(forms.some(f=>_SOFT.has(f))){ soft.push(forms); continue; }
+    if(raw.length>=2) content.push(forms);
   }
-  if(!kw.length){ rbox.innerHTML='<div class="ask-hint">לא זיהיתי אירוע בשאלה. כתוב שם של חג/פרשה/אירוע — למשל "חג המצות" או "בן פרת".</div>'; return; }
+  // if the query had only soft/generic words (e.g. "החג הבא בשבת"), fall back to them as the terms
+  let terms = content.length ? content : soft;
+  const holidayMode = !content.length && (soft.length>0 || weekday!=null);   // "which holiday …" style
+  if(!terms.length && weekday==null){ rbox.innerHTML='<div class="ask-hint">לא זיהיתי אירוע בשאלה. נסה שם של חג / פרשה / אירוע — למשל "חג המצות", "פסח בשבת", או "פרשת בנים אתם".</div>'; return; }
   rbox.innerHTML='<div class="ask-hint">מחפש…</div>';
-  const cands=kw.map(w=>{ const b=stripPfx(w); return b!==w?[w,b]:[w]; });   // each keyword matches its own form OR the prefix-stripped form
-  const nameHit=n=>{ n=n||''; return cands.every(alts=>alts.some(a=>n.indexOf(a)>=0)); };
-  const startY=currentGreg(), HORIZON=50, CAP=40, BATCH=6;
-  const matches=[], seen=new Set();
-  for(let y=startY; y<startY+HORIZON && matches.length<CAP; y+=BATCH){
-    const ys=[]; for(let i=0;i<BATCH && y+i<startY+HORIZON;i++) ys.push(y+i);
-    const ycs=await Promise.all(ys.map(cachedYC));
-    for(const yc of ycs){ if(!yc) continue;
-      for(const mo of yc.months) for(const rec of mo.days){
-        if(rec.greg<TODAY_ISO || seen.has(rec.greg)) continue;
-        if(weekday!=null && wdOfISO(rec.greg)!==weekday) continue;
-        const hits=[];
-        (rec.festivals||[]).forEach(f=>{ if(nameHit(f.name)) hits.push(f.name); });
-        USER_EVENTS.filter(e=>e.date===rec.greg).forEach(e=>{ if(nameHit(e.desc)) hits.push(e.desc); });
-        PRIVATE_EVENTS.filter(e=>e.date===rec.greg).forEach(e=>{ if(nameHit(e.desc)) hits.push('פרטי- '+e.desc); });
-        if(hits.length){ seen.add(rec.greg); matches.push({date:rec.greg, names:[...new Set(hits)]}); }
+  const HOLIDAY_KINDS=new Set(['sam','moed','jew','national','eclipse']);
+  const nameHitAll = n => terms.every(alts=>alts.some(a=>n.indexOf(a)>=0));   // strict: every term present
+  const nameHitAny = n => terms.some(alts=>alts.some(a=>n.indexOf(a)>=0));    // loose: any term (suggestions)
+  async function scan(matcher){
+    const startY=currentGreg(), HORIZON=60, CAP=60, BATCH=6;
+    const out=[], seen=new Set();
+    for(let y=startY; y<startY+HORIZON && out.length<CAP; y+=BATCH){
+      const ys=[]; for(let i=0;i<BATCH && y+i<startY+HORIZON;i++) ys.push(y+i);
+      const ycs=await Promise.all(ys.map(cachedYC));
+      for(const yc of ycs){ if(!yc) continue;
+        for(const mo of yc.months) for(const rec of mo.days){
+          if(rec.greg<TODAY_ISO || seen.has(rec.greg)) continue;
+          if(weekday!=null && wdOfISO(rec.greg)!==weekday) continue;
+          const hits=[];
+          (rec.festivals||[]).forEach(f=>{
+            if(separate && f.kind==='parasha' && f.name.indexOf('+')>=0) return;   // "separate" excludes combined readings
+            if(holidayMode){ if(HOLIDAY_KINDS.has(f.kind)) hits.push(f.name); }
+            else if(matcher(_normHeb(f.name))) hits.push(f.name);
+          });
+          if(!holidayMode){
+            USER_EVENTS.filter(e=>e.date===rec.greg).forEach(e=>{ if(matcher(_normHeb(e.desc))) hits.push(e.desc); });
+            PRIVATE_EVENTS.filter(e=>e.date===rec.greg).forEach(e=>{ if(matcher(_normHeb(e.desc))) hits.push('פרטי- '+e.desc); });
+          }
+          if(hits.length){ seen.add(rec.greg); out.push({date:rec.greg, names:[...new Set(hits)]}); }
+        }
       }
     }
+    out.sort((a,b)=>a.date.localeCompare(b.date));
+    return out;
   }
-  matches.sort((a,b)=>a.date.localeCompare(b.date));
-  if(!matches.length){ rbox.innerHTML=`<div class="ask-hint">לא נמצאו תוצאות ל‑"${escHtml(q)}" ב‑${HORIZON} השנים הקרובות.</div>`; return; }
-  const more = matches.length>=CAP ? `<div class="ask-hint">מוצגות ${CAP} התוצאות הראשונות.</div>` : '';
-  rbox.innerHTML = matches.slice(0,CAP).map(m=>{
+  let matches = await scan(holidayMode? (()=>true) : nameHitAll);
+  let note='';
+  if(!matches.length && !holidayMode && terms.length>1){       // strict found nothing → try loose (suggestions)
+    matches = await scan(nameHitAny);
+    if(matches.length) note='<div class="ask-hint">לא נמצאה התאמה מדויקת — מוצגות תוצאות קרובות:</div>';
+  }
+  const CAP=40;
+  if(!matches.length){ rbox.innerHTML=`<div class="ask-hint">לא נמצאו תוצאות ל‑"${escHtml(q)}" ב‑60 השנים הקרובות. ייתכן שאין אירוע בשם זה בלוח.</div>`; return; }
+  const more = matches.length>CAP ? `<div class="ask-hint">מוצגות ${CAP} התוצאות הראשונות (מתוך ${matches.length}+).</div>` : '';
+  rbox.innerHTML = note + matches.slice(0,CAP).map(m=>{
     const d=new Date(m.date+'T00:00:00');
     return `<div class="ask-res" data-g="${m.date}"><b>${d.toLocaleDateString('he-IL')}</b> · יום ${WD[d.getDay()]} · <span class="ask-ev">${escHtml(m.names.join(' · '))}</span></div>`;
   }).join('') + more;
