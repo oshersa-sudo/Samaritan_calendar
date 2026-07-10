@@ -1139,12 +1139,16 @@ async function runAsk(){
   const HOLIDAY_KINDS=new Set(['sam','moed','jew','national','eclipse']);
   const nameHitAll = n => terms.every(alts=>alts.some(a=>n.indexOf(a)>=0));   // strict: every term present
   const nameHitAny = n => terms.some(alts=>alts.some(a=>n.indexOf(a)>=0));    // loose: any term (suggestions)
+  // scan the FULL calendar range forward (to the data end, year 3000), early-exit once enough are found
+  const startY=currentGreg(), endY=(INDEX.greg_range&&INDEX.greg_range[1])||(startY+60), CAP=80, BATCH=8;
+  let lastScanned=startY;
   async function scan(matcher){
-    const startY=currentGreg(), HORIZON=60, CAP=60, BATCH=6;
     const out=[], seen=new Set();
-    for(let y=startY; y<startY+HORIZON && out.length<CAP; y+=BATCH){
-      const ys=[]; for(let i=0;i<BATCH && y+i<startY+HORIZON;i++) ys.push(y+i);
+    for(let y=startY; y<=endY && out.length<CAP; y+=BATCH){
+      const ys=[]; for(let i=0;i<BATCH && y+i<=endY;i++) ys.push(y+i);
+      rbox.innerHTML=`<div class="ask-hint">מחפש… שנת ${y} (מתוך ${startY}–${endY}) · נמצאו ${out.length}</div>`;
       const ycs=await Promise.all(ys.map(cachedYC));
+      lastScanned=Math.min(y+BATCH-1,endY);
       for(const yc of ycs){ if(!yc) continue;
         for(const mo of yc.months) for(const rec of mo.days){
           if(rec.greg<TODAY_ISO || seen.has(rec.greg)) continue;
@@ -1172,10 +1176,10 @@ async function runAsk(){
     matches = await scan(nameHitAny);
     if(matches.length) note='<div class="ask-hint">לא נמצאה התאמה מדויקת — מוצגות תוצאות קרובות:</div>';
   }
-  const CAP=40;
-  if(!matches.length){ rbox.innerHTML=`<div class="ask-hint">לא נמצאו תוצאות ל‑"${escHtml(q)}" ב‑60 השנים הקרובות. ייתכן שאין אירוע בשם זה בלוח.</div>`; return; }
-  const more = matches.length>CAP ? `<div class="ask-hint">מוצגות ${CAP} התוצאות הראשונות (מתוך ${matches.length}+).</div>` : '';
-  rbox.innerHTML = note + matches.slice(0,CAP).map(m=>{
+  const DCAP=60;
+  if(!matches.length){ rbox.innerHTML=`<div class="ask-hint">לא נמצאו תוצאות ל‑"${escHtml(q)}" בין השנים ${startY}–${lastScanned}. ייתכן שאין אירוע בשם זה בלוח.</div>`; return; }
+  const more = matches.length>DCAP ? `<div class="ask-hint">מוצגות ${DCAP} התוצאות הראשונות (מתוך ${matches.length}+, נסרקו ${startY}–${lastScanned}).</div>` : `<div class="ask-hint">נסרקו השנים ${startY}–${lastScanned}.</div>`;
+  rbox.innerHTML = note + matches.slice(0,DCAP).map(m=>{
     const d=new Date(m.date+'T00:00:00');
     return `<div class="ask-res" data-g="${m.date}"><b>${d.toLocaleDateString('he-IL')}</b> · יום ${WD[d.getDay()]} · <span class="ask-ev">${escHtml(m.names.join(' · '))}</span></div>`;
   }).join('') + more;
