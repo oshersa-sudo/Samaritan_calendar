@@ -269,6 +269,8 @@
   .ask-io{display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line)}
   .ask-io input{flex:1;padding:7px 9px;border:1px solid var(--line);border-radius:9px;font-size:.9rem;font-family:inherit}
   .ask-io button{padding:7px 13px;border:none;border-radius:9px;background:var(--accent);color:#fff;font-weight:700;cursor:pointer;white-space:nowrap}
+  .ask-past-row{display:flex;align-items:center;gap:6px;padding:5px 12px;font-size:.82rem;color:var(--muted);border-bottom:1px solid var(--line);cursor:pointer}
+  .ask-past-row input{cursor:pointer}
   .ask-results{overflow-y:auto;padding:6px 8px}
   .ask-hint{color:var(--muted);font-size:.85rem;line-height:1.7;padding:6px 4px}
   .ask-res{padding:7px 8px;border-bottom:1px solid var(--line);cursor:pointer;font-size:.85rem;border-radius:8px}
@@ -593,6 +595,7 @@
       <input id="ask-input" type="text" placeholder='למשל: מתי יחול פסח בשבת? · חג הסוכות הבא · בן פרת'>
       <button id="ask-send">שאל</button>
     </div>
+    <label class="ask-past-row"><input type="checkbox" id="ask-past"> כלול אירועים מהעבר (חיפוש גם אחורה)</label>
     <div class="ask-results" id="ask-results"></div>
   </div>
 
@@ -1139,19 +1142,25 @@ async function runAsk(){
   const HOLIDAY_KINDS=new Set(['sam','moed','jew','national','eclipse']);
   const nameHitAll = n => terms.every(alts=>alts.some(a=>n.indexOf(a)>=0));   // strict: every term present
   const nameHitAny = n => terms.some(alts=>alts.some(a=>n.indexOf(a)>=0));    // loose: any term (suggestions)
-  // scan the FULL calendar range forward (to the data end, year 3000), early-exit once enough are found
-  const startY=currentGreg(), endY=(INDEX.greg_range&&INDEX.greg_range[1])||(startY+60), CAP=80, BATCH=8;
-  let lastScanned=startY;
-  async function scan(matcher){
+  // scan the FULL calendar range; forward to the data end (3000), and — if requested — backward to the start (1900)
+  const includePast = !!(document.getElementById('ask-past') && document.getElementById('ask-past').checked);
+  const rangeLo=(INDEX.greg_range&&INDEX.greg_range[0])||(currentGreg()-60);
+  const rangeHi=(INDEX.greg_range&&INDEX.greg_range[1])||(currentGreg()+60);
+  const startY=currentGreg(), CAP=80, BATCH=8;
+  let scanLo=startY, scanHi=startY;
+  // scan a list of years (in the given order), collecting matches; early-exit at CAP. timeFilter: 'future'|'past'
+  async function scanYears(matcher, years, timeFilter){
     const out=[], seen=new Set();
-    for(let y=startY; y<=endY && out.length<CAP; y+=BATCH){
-      const ys=[]; for(let i=0;i<BATCH && y+i<=endY;i++) ys.push(y+i);
-      rbox.innerHTML=`<div class="ask-hint">מחפש… שנת ${y} (מתוך ${startY}–${endY}) · נמצאו ${out.length}</div>`;
+    for(let k=0;k<years.length && out.length<CAP;k+=BATCH){
+      const ys=years.slice(k,k+BATCH);
+      rbox.innerHTML=`<div class="ask-hint">מחפש… שנת ${ys[0]}${includePast?' (כולל עבר)':''} · נמצאו ${out.length}</div>`;
       const ycs=await Promise.all(ys.map(cachedYC));
-      lastScanned=Math.min(y+BATCH-1,endY);
+      for(const y of ys){ if(y<scanLo)scanLo=y; if(y>scanHi)scanHi=y; }
       for(const yc of ycs){ if(!yc) continue;
         for(const mo of yc.months) for(const rec of mo.days){
-          if(rec.greg<TODAY_ISO || seen.has(rec.greg)) continue;
+          if(seen.has(rec.greg)) continue;
+          if(timeFilter==='future' && rec.greg<TODAY_ISO) continue;
+          if(timeFilter==='past'   && rec.greg>=TODAY_ISO) continue;
           if(weekday!=null && wdOfISO(rec.greg)!==weekday) continue;
           const hits=[];
           (rec.festivals||[]).forEach(f=>{
@@ -1167,8 +1176,17 @@ async function runAsk(){
         }
       }
     }
-    out.sort((a,b)=>a.date.localeCompare(b.date));
     return out;
+  }
+  // forward years: today → end ; backward years: today → start (descending, so nearest past is found first)
+  const fwdYears=[]; for(let y=startY;y<=rangeHi;y++) fwdYears.push(y);
+  const bwdYears=[]; for(let y=startY-1;y>=rangeLo;y--) bwdYears.push(y);
+  async function scan(matcher){
+    const fut=await scanYears(matcher, fwdYears, 'future');
+    const past=includePast ? await scanYears(matcher, bwdYears, 'past') : [];
+    const all=[...past,...fut];
+    all.sort((a,b)=>a.date.localeCompare(b.date));
+    return all;
   }
   let matches = await scan(holidayMode? (()=>true) : nameHitAll);
   let note='';
@@ -1177,8 +1195,8 @@ async function runAsk(){
     if(matches.length) note='<div class="ask-hint">לא נמצאה התאמה מדויקת — מוצגות תוצאות קרובות:</div>';
   }
   const DCAP=60;
-  if(!matches.length){ rbox.innerHTML=`<div class="ask-hint">לא נמצאו תוצאות ל‑"${escHtml(q)}" בין השנים ${startY}–${lastScanned}. ייתכן שאין אירוע בשם זה בלוח.</div>`; return; }
-  const more = matches.length>DCAP ? `<div class="ask-hint">מוצגות ${DCAP} התוצאות הראשונות (מתוך ${matches.length}+, נסרקו ${startY}–${lastScanned}).</div>` : `<div class="ask-hint">נסרקו השנים ${startY}–${lastScanned}.</div>`;
+  if(!matches.length){ rbox.innerHTML=`<div class="ask-hint">לא נמצאו תוצאות ל‑"${escHtml(q)}" בין השנים ${scanLo}–${scanHi}. ייתכן שאין אירוע בשם זה בלוח.</div>`; return; }
+  const more = matches.length>DCAP ? `<div class="ask-hint">מוצגות ${DCAP} התוצאות הראשונות (מתוך ${matches.length}+, נסרקו ${scanLo}–${scanHi}).</div>` : `<div class="ask-hint">נסרקו השנים ${scanLo}–${scanHi}.</div>`;
   rbox.innerHTML = note + matches.slice(0,DCAP).map(m=>{
     const d=new Date(m.date+'T00:00:00');
     return `<div class="ask-res" data-g="${m.date}"><b>${d.toLocaleDateString('he-IL')}</b> · יום ${WD[d.getDay()]} · <span class="ask-ev">${escHtml(m.names.join(' · '))}</span></div>`;
