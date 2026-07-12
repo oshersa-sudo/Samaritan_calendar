@@ -1373,6 +1373,32 @@ function communityLogin(){
       {label:'ביטול'}
     ]});
 }
+// ---- admin auto-logout: close the editor after 20 min of inactivity (must re-login) ----
+const ADMIN_IDLE_MS = 20*60*1000;   // 20 minutes
+let adminActive = false, adminIdleTimer = null;
+function adminActivity(){
+  if(!adminActive) return;
+  clearTimeout(adminIdleTimer);
+  adminIdleTimer = setTimeout(()=>adminLogout('idle'), ADMIN_IDLE_MS);
+}
+function adminSessionStart(){
+  if(adminActive){ adminActivity(); return; }
+  adminActive = true;
+  ['mousemove','keydown','click','touchstart','scroll'].forEach(ev=>document.addEventListener(ev, adminActivity, true));
+  adminActivity();   // arm the idle timer
+}
+function adminLogout(reason){
+  if(!adminActive) return;
+  adminActive = false;
+  clearTimeout(adminIdleTimer); adminIdleTimer = null;
+  ['mousemove','keydown','click','touchstart','scroll'].forEach(ev=>document.removeEventListener(ev, adminActivity, true));
+  cevtDraft = [];
+  const m = document.getElementById('cevt-modal'); if(m) m.hidden = true;   // close the editor
+  if(reason==='idle')
+    dialog({ title:'התנתקות אוטומטית',
+      html:'התנתקת ממערכת עריכת אירועי הקהילה עקב <b>20 דקות ללא פעילות</b>.<br>יש להתחבר מחדש כדי להמשיך לערוך.',
+      buttons:[{label:'הבנתי', primary:true}] });
+}
 let cevtUID = 0;
 function openCevtEditor(){
   cevtDraft = USER_EVENTS.map(e=>({...e, id:++cevtUID}));
@@ -1381,6 +1407,7 @@ function openCevtEditor(){
   document.getElementById('cevt-form-err').textContent = '';
   renderCevtList();
   document.getElementById('cevt-modal').hidden = false;
+  adminSessionStart();   // begin the 20-min inactivity watchdog
 }
 let cevtBakedCache = {};
 async function bakedCommunityFor(year){   // community events baked into the calendar (.dat from the Excel)
@@ -1452,7 +1479,7 @@ function cevtAddRow(){
 function cevtSave(){
   USER_EVENTS = cevtDraft.filter(e => (e.desc||'').trim() && e.date).map(({id,...e})=>e);   // drop blank rows + id
   try{ localStorage.setItem(UEVT_KEY, JSON.stringify(USER_EVENTS)); }catch(e){}
-  document.getElementById('cevt-modal').hidden = true;
+  adminLogout('manual');   // save closes the editor and ends the admin session
   if(DATA_YC) buildYear(currentGreg());   // re-render the calendar with the new events
 }
 
@@ -1660,7 +1687,7 @@ function setupCommunity(){
   moreMenu.addEventListener('click',e=>{ if(e.target.closest('.act')) closeMenus(); });   // close after picking an action
   document.addEventListener('click',closeMenus);   // any outside click closes both
   document.getElementById('ham-events').onclick=()=>{ closeMenus(); communityLogin(); };
-  document.getElementById('cevt-close').onclick=()=>{ document.getElementById('cevt-modal').hidden=true; };
+  document.getElementById('cevt-close').onclick=()=>{ adminLogout('manual'); };
   document.getElementById('cevt-show').onclick=cevtShow;
   document.getElementById('cevt-add').onclick=cevtAddRow;
   document.getElementById('cevt-save').onclick=cevtSave;
