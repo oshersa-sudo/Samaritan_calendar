@@ -54,9 +54,8 @@
   .ham-sub button:hover{background:var(--soft)}
   @media print{ .hamburger,.ham-menu{display:none!important} }
   .more-wrap{position:relative;display:inline-flex}
-  /* fixed + JS-positioned so the sideways-scrolling toolbar never clips it */
-  .more-menu{position:fixed;z-index:70;background:var(--card);border:1px solid var(--line);
-    border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.18);padding:5px;display:flex;flex-direction:column;gap:3px;min-width:210px;max-height:80vh;overflow:auto}
+  .more-menu{position:absolute;top:calc(100% + 5px);left:0;z-index:40;background:var(--card);border:1px solid var(--line);
+    border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.18);padding:5px;display:flex;flex-direction:column;gap:3px;min-width:210px}
   .more-menu[hidden]{display:none}   /* flex display must not override the hidden attribute */
   .more-menu .act{display:block;width:100%;text-align:right;border:none;background:none;border-radius:7px}
   .more-menu .act:hover{background:var(--soft)}
@@ -164,24 +163,18 @@
     .wrap{padding-bottom:34px}
   }
 
-  .bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;flex-wrap:nowrap;
-    gap:10px;background:var(--card);border:1px solid var(--line);
+  .bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;flex-wrap:wrap;
+    justify-content:center;column-gap:14px;row-gap:8px;background:var(--card);border:1px solid var(--line);
     border-radius:14px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:8px}
-  /* ONE non-wrapping row: the year/nav clusters scroll sideways if too wide, while the action
-     buttons (zoom / options) stay PINNED and always visible — never wraps, never overlaps. */
-  .bar-scroll{display:flex;align-items:center;flex-wrap:nowrap;column-gap:14px;
-    flex:1 1 auto;min-width:0;overflow-x:auto;overflow-y:visible;
-    scrollbar-width:thin;scrollbar-color:var(--line) transparent;-webkit-overflow-scrolling:touch}
-  .bar-scroll::-webkit-scrollbar{height:6px}
-  .bar-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
-  .bar-scroll::-webkit-scrollbar-track{background:transparent}
-  .bar-group,.bar .actions{display:flex;align-items:center;flex-wrap:nowrap;gap:6px;justify-content:center;flex:0 0 auto}
+  /* two tidy clusters: year/nav controls + action buttons; each wraps as a unit, so the bar
+     is one line when it fits and breaks into two clean rows otherwise. */
+  .bar-group,.bar .actions{display:flex;align-items:center;flex-wrap:wrap;gap:6px;justify-content:center}
   .bar label,.bar .yhint{white-space:nowrap}
   .bar label{font-weight:600;font-size:.92rem}
   .modes{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
   .modes button{background:#fff;border:none;padding:6px 9px;cursor:pointer;font-size:.8rem;color:var(--muted);white-space:nowrap}
   .modes button.on{background:var(--accent);color:#fff;font-weight:700}
-  .lbl-long{display:none} .lbl-short{display:inline}   /* compact mode labels keep the bar to one row (full text in the tooltip) */
+  .lbl-short{display:none}   /* short mode labels appear only on phones */
   input[type=number]{font-size:1rem;width:82px;padding:6px 6px;text-align:center;
     border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)}
   .bar .go{font-size:.9rem;padding:7px 12px;border:none;border-radius:9px;background:var(--accent);color:#fff;cursor:pointer;font-weight:700;white-space:nowrap}
@@ -377,15 +370,23 @@
     h1{font-size:1.2rem}
     .sub{font-size:.8rem}
     .note-important,.note-exp{font-size:.76rem;line-height:1.45}
-    /* sticky control bar: ONE compact, sideways-scrolling row (no wrapping) */
-    .bar{gap:6px;column-gap:10px;padding:8px 8px 8px 50px;-webkit-overflow-scrolling:touch}
+    /* sticky control bar: let buttons wrap instead of forcing a sideways scroll */
+    .bar{gap:6px;padding:8px 8px 8px 50px}
     .modes button,.bar .go,.act{font-size:.72rem;padding:6px 7px}
-    .lbl-long{display:none} .lbl-short{display:inline}   /* short mode labels on phones */
-    .modes button{padding:5px 6px;font-size:.7rem}
-    .bar .go{padding:6px 8px}
-    .nav{padding:6px 8px}
-    input[type=number]{width:62px;font-size:.92rem}
-    .date-input{width:112px}
+    input[type=number]{width:70px;font-size:.92rem}
+    /* on phones: each cluster takes a full row -> clean stacked rows */
+    .bar-group,.bar .actions{flex-basis:100%;width:100%;gap:5px;margin-inline-start:0}
+    /* phones: buttons WRAP so every control stays visible — never cut off by a sideways scroll */
+    .lbl-long{display:none} .lbl-short{display:inline}
+    .bar-group.primary{flex-wrap:wrap;justify-content:center;gap:5px}
+    .bar-group.primary>*{flex:0 0 auto}
+    .modes button{padding:5px 5px;font-size:.7rem}
+    .bar .go{padding:6px 7px}
+    .nav{padding:6px 7px}
+    input[type=number]{width:56px}
+    .bar-group.secondary{flex-wrap:wrap;justify-content:center;gap:5px}
+    .bar-group.secondary>*{flex:0 0 auto}
+    .bar-group.secondary .date-input{flex:0 1 auto;min-width:96px}
     .legend{gap:7px 10px;font-size:.7rem;margin:6px 0 12px}
     /* month header */
     .mhead{padding:42px 10px 8px}
@@ -449,12 +450,11 @@
   </header>
 
   <div class="bar">
-    <div class="bar-scroll">
     <span class="bar-group primary">
       <button class="nav" id="prev" title="שנה קודמת">▶</button>
       <div class="modes">
-        <button id="mGreg" class="on" title="שנה לועזית (גרגוריאנית)"><span class="lbl-long">שנה לועזית</span><span class="lbl-short">לועזית</span></button>
-        <button id="mCanaan" title="שנת כניסה לארץ הקדושה"><span class="lbl-long">שנת כניסה לארץ הקדושה</span><span class="lbl-short">כניסה</span></button>
+        <button id="mGreg" class="on"><span class="lbl-long">שנה לועזית</span><span class="lbl-short">לועזית</span></button>
+        <button id="mCanaan"><span class="lbl-long">שנת כניסה לארץ הקדושה</span><span class="lbl-short">כניסה</span></button>
       </div>
       <input type="number" id="year" step="1">
       <button class="nav" id="next" title="שנה הבאה">◀</button>
@@ -471,7 +471,6 @@
       <input type="text" id="date-input" class="date-input" placeholder="הזן תאריך לועזי" inputmode="numeric" maxlength="10" autocomplete="off">
       <button class="nav" id="date-go" title="הצגת התאריך שהוזן">הצג</button>
     </span>
-    </div>
     <span class="actions">
       <button class="act" id="zoomout" title="הקטן תצוגה">➖</button>
       <button class="act" id="zoomin" title="הגדל תצוגה">➕</button>
@@ -1683,12 +1682,7 @@ function setupCommunity(){
   const moreSub=document.getElementById('ham-more-sub');
   const closeMenus=()=>{ menu.hidden=true; moreMenu.hidden=true; moreSub.hidden=true; };
   ham.onclick=e=>{ e.stopPropagation(); const open=menu.hidden; closeMenus(); menu.hidden=!open; };
-  moreBtn.onclick=e=>{ e.stopPropagation(); const open=moreMenu.hidden; closeMenus();
-    if(open){ moreMenu.hidden=false;                                 // show first to measure, then clamp fully on-screen
-      const r=moreBtn.getBoundingClientRect(), mw=moreMenu.offsetWidth||210, mh=moreMenu.offsetHeight||300;
-      let left=Math.max(8, Math.min(r.right-mw, window.innerWidth-mw-8));       // right-aligned (RTL), clamped
-      let top=r.bottom+5; if(top+mh>window.innerHeight-8) top=Math.max(8, r.top-mh-5);   // flip up if no room below
-      moreMenu.style.left=Math.round(left)+'px'; moreMenu.style.right='auto'; moreMenu.style.top=Math.round(top)+'px'; } };
+  moreBtn.onclick=e=>{ e.stopPropagation(); const open=moreMenu.hidden; closeMenus(); moreMenu.hidden=!open; };
   menu.onclick=e=>e.stopPropagation();
   moreMenu.addEventListener('click',e=>{ if(e.target.closest('.act')) closeMenus(); });   // close after picking an action
   document.addEventListener('click',closeMenus);   // any outside click closes both
@@ -1924,11 +1918,11 @@ async function init(){
     const panel=document.getElementById('month-filter-panel');
     if(panel.hidden){
       buildFilterPanel();
-      panel.hidden=false;                                        // show first to measure, then clamp on-screen
-      const r=e.currentTarget.getBoundingClientRect(), pw=panel.offsetWidth||200, ph=panel.offsetHeight||260;
-      let left=Math.max(8, Math.min(r.right-pw, window.innerWidth-pw-8));
-      let top=r.bottom+5; if(top+ph>window.innerHeight-8) top=Math.max(8, r.top-ph-5);
-      panel.style.left=Math.round(left)+'px'; panel.style.right='auto'; panel.style.top=Math.round(top)+'px';
+      const r=e.currentTarget.getBoundingClientRect();          // float below the button (escapes the sticky bar's clipping)
+      panel.style.top=Math.round(r.bottom+5)+'px';
+      panel.style.right=Math.round(window.innerWidth-r.right)+'px';
+      panel.style.left='auto';
+      panel.hidden=false;
     } else panel.hidden=true;
   };
   document.addEventListener('click',e=>{
