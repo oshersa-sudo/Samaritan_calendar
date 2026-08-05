@@ -194,6 +194,7 @@
   .mf-row input{width:15px;height:15px;cursor:pointer;accent-color:var(--accent)}
   .date-input{font-size:.84rem;width:140px;padding:6px 8px;border:1px solid var(--line);border-radius:9px;
     background:#fff;color:var(--ink);text-align:center}
+  .date-wrap{display:inline-flex;align-items:center;gap:6px;flex-wrap:nowrap}   /* keep הצג beside the date box */
   .cell.flash{outline:3px solid #e0a020;outline-offset:-3px;animation:cellflash 2s ease-out 1}
   @keyframes cellflash{0%,65%{outline-color:#e0a020}100%{outline-color:transparent}}
 
@@ -460,7 +461,7 @@
       <button class="nav" id="next" title="שנה הבאה">◀</button>
       <button class="go" id="go">בנה לוח</button>
       <button class="nav" id="today" title="עבור ליום הנוכחי">היום</button>
-      <button class="nav view-toggle" id="viewToggle" title="החלף בין תצוגה שומרונית ללועזית">📅 תצוגה לועזית</button>
+      <button class="nav view-toggle" id="viewToggle" title="החלף בין תצוגה שומרונית ללועזית">📅 תצ.לועזית</button>
     </span>
     <span class="bar-group secondary">
       <span class="filter-wrap">
@@ -468,8 +469,10 @@
         <div class="month-filter-panel" id="month-filter-panel" hidden></div>
       </span>
       <button class="nav" id="clear-filter" title="הצגת כל חודשי השנה">נקה סינון</button>
-      <input type="text" id="date-input" class="date-input" placeholder="הזן תאריך לועזי" inputmode="numeric" maxlength="10" autocomplete="off">
-      <button class="nav" id="date-go" title="הצגת התאריך שהוזן">הצג</button>
+      <span class="date-wrap">
+        <input type="text" id="date-input" class="date-input" placeholder="הזן תאריך לועזי" inputmode="numeric" maxlength="10" autocomplete="off">
+        <button class="nav" id="date-go" title="הצגת התאריך שהוזן">הצג</button>
+      </span>
     </span>
     <span class="actions">
       <button class="act" id="zoomout" title="הקטן תצוגה">➖</button>
@@ -1708,7 +1711,7 @@ function setupCommunity(){
   document.getElementById('viewToggle').onclick=()=>{
     gregView=!gregView;
     document.getElementById('viewToggle').classList.toggle('on',gregView);
-    document.getElementById('viewToggle').textContent = gregView ? '📅 תצוגה שומרונית' : '📅 תצוגה לועזית';
+    document.getElementById('viewToggle').textContent = gregView ? '📅 תצ.שומרונית' : '📅 תצ.לועזית';
     document.body.classList.toggle('gview',gregView);
     buildYear(currentGreg());
   };
