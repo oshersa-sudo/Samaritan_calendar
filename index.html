@@ -163,12 +163,27 @@
     .wrap{padding-bottom:34px}
   }
 
-  .bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;flex-wrap:wrap;
-    justify-content:center;column-gap:14px;row-gap:8px;background:var(--card);border:1px solid var(--line);
-    border-radius:14px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:8px}
-  /* two tidy clusters: year/nav controls + action buttons; each wraps as a unit, so the bar
-     is one line when it fits and breaks into two clean rows otherwise. */
+  .bar{position:sticky;top:0;z-index:20;display:flex;flex-direction:column;align-items:stretch;
+    gap:6px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:10px 12px 4px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:8px}
+  /* tier 1 (always visible): year/nav + filter. tier 2 (collapsible): view toggle, date jump, actions. */
+  .bar-main,.bar-extra{display:flex;align-items:center;flex-wrap:wrap;justify-content:center;column-gap:14px;row-gap:6px}
+  .bar-extra{overflow:hidden;opacity:1;transition:opacity .22s ease}
+  body.bar-collapsed .bar-extra{max-height:0;min-height:0;opacity:0;margin:0;pointer-events:none}
   .bar-group,.bar .actions{display:flex;align-items:center;flex-wrap:wrap;gap:6px;justify-content:center}
+  /* shutter handle — the drawer pull the user grabs to open/close the extra controls */
+  .bar-handle{align-self:center;display:inline-flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;
+    border:none;background:var(--soft);color:var(--accent);border-radius:10px;padding:3px 16px 4px;margin-top:1px;
+    font-size:.72rem;font-weight:700}
+  .bar-handle:hover{background:#e3d4b4}
+  .handle-grip{width:32px;height:5px;border-radius:3px;background:var(--accent);opacity:.45}
+  .handle-label{white-space:nowrap}
+  /* year-nav footer at the end of the calendar */
+  .year-nav-foot{display:flex;justify-content:space-between;gap:10px;margin:16px 2px 32px;flex-wrap:wrap}
+  .ynf-btn{flex:1 1 210px;padding:12px 16px;border:1px solid var(--line);border-radius:12px;background:var(--card);
+    color:var(--accent);font-weight:700;font-size:.95rem;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.05);text-align:center}
+  .ynf-btn:hover{background:var(--soft)}
+  .ynf-btn b{color:var(--ink)}
   .bar label,.bar .yhint{white-space:nowrap}
   .bar label{font-weight:600;font-size:.92rem}
   .modes{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
@@ -451,6 +466,7 @@
   </header>
 
   <div class="bar">
+    <div class="bar-main">
     <span class="bar-group primary">
       <button class="nav" id="prev" title="שנה קודמת">▶</button>
       <div class="modes">
@@ -461,14 +477,18 @@
       <button class="nav" id="next" title="שנה הבאה">◀</button>
       <button class="go" id="go">בנה לוח</button>
       <button class="nav" id="today" title="עבור ליום הנוכחי">היום</button>
-      <button class="nav view-toggle" id="viewToggle" title="החלף בין תצוגה שומרונית ללועזית">📅 תצ.לועזית</button>
     </span>
-    <span class="bar-group secondary">
+    <span class="bar-group filters">
       <span class="filter-wrap">
         <button class="nav" id="month-filter-btn" title="הצגת חודשים נבחרים בלבד">סינון ▾</button>
         <div class="month-filter-panel" id="month-filter-panel" hidden></div>
       </span>
       <button class="nav" id="clear-filter" title="הצגת כל חודשי השנה">נקה סינון</button>
+    </span>
+    </div>
+    <div class="bar-extra" id="barExtra">
+    <span class="bar-group">
+      <button class="nav view-toggle" id="viewToggle" title="החלף בין תצוגה שומרונית ללועזית">📅 תצ.לועזית</button>
       <span class="date-wrap">
         <input type="text" id="date-input" class="date-input" placeholder="הזן תאריך לועזי" inputmode="numeric" maxlength="10" autocomplete="off">
         <button class="nav" id="date-go" title="הצגת התאריך שהוזן">הצג</button>
@@ -492,6 +512,10 @@
         </div>
       </span>
     </span>
+    </div>
+    <button class="bar-handle" id="barHandle" type="button" aria-label="הרחב או כווץ את התפריט">
+      <span class="handle-grip"></span><span class="handle-label" id="handleLabel">הרחב תפריט</span>
+    </button>
   </div>
 
   <div class="legend">
@@ -506,6 +530,10 @@
   </div>
 
   <div id="result"></div>
+  <div class="year-nav-foot" id="yearNavFoot" hidden>
+    <button class="ynf-btn" id="ynfPrev" type="button"></button>
+    <button class="ynf-btn" id="ynfNext" type="button"></button>
+  </div>
   <div class="meta" id="meta"></div>
   <div class="print-footer"><span id="pf-year"></span>All rights reserved to Osher Sassoni · כל הזכויות שמורות לאושר ששוני · www.the-samaritans.net</div>
 
@@ -1098,11 +1126,25 @@ async function buildYear(greg){
   DATA_YC = yc;
   monthFilter.clear();   // a fresh year starts unfiltered
   document.getElementById('year').value = dispOf(greg);
-  if(gregView){ await renderGregView(greg, box, meta); return; }
+  if(gregView){ await renderGregView(greg, box, meta); updateYearNavFoot(); return; }
   box.innerHTML = `<div class="months">${yc.months.map(mo=>monthCard(yc.canaan_year,yc.year_change_month||6,mo)).join('')}</div>`;
   meta.innerHTML = `<b>שנה לועזית ${yc.greg_year}</b> · <b>כנען ${yc.canaan_year}</b> ·
      ${yc.n_months} חודשים ${yc.leap?'(מעוברת)':'(פשוטה)'} ·
      הלוח נפתח ב-1 אביב ונמשך עד החודש שלפני אביב הבא.`;
+  updateYearNavFoot();
+}
+// prev/next-year buttons at the bottom of the calendar (labelled by the current display type)
+function updateYearNavFoot(){
+  const foot=document.getElementById('yearNavFoot'); if(!foot) return;
+  const cur=+document.getElementById('year').value;
+  const [lo,hi] = mode==='greg'?INDEX.greg_range:INDEX.canaan_range;
+  const kind = gregView ? 'לועזית' : (mode==='canaan'?'לכניסה לארץ':'לועזית');
+  const prev=document.getElementById('ynfPrev'), next=document.getElementById('ynfNext');
+  prev.innerHTML = '▶ לשנה הקודמת <b>'+(cur-1)+'</b> '+kind;
+  next.innerHTML = 'לשנה הבאה <b>'+(cur+1)+'</b> '+kind+' ◀';
+  prev.style.visibility = (cur-1<lo)?'hidden':'';
+  next.style.visibility = (cur+1>hi)?'hidden':'';
+  foot.hidden=false;
 }
 // Gregorian-month view: same calendar data, regrouped into Jan–Dec of `greg`. The Samaritan
 // year data spans Abib→Abib, so we merge the Samaritan years (greg-1, greg) to cover the full
@@ -1679,6 +1721,19 @@ function saveNotif(){
   else Notification.requestPermission().then(done);
 }
 
+// ---- collapsible toolbar: show open on entry, auto-collapse the extra tier after a few seconds ----
+function setupBarCollapse(){
+  const handle=document.getElementById('barHandle'), label=document.getElementById('handleLabel'), extra=document.getElementById('barExtra');
+  if(!handle) return;
+  let timer=null;
+  const isCollapsed=()=>document.body.classList.contains('bar-collapsed');
+  function collapse(){ document.body.classList.add('bar-collapsed'); label.textContent='הרחב תפריט'; clearTimeout(timer); timer=null; }
+  function arm(){ clearTimeout(timer); timer=setTimeout(collapse, 6000); }   // auto-collapse after ~6s of no use
+  function expand(){ document.body.classList.remove('bar-collapsed'); label.textContent='כווץ תפריט'; arm(); }
+  handle.onclick=()=>{ isCollapsed()?expand():collapse(); };
+  ['pointerdown','keydown','focusin'].forEach(ev=>extra.addEventListener(ev,()=>{ if(!isCollapsed()) arm(); }));  // stay open while in use
+  expand();   // start expanded so the user notices everything, then it folds up on its own
+}
 function setupCommunity(){
   const ham=document.getElementById('hamburger'), menu=document.getElementById('ham-menu');
   const moreBtn=document.getElementById('more-btn'), moreMenu=document.getElementById('more-menu');
@@ -1745,6 +1800,7 @@ function setupCommunity(){
     setTimeout(()=>showWhatsNew(true), 500);
   }
   checkNotifications(); setInterval(checkNotifications, 60000);
+  setupBarCollapse();   // collapsible toolbar (open on entry, folds up after a few seconds)
 }
 
 // ---- shortcut / install: app on mobile (PWA), .url file on desktop ----
@@ -1886,6 +1942,9 @@ async function init(){
   document.getElementById('go').onclick=()=>buildYear(currentGreg());
   document.getElementById('next').onclick=()=>{document.getElementById('year').value=+document.getElementById('year').value+1; buildYear(currentGreg());};
   document.getElementById('prev').onclick=()=>{document.getElementById('year').value=+document.getElementById('year').value-1; buildYear(currentGreg());};
+  const ynfGo=step=>{ document.getElementById('year').value=+document.getElementById('year').value+step; buildYear(currentGreg()).then(()=>window.scrollTo({top:0,behavior:'smooth'})); };
+  document.getElementById('ynfNext').onclick=()=>ynfGo(1);
+  document.getElementById('ynfPrev').onclick=()=>ynfGo(-1);
   document.getElementById('year').addEventListener('keydown',e=>{if(e.key==='Enter')buildYear(currentGreg());});
   document.getElementById('mGreg').onclick=()=>{const g=currentGreg();setMode('greg');document.getElementById('year').value=g;buildYear(g);};
   document.getElementById('mCanaan').onclick=()=>{const g=currentGreg();setMode('canaan');document.getElementById('year').value=g+INDEX.canaan_offset;buildYear(g);};
