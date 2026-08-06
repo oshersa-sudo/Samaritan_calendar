@@ -171,12 +171,12 @@
   .bar-extra{overflow:hidden;opacity:1;transition:opacity .22s ease}
   body.bar-collapsed .bar-extra{max-height:0;min-height:0;opacity:0;margin:0;pointer-events:none}
   .bar-group,.bar .actions{display:flex;align-items:center;flex-wrap:wrap;gap:6px;justify-content:center}
-  /* shutter handle — the drawer pull the user grabs to open/close the extra controls */
-  .bar-handle{align-self:center;display:inline-flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;
-    border:none;background:var(--soft);color:var(--accent);border-radius:10px;padding:3px 16px 4px;margin-top:1px;
-    font-size:.72rem;font-weight:700}
-  .bar-handle:hover{background:#e3d4b4}
-  .handle-grip{width:32px;height:5px;border-radius:3px;background:var(--accent);opacity:.45}
+  /* shutter handle — a prominent (filled) drawer pull, deliberately different from the ghost nav buttons */
+  .bar-handle{align-self:center;display:inline-flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;
+    border:none;background:linear-gradient(180deg,var(--accent),var(--accent2));color:#fff;border-radius:11px;
+    padding:4px 20px 5px;margin-top:2px;font-size:.74rem;font-weight:800;box-shadow:0 2px 7px rgba(0,0,0,.18);letter-spacing:.2px}
+  .bar-handle:hover{filter:brightness(1.08)}
+  .handle-grip{width:34px;height:5px;border-radius:3px;background:#fff;opacity:.85}
   .handle-label{white-space:nowrap}
   /* year-nav footer at the end of the calendar */
   .year-nav-foot{display:flex;justify-content:space-between;gap:10px;margin:16px 2px 32px;flex-wrap:wrap}
@@ -196,6 +196,9 @@
   .bar .go:hover{background:var(--accent2)}
   .nav{background:var(--soft);color:var(--accent);border:none;border-radius:9px;padding:6px 10px;cursor:pointer;font-size:.95rem;font-weight:700}
   .nav:hover{background:#e3d4b4}
+  .nav.ic{padding:6px 8px;display:inline-flex;align-items:center;justify-content:center;line-height:0}
+  .nav.ic svg{display:block}
+  .today-cluster{display:inline-flex;align-items:center;gap:6px;flex-wrap:nowrap}   /* keep היום + סינון + נקה on one row */
   .yhint{font-size:.82rem;color:var(--muted)}
   .oico{width:1.05em;height:1.05em;vertical-align:-3px;margin-inline-end:2px}
   .filter-wrap{position:relative;display:inline-flex}
@@ -477,14 +480,18 @@
       <input type="number" id="year" step="1">
       <button class="nav" id="next" title="שנה הבאה">◀</button>
       <button class="go" id="go">בנה לוח</button>
-      <button class="nav" id="today" title="עבור ליום הנוכחי">היום</button>
-    </span>
-    <span class="bar-group filters">
-      <span class="filter-wrap">
-        <button class="nav" id="month-filter-btn" title="הצגת חודשים נבחרים בלבד">סינון ▾</button>
-        <div class="month-filter-panel" id="month-filter-panel" hidden></div>
+      <span class="today-cluster">
+        <button class="nav" id="today" title="עבור ליום הנוכחי">היום</button>
+        <span class="filter-wrap">
+          <button class="nav ic" id="month-filter-btn" title="סינון חודשים">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+          </button>
+          <div class="month-filter-panel" id="month-filter-panel" hidden></div>
+        </span>
+        <button class="nav ic" id="clear-filter" title="נקה סינון">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H8.5L3.7 15.2a2 2 0 0 1 0-2.8l7.6-7.6a2 2 0 0 1 2.8 0l5.4 5.4a2 2 0 0 1 0 2.8L13 20"/><line x1="18" y1="20" x2="8" y2="20"/></svg>
+        </button>
       </span>
-      <button class="nav" id="clear-filter" title="הצגת כל חודשי השנה">נקה סינון</button>
     </span>
     </div>
     <div class="bar-extra" id="barExtra">
@@ -971,7 +978,10 @@ function translateUI(){
   setSel('.suptitle','suptitle'); setSel('header h1','title');
   setSel('#mGreg .lbl-long','mode_greg'); setSel('#mGreg .lbl-short','mode_greg_s');
   setSel('#mCanaan .lbl-long','mode_canaan'); setSel('#mCanaan .lbl-short','mode_canaan_s');
-  set('go','build'); set('today','today'); set('month-filter-btn','filter'); set('clear-filter','clear_filter');
+  set('go','build'); set('today','today');
+  // filter/clear are icon buttons now — translate the TOOLTIP, not the content (keeps the SVG)
+  const fb=document.getElementById('month-filter-btn'), cb=document.getElementById('clear-filter');
+  if(fb) fb.title=t('filter').replace(/\s*▾\s*/,''); if(cb) cb.title=t('clear_filter');
   const di=document.getElementById('date-input'); if(di) di.placeholder=t('date_ph');
   set('date-go','show'); set('more-btn','more');
   set('moadim','m_moadim'); set('notif','m_notif'); set('print','m_print'); set('ics','m_sync'); set('share','m_share');
