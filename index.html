@@ -448,6 +448,7 @@
     </div>
     <button id="ham-private">➕ הוסף אירוע פרטי</button>
     <button id="ham-ask">💬 שאל את הלוח</button>
+    <button id="ham-push" hidden>🔔 התראות PUSH</button>
     <button id="ham-help">❓ עזרה</button>
     <button id="ham-version">גרסה נוכחית: <span class="ham-ver" id="ham-ver"></span></button>
     <button id="ham-lang">🌐 שנה שפה</button>
@@ -1721,6 +1722,63 @@ function saveNotif(){
   else Notification.requestPermission().then(done);
 }
 
+// ================= Web-Push opt-in (activates only once the Worker URL is set) =================
+const PUSH_WORKER_URL   = '';   // ← paste the deployed Cloudflare Worker URL here, then redeploy the site
+const PUSH_VAPID_PUBLIC = 'BLXuxYvP-xKuVOdbFMPTsLOiwi_0NpUtVi1w8dQFU36ejVbdUkNDIzs3snXmErKmwyKPlRWeeu_RqM_YAnd9UYE';
+const PUSH_ASKED_KEY = 'sam-push-asked', PUSH_PREFS_KEY = 'sam-push-prefs';
+function _urlB64(s){ s=(s+'='.repeat((4-s.length%4)%4)).replace(/-/g,'+').replace(/_/g,'/'); const raw=atob(s),a=new Uint8Array(raw.length); for(let i=0;i<raw.length;i++)a[i]=raw.charCodeAt(i); return a; }
+function _pushIdbSet(k,v){ return new Promise((res,rej)=>{ const r=indexedDB.open('sam-push',1); r.onupgradeneeded=()=>r.result.createObjectStore('kv'); r.onsuccess=()=>{ const t=r.result.transaction('kv','readwrite').objectStore('kv').put(v,k); t.onsuccess=()=>res(); t.onerror=()=>rej(t.error); }; r.onerror=()=>rej(r.error); }); }
+function pushPrefs(){ try{ return JSON.parse(localStorage.getItem(PUSH_PREFS_KEY)||'null')||{shabbat:false,events:false}; }catch(e){ return {shabbat:false,events:false}; } }
+async function pushApply(groups){
+  if(!PUSH_WORKER_URL) return false;
+  if(!('serviceWorker' in navigator) || !('PushManager' in window)) return false;
+  await _pushIdbSet('prefs', groups);
+  try{ localStorage.setItem(PUSH_PREFS_KEY, JSON.stringify(groups)); }catch(e){}
+  const reg=await navigator.serviceWorker.ready;
+  if(!groups.shabbat && !groups.events){                       // fully opted out → unsubscribe
+    const s=await reg.pushManager.getSubscription();
+    if(s){ try{ await fetch(PUSH_WORKER_URL.replace(/\/$/,'')+'/unsubscribe',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({endpoint:s.endpoint})}); }catch(e){} await s.unsubscribe(); }
+    return true;
+  }
+  if(Notification.permission!=='granted'){ const p=await Notification.requestPermission(); if(p!=='granted') return false; }
+  let sub=await reg.pushManager.getSubscription();
+  if(!sub) sub=await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:_urlB64(PUSH_VAPID_PUBLIC)});
+  await fetch(PUSH_WORKER_URL.replace(/\/$/,'')+'/subscribe',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({subscription:sub.toJSON(), groups})});
+  return true;
+}
+function askPush(force){
+  const g={shabbat:false, events:false};
+  dialog({ title:'🔔 התראות זמני שבת וחג', html:'לקבל התראות (PUSH) על <b>זמני כניסת ויציאת השבת</b> בימי שישי, וכן ערבי-חג וחגים? (זמני חולון · גם כשהאפליקציה סגורה)',
+    buttons:[
+      {label:'כן', primary:true, act:()=>{ g.shabbat=true; _askPush2(g); }},
+      {label:'לא', act:()=>_askPush2(g)}
+    ]});
+}
+function _askPush2(g){
+  dialog({ title:'🔔 התראות חגים וראשי-חודשים', html:'ולקבל התראות (PUSH) על <b>חגים קרבים, ראשי-חודשים ואירועי קהילה</b>?',
+    buttons:[
+      {label:'כן', primary:true, act:()=>{ g.events=true; _finishPush(g); }},
+      {label:'לא', act:()=>_finishPush(g)}
+    ]});
+}
+async function _finishPush(g){
+  const ok=await pushApply(g).catch(()=>false);
+  const on=[g.shabbat?'זמני שבת/חג':'', g.events?'חגים/ר״ח/קהילה':''].filter(Boolean).join(' ו-');
+  if(g.shabbat||g.events){
+    if(ok) dialog({title:'ההתראות הופעלו ✓', html:'תקבל התראות '+on+' גם כשהאפליקציה סגורה. ניתן לשנות בכל עת (☰ → התראות PUSH).', buttons:[{label:'מצוין',primary:true}]});
+    else dialog({title:'לא הופעלו התראות', html:'לא ניתנה הרשאת התראות, או שהדפדפן/המכשיר אינו תומך (ב-iPhone יש להתקין את האפליקציה למסך הבית).', buttons:[{label:'סגור',primary:true}]});
+  } else { pushApply(g); }   // both declined → ensure unsubscribed
+}
+function setupPush(){
+  if('serviceWorker' in navigator)
+    navigator.serviceWorker.addEventListener('message', e=>{ if(e.data && e.data.goto) gotoResult(e.data.goto); });
+  if(location.hash.indexOf('goto=')>=0){ const d=location.hash.split('goto=')[1]; if(d) setTimeout(()=>gotoResult(d),400); }
+  if(!PUSH_WORKER_URL) return;                     // not configured → never prompt
+  let asked=false; try{ asked=!!localStorage.getItem(PUSH_ASKED_KEY); }catch(e){}
+  if(asked) return;
+  try{ localStorage.setItem(PUSH_ASKED_KEY,'1'); }catch(e){}
+  setTimeout(()=>askPush(), 1800);                 // ask shortly after entry (after what's-new)
+}
 // ---- collapsible toolbar: show open on entry, auto-collapse the extra tier after a few seconds ----
 function setupBarCollapse(){
   const handle=document.getElementById('barHandle'), label=document.getElementById('handleLabel'), extra=document.getElementById('barExtra');
@@ -1772,6 +1830,7 @@ function setupCommunity(){
   };
   // "Ask the calendar" chat
   document.getElementById('ham-ask').onclick=()=>{ closeMenus(); openAsk(); };
+  if(PUSH_WORKER_URL){ const pb=document.getElementById('ham-push'); pb.hidden=false; pb.onclick=()=>{ closeMenus(); askPush(true); }; }
   document.getElementById('ask-close').onclick=()=>{ document.getElementById('ask-modal').hidden=true; };
   document.getElementById('ask-send').onclick=runAsk;
   document.getElementById('ask-input').addEventListener('keydown',e=>{ if(e.key==='Enter') runAsk(); });
@@ -1801,6 +1860,7 @@ function setupCommunity(){
   }
   checkNotifications(); setInterval(checkNotifications, 60000);
   setupBarCollapse();   // collapsible toolbar (open on entry, folds up after a few seconds)
+  setupPush();          // web-push opt-in (only prompts once the Worker URL is configured)
 }
 
 // ---- shortcut / install: app on mobile (PWA), .url file on desktop ----
