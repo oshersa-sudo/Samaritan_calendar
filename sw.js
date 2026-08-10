@@ -1,5 +1,5 @@
 // Minimal service worker — required for "install app" on mobile, plus light offline caching.
-const CACHE = 'shomron-luach-v23';
+const CACHE = 'shomron-luach-v24';
 const SHELL = ['./', 'index.html', 'Sam_font.ttf', 'manifest.json', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -22,12 +22,21 @@ self.addEventListener('fetch', e => {
   );
 });
 
-// ===================== Web-Push: compose the notification ON-DEVICE =====================
-// The Worker sends an empty "wake" push; here we read the saved prefs + the calendar .dat
-// and show the right notification (Shabbat times / holiday / rosh chodesh / community).
-self.addEventListener('push', e => { e.waitUntil(handlePush()); });
+// ===================== Web-Push =====================
+// Preferred: the Worker sends an ENCRYPTED payload {title,body,url} → we just display it (Onyx-style).
+// Fallback: an empty "wake" push → we compose the text ON-DEVICE from the .dat + saved prefs.
+self.addEventListener('push', e => { e.waitUntil(handlePush(e.data)); });
 
-async function handlePush() {
+async function handlePush(payload) {
+  if (payload) {                                  // Worker delivered the text → just show it
+    let d = {}; try { d = payload.json(); } catch (e) { d = { title: 'חשבון קשט — הלוח השומרוני', body: payload.text() }; }
+    return self.registration.showNotification(d.title || 'חשבון קשט — הלוח השומרוני',
+      { body: d.body || '', icon: 'icon-192.png', badge: 'icon-192.png', dir: 'rtl', lang: 'he', tag: d.tag || 'sam', requireInteraction: true, data: { date: d.date || '', url: d.url || '' } });
+  }
+  return handlePushOnDevice();
+}
+
+async function handlePushOnDevice() {
   let prefs = {}; try { prefs = await idbGet('prefs') || {}; } catch (e) {}
   const il = israelParts(new Date());
   const shown = [];
