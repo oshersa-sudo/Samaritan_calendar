@@ -32,11 +32,11 @@
   .suptitle{font-size:1.15rem;font-weight:700;letter-spacing:.12em;color:var(--accent);opacity:.85;margin:0 0 .05em}
   h1{font-size:1.7rem;margin:.1em 0;color:var(--accent)}
   .sub{color:var(--muted);font-size:.9rem}
-  .notes-box{max-width:720px;margin:8px auto 0;background:#fbecea;border:1px solid #eccfcb;
-    border-radius:10px;padding:8px 12px}
-  .note-important{font-size:.9rem;font-weight:700;color:#8a3b3b;line-height:1.5}
-  .note-exp{font-size:.92rem;font-weight:800;color:#c0392b;line-height:1.5;
-    margin-top:7px;padding-top:7px;border-top:1px solid #f0d0cb}
+  .notes-box{width:100%;margin:6px auto 0;background:#fbecea;border:1px solid #eccfcb;
+    border-radius:10px;padding:5px 12px}
+  .note-important{font-size:.72rem;font-weight:700;color:#8a3b3b;line-height:1.35}
+  .note-exp{font-size:.72rem;font-weight:700;color:#c0392b;line-height:1.35;
+    margin-top:4px;padding-top:4px;border-top:1px solid #f0d0cb}
   .actions{display:inline-flex;gap:8px;margin-inline-start:6px}
   .act{background:#fff;border:1px solid var(--line);border-radius:9px;padding:6px 8px;cursor:pointer;
     font-size:.78rem;color:var(--accent);font-weight:600;white-space:nowrap}
@@ -54,8 +54,9 @@
   .ham-sub button:hover{background:var(--soft)}
   @media print{ .hamburger,.ham-menu{display:none!important} }
   .more-wrap{position:relative;display:inline-flex}
-  .more-menu{position:absolute;top:calc(100% + 5px);left:0;z-index:40;background:var(--card);border:1px solid var(--line);
-    border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.18);padding:5px;display:flex;flex-direction:column;gap:3px;min-width:210px}
+  /* fixed + JS-positioned so the collapsible bar's overflow:hidden never clips it */
+  .more-menu{position:fixed;z-index:80;background:var(--card);border:1px solid var(--line);
+    border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.18);padding:5px;display:flex;flex-direction:column;gap:3px;min-width:210px;max-height:80vh;overflow:auto}
   .more-menu[hidden]{display:none}   /* flex display must not override the hidden attribute */
   .more-menu .act{display:block;width:100%;text-align:right;border:none;background:none;border-radius:7px}
   .more-menu .act:hover{background:var(--soft)}
@@ -171,13 +172,16 @@
   .bar-extra{overflow:hidden;opacity:1;transition:opacity .22s ease}
   body.bar-collapsed .bar-extra{max-height:0;min-height:0;opacity:0;margin:0;pointer-events:none}
   .bar-group,.bar .actions{display:flex;align-items:center;flex-wrap:wrap;gap:6px;justify-content:center}
-  /* shutter handle — a prominent (filled) drawer pull, deliberately different from the ghost nav buttons */
-  .bar-handle{align-self:center;display:inline-flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;
-    border:none;background:linear-gradient(180deg,var(--accent),var(--accent2));color:#fff;border-radius:11px;
-    padding:4px 20px 5px;margin-top:2px;font-size:.74rem;font-weight:800;box-shadow:0 2px 7px rgba(0,0,0,.18);letter-spacing:.2px}
+  /* shutter handle — small drawer pull: a grip + a chevron (down = can open, up = can close) */
+  .bar-handle{align-self:center;display:inline-flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;
+    border:none;background:linear-gradient(180deg,var(--accent),var(--accent2));color:#fff;border-radius:0 0 11px 11px;
+    padding:2px 20px 3px;margin-top:-3px;box-shadow:0 2px 6px rgba(0,0,0,.16);line-height:1}
   .bar-handle:hover{filter:brightness(1.08)}
-  .handle-grip{width:34px;height:5px;border-radius:3px;background:#fff;opacity:.85}
-  .handle-label{white-space:nowrap}
+  .handle-grip{width:26px;height:4px;border-radius:3px;background:#fff;opacity:.85}
+  .handle-chevron{font-size:.64rem;line-height:1;transition:transform .3s ease}
+  body:not(.bar-collapsed) .handle-chevron{transform:rotate(180deg)}         /* points UP when the menu is open */
+  body.bar-collapsed .bar-handle{animation:handleBob 1.7s ease-in-out infinite}  /* gentle bob when closed → "pull me down" */
+  @keyframes handleBob{0%,100%{transform:translateY(0)}50%{transform:translateY(2px)}}
   /* year-nav footer at the end of the calendar */
   .year-nav-foot{display:flex;justify-content:space-between;gap:10px;margin:16px 2px 32px;flex-wrap:wrap}
   .ynf-btn{flex:1 1 210px;padding:12px 16px;border:1px solid var(--line);border-radius:12px;background:var(--card);
@@ -275,7 +279,6 @@
   .greg-head{padding:8px 12px}
   .greg-head .mname{font-size:1.12rem;font-weight:800;color:var(--accent)}
   .cell .fest .samstart{display:block;color:#0f6e56;font-weight:800;font-size:.66rem;margin:1px 0}
-  body.gview .filter-wrap{display:none}
   .cell.flash{animation:cellflash 2.6s ease}
   @keyframes cellflash{0%,100%{box-shadow:none}15%,55%{box-shadow:inset 0 0 0 3px #f5a623,0 0 14px #f5a623}}
   /* "Ask the calendar" floating panel */
@@ -521,8 +524,8 @@
       </span>
     </span>
     </div>
-    <button class="bar-handle" id="barHandle" type="button" aria-label="הרחב או כווץ את התפריט">
-      <span class="handle-grip"></span><span class="handle-label" id="handleLabel">הרחב תפריט</span>
+    <button class="bar-handle" id="barHandle" type="button" title="הרחב / כווץ תפריט" aria-label="הרחב או כווץ את התפריט">
+      <span class="handle-grip"></span><span class="handle-chevron">▾</span>
     </button>
   </div>
 
@@ -847,7 +850,8 @@
     canaan = לועזי + 1638 · לוח סורי = יוליאני (הפרש 13 יום) · חגים יהודיים: pyluach.
     <div class="copyright">
       All rights reserved to Osher Sassoni · כל הזכויות שמורות לאושר ששוני<br>
-      <a href="https://www.the-samaritans.net" target="_blank" rel="noopener">www.the-samaritans.net</a>
+      <a href="https://www.the-samaritans.net" target="_blank" rel="noopener">www.the-samaritans.net</a><br>
+      <a href="https://www.onyx-apps.com" target="_blank" rel="noopener">www.onyx-apps.com</a>
     </div>
   </footer>
 </div>
@@ -1094,7 +1098,7 @@ function gregMonthCard(y, mon, days){
   let cells = '';
   for(let i=0;i<first;i++) cells += `<div class="cell empty"></div>`;
   for(const rec of days) cells += renderDayCell(rec, true);
-  return `<div class="month gcard">
+  return `<div class="month gcard" data-gm="${mon}">
     <div class="mhead greg-head"><div class="mname">${GMON[mon]} ${y}</div></div>
     <div class="wdrow">${WD.map(w=>`<div>${w}</div>`).join('')}</div>
     <div class="grid">${cells}</div>
@@ -1791,13 +1795,13 @@ function setupPush(){
 }
 // ---- collapsible toolbar: show open on entry, auto-collapse the extra tier after a few seconds ----
 function setupBarCollapse(){
-  const handle=document.getElementById('barHandle'), label=document.getElementById('handleLabel'), extra=document.getElementById('barExtra');
+  const handle=document.getElementById('barHandle'), extra=document.getElementById('barExtra');
   if(!handle) return;
   let timer=null;
   const isCollapsed=()=>document.body.classList.contains('bar-collapsed');
-  function collapse(){ document.body.classList.add('bar-collapsed'); label.textContent='הרחב תפריט'; clearTimeout(timer); timer=null; }
+  function collapse(){ document.body.classList.add('bar-collapsed'); clearTimeout(timer); timer=null; }   // chevron flips via CSS
   function arm(){ clearTimeout(timer); timer=setTimeout(collapse, 6000); }   // auto-collapse after ~6s of no use
-  function expand(){ document.body.classList.remove('bar-collapsed'); label.textContent='כווץ תפריט'; arm(); }
+  function expand(){ document.body.classList.remove('bar-collapsed'); arm(); }
   handle.onclick=()=>{ isCollapsed()?expand():collapse(); };
   ['pointerdown','keydown','focusin'].forEach(ev=>extra.addEventListener(ev,()=>{ if(!isCollapsed()) arm(); }));  // stay open while in use
   expand();   // start expanded so the user notices everything, then it folds up on its own
@@ -1808,7 +1812,12 @@ function setupCommunity(){
   const moreSub=document.getElementById('ham-more-sub');
   const closeMenus=()=>{ menu.hidden=true; moreMenu.hidden=true; moreSub.hidden=true; };
   ham.onclick=e=>{ e.stopPropagation(); const open=menu.hidden; closeMenus(); menu.hidden=!open; };
-  moreBtn.onclick=e=>{ e.stopPropagation(); const open=moreMenu.hidden; closeMenus(); moreMenu.hidden=!open; };
+  moreBtn.onclick=e=>{ e.stopPropagation(); const open=moreMenu.hidden; closeMenus();
+    if(open){ moreMenu.hidden=false;                                // show first to measure, then clamp fully on-screen
+      const r=moreBtn.getBoundingClientRect(), mw=moreMenu.offsetWidth||210, mh=moreMenu.offsetHeight||300;
+      let left=Math.max(8, Math.min(r.right-mw, window.innerWidth-mw-8));       // right-aligned (RTL), clamped
+      let top=r.bottom+5; if(top+mh>window.innerHeight-8) top=Math.max(8, r.top-mh-5);   // flip up if no room below
+      moreMenu.style.left=Math.round(left)+'px'; moreMenu.style.right='auto'; moreMenu.style.top=Math.round(top)+'px'; } };
   menu.onclick=e=>e.stopPropagation();
   moreMenu.addEventListener('click',e=>{ if(e.target.closest('.act')) closeMenus(); });   // close after picking an action
   document.addEventListener('click',closeMenus);   // any outside click closes both
@@ -2031,12 +2040,26 @@ async function init(){
   // ---- month filter: show only the selected month(s) of the current year ----
   function applyMonthFilter(){
     document.querySelectorAll('.month').forEach(m=>{
-      m.style.display = (!monthFilter.size || monthFilter.has(+m.dataset.mi)) ? '' : 'none';
+      const key = gregView ? +m.dataset.gm : +m.dataset.mi;   // greg-month view filters by Gregorian month
+      m.style.display = (!monthFilter.size || monthFilter.has(key)) ? '' : 'none';
     });
   }
   function buildFilterPanel(){
     const panel=document.getElementById('month-filter-panel'); panel.innerHTML='';
     if(!DATA_YC){ panel.innerHTML='<div class="mf-row">בנו לוח תחילה</div>'; return; }
+    if(gregView){
+      // list the Gregorian months as rendered (name + year), filter by Gregorian month number
+      [...document.querySelectorAll('.month.gcard')].forEach(card=>{
+        const gm=+card.dataset.gm;
+        const label=(card.querySelector('.mname')||{}).textContent||(GMON[gm]);
+        const row=document.createElement('label'); row.className='mf-row';
+        const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=monthFilter.has(gm);
+        cb.onchange=()=>{ cb.checked?monthFilter.add(gm):monthFilter.delete(gm); applyMonthFilter(); };
+        const span=document.createElement('span'); span.textContent=label;
+        row.append(cb,span); panel.appendChild(row);
+      });
+      return;
+    }
     DATA_YC.months.forEach(mo=>{
       const row=document.createElement('label'); row.className='mf-row';
       const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=monthFilter.has(mo.index);
