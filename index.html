@@ -177,7 +177,7 @@
     border:none;background:linear-gradient(180deg,var(--accent),var(--accent2));border-radius:0 0 12px 12px;
     padding:3px 16px 4px;margin-top:-3px;box-shadow:0 2px 6px rgba(0,0,0,.18);line-height:1}
   .bar-handle:hover{filter:brightness(1.06)}
-  .handle-grip,.grip-svg{display:block}
+  .handle-grip{width:26px;height:4px;border-radius:3px;background:#e4e4e4;opacity:.95}
   .handle-chev{display:block;height:12px;overflow:visible}
   .chev-inner{display:inline-block;color:#fff;font-size:.86rem;font-weight:900;line-height:1;transition:transform .3s ease;text-shadow:0 1px 1px rgba(0,0,0,.3)}
   body:not(.bar-collapsed) .chev-inner{transform:rotate(180deg)}             /* points UP when the menu is open */
@@ -528,7 +528,7 @@
     </span>
     </div>
     <button class="bar-handle" id="barHandle" type="button" title="הרחב / כווץ תפריט" aria-label="הרחב או כווץ את התפריט">
-      <span class="handle-grip"><svg class="grip-svg" viewBox="0 0 44 13" width="40" height="12" aria-hidden="true"><ellipse cx="22" cy="6.5" rx="21" ry="5.5" fill="#e4e4e4" stroke="#b7b7b7" stroke-width="1"/><line x1="9" y1="6.5" x2="35" y2="6.5" stroke="#8c8c8c" stroke-width="1.7" stroke-linecap="round" stroke-dasharray="0.5 3"/></svg></span>
+      <span class="handle-grip"></span>
       <span class="handle-chev"><span class="chev-inner">▾</span></span>
     </button>
   </div>
