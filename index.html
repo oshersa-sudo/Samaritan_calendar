@@ -172,16 +172,19 @@
   .bar-extra{overflow:hidden;opacity:1;transition:opacity .22s ease}
   body.bar-collapsed .bar-extra{max-height:0;min-height:0;opacity:0;margin:0;pointer-events:none}
   .bar-group,.bar .actions{display:flex;align-items:center;flex-wrap:wrap;gap:6px;justify-content:center}
-  /* shutter handle — small drawer pull: a grip + a chevron (down = can open, up = can close) */
+  /* shutter handle — a light-grey perforated elliptical grip + an emphasized sliding chevron */
   .bar-handle{align-self:center;display:inline-flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;
-    border:none;background:linear-gradient(180deg,var(--accent),var(--accent2));color:#fff;border-radius:0 0 11px 11px;
-    padding:2px 20px 3px;margin-top:-3px;box-shadow:0 2px 6px rgba(0,0,0,.16);line-height:1}
-  .bar-handle:hover{filter:brightness(1.08)}
-  .handle-grip{width:26px;height:4px;border-radius:3px;background:#fff;opacity:.85}
-  .handle-chevron{font-size:.64rem;line-height:1;transition:transform .3s ease}
-  body:not(.bar-collapsed) .handle-chevron{transform:rotate(180deg)}         /* points UP when the menu is open */
-  body.bar-collapsed .bar-handle{animation:handleBob 1.7s ease-in-out infinite}  /* gentle bob when closed → "pull me down" */
-  @keyframes handleBob{0%,100%{transform:translateY(0)}50%{transform:translateY(2px)}}
+    border:none;background:linear-gradient(180deg,var(--accent),var(--accent2));border-radius:0 0 12px 12px;
+    padding:3px 16px 4px;margin-top:-3px;box-shadow:0 2px 6px rgba(0,0,0,.18);line-height:1}
+  .bar-handle:hover{filter:brightness(1.06)}
+  .handle-grip,.grip-svg{display:block}
+  .handle-chev{display:block;height:12px;overflow:visible}
+  .chev-inner{display:inline-block;color:#fff;font-size:.86rem;font-weight:900;line-height:1;transition:transform .3s ease;text-shadow:0 1px 1px rgba(0,0,0,.3)}
+  body:not(.bar-collapsed) .chev-inner{transform:rotate(180deg)}             /* points UP when the menu is open */
+  body.bar-collapsed .handle-chev{animation:chevDown 1.2s ease-in-out infinite}    /* slides down → "pull me down to open" */
+  body:not(.bar-collapsed) .handle-chev{animation:chevUp 1.2s ease-in-out infinite} /* slides up → "push me up to close" */
+  @keyframes chevDown{0%,100%{transform:translateY(-2px);opacity:.55}50%{transform:translateY(4px);opacity:1}}
+  @keyframes chevUp{0%,100%{transform:translateY(2px);opacity:.55}50%{transform:translateY(-4px);opacity:1}}
   /* year-nav footer at the end of the calendar */
   .year-nav-foot{display:flex;justify-content:space-between;gap:10px;margin:16px 2px 32px;flex-wrap:wrap}
   .ynf-btn{flex:1 1 210px;padding:12px 16px;border:1px solid var(--line);border-radius:12px;background:var(--card);
@@ -525,7 +528,8 @@
     </span>
     </div>
     <button class="bar-handle" id="barHandle" type="button" title="הרחב / כווץ תפריט" aria-label="הרחב או כווץ את התפריט">
-      <span class="handle-grip"></span><span class="handle-chevron">▾</span>
+      <span class="handle-grip"><svg class="grip-svg" viewBox="0 0 44 13" width="40" height="12" aria-hidden="true"><ellipse cx="22" cy="6.5" rx="21" ry="5.5" fill="#e4e4e4" stroke="#b7b7b7" stroke-width="1"/><line x1="9" y1="6.5" x2="35" y2="6.5" stroke="#8c8c8c" stroke-width="1.7" stroke-linecap="round" stroke-dasharray="0.5 3"/></svg></span>
+      <span class="handle-chev"><span class="chev-inner">▾</span></span>
     </button>
   </div>
 
