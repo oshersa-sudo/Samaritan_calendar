@@ -35,14 +35,19 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Install SDK packages
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0" "platform-tools"
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.11.1'
 
+      # No --stacktrace: it buries the actual message under a few hundred
+      # frames of Gradle internals, which is useless when reading the log tail.
       - name: Build debug APK
         working-directory: wear
-        run: gradle assembleDebug --no-daemon --stacktrace
+        run: gradle assembleDebug --no-daemon
 
       - name: Report APK
         working-directory: wear

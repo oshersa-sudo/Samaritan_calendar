@@ -90,12 +90,17 @@ object SamCalendar {
     }
 
     /** Fresher downloaded copy if we have one, otherwise the bundled asset. */
-    fun datSource(ctx: Context, gy: Int): (() -> String)? {
+    private fun readDat(ctx: Context, gy: Int): String? {
         val f = File(ctx.filesDir, "cal/$gy.dat")
-        if (f.isFile && f.length() > 1000) return { f.readText() }
+        if (f.isFile && f.length() > 1000) {
+            try {
+                return f.readText()
+            } catch (e: Exception) {
+                // fall through to the bundled copy
+            }
+        }
         return try {
-            ctx.assets.open("cal/$gy.dat").close()
-            { ctx.assets.open("cal/$gy.dat").bufferedReader().use { it.readText() } }
+            ctx.assets.open("cal/$gy.dat").bufferedReader().use { r -> r.readText() }
         } catch (e: Exception) {
             null
         }
@@ -105,7 +110,7 @@ object SamCalendar {
         cache[gy]?.let { return it }
         if (cache.containsKey(gy)) return null
         val parsed = try {
-            datSource(ctx, gy)?.let { JSONObject(decode(it())) }
+            readDat(ctx, gy)?.let { raw -> JSONObject(decode(raw)) }
         } catch (e: Exception) {
             null
         }
@@ -171,7 +176,8 @@ object SamCalendar {
                     val raw = days.getJSONObject(di)
                     val iso = raw.optString("greg")
                     if (iso <= fromIso) continue
-                    if (best != null && iso >= best.greg) continue
+                    val sofar = best
+                    if (sofar != null && iso >= sofar.greg) continue
                     val day = toDay(raw, mo.optString("name"))
                     if (day.notable.isNotEmpty()) best = day
                 }

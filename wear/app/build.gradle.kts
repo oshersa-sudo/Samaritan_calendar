@@ -5,11 +5,11 @@ plugins {
 
 // The repository root, two levels up — the web build and the calendar archive
 // live there and are the single source of truth for both the app and the site.
-val siteRoot: File = rootProject.projectDir.parentFile
+val siteRoot = rootProject.projectDir.parentFile
 
 // Years the watch page can actually reach (it probes y-1 … y+1). Bundling only
 // these keeps the APK at a few hundred KB instead of shipping the 103 MB archive.
-val bundledYears: List<Int> = java.time.Year.now(java.time.ZoneId.of("Asia/Jerusalem")).value
+val bundledYears = java.time.Year.now(java.time.ZoneId.of("Asia/Jerusalem")).value
     .let { listOf(it - 1, it, it + 1) }
 
 // Copy the web build into assets so the app opens instantly and works with no

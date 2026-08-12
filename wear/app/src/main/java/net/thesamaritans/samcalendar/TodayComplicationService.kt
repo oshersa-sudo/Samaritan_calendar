@@ -47,7 +47,7 @@ class TodayComplicationService : ComplicationDataSourceService() {
 
     override fun onComplicationRequest(
         request: ComplicationRequest,
-        listener: ComplicationRequestListener
+        listener: ComplicationDataSourceService.ComplicationRequestListener
     ) {
         val today = SamCalendar.todayIso()
         val day = SamCalendar.findDay(this, today)
