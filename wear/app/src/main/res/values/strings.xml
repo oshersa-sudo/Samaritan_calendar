@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">חשבון קשט</string>
+    <string name="tile_label">הלוח השומרוני</string>
+    <string name="complication_label">התאריך השומרוני</string>
+    <string name="tile_no_data">הלוח לא נטען</string>
+    <string name="tile_tomorrow">%1$s — מחר</string>
+    <string name="tile_in_days">%1$s — בעוד %2$d ימים</string>
+</resources>

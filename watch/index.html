@@ -382,6 +382,16 @@ addEventListener('touchend', e => {
     show(page + (dx < 0 ? 1 : -1));       // RTL: swipe left → next panel
 }, {passive:true});
 
+/* The Wear OS wrapper loads this with nav=tap. Wear reserves the horizontal
+   swipe for its own dismiss gesture, so inside the wrapper a tap anywhere must
+   advance too — otherwise navigation could be swallowed entirely. */
+if(new URLSearchParams(location.search).get('nav') === 'tap'){
+  document.getElementById('stage').addEventListener('click', e => {
+    if(e.target.closest('#script')) return;      // the toggle keeps its own job
+    show(page + 1);
+  });
+}
+
 // Wear OS rotary bezel / crown arrives as a wheel event in the WebView.
 let wlock = 0;
 addEventListener('wheel', e => {
