@@ -1,3 +1,9 @@
+// Imported rather than fully qualified: inside a Kotlin DSL build script the
+// name `java` resolves to the project's java extension, so `java.time.Year`
+// does not reference the package at all.
+import java.time.Year
+import java.time.ZoneId
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -9,8 +15,8 @@ val siteRoot = rootProject.projectDir.parentFile
 
 // Years the watch page can actually reach (it probes y-1 … y+1). Bundling only
 // these keeps the APK at a few hundred KB instead of shipping the 103 MB archive.
-val bundledYears = java.time.Year.now(java.time.ZoneId.of("Asia/Jerusalem")).value
-    .let { listOf(it - 1, it, it + 1) }
+val currentYear = Year.now(ZoneId.of("Asia/Jerusalem")).value
+val bundledYears = listOf(currentYear - 1, currentYear, currentYear + 1)
 
 // Copy the web build into assets so the app opens instantly and works with no
 // network at all on first launch. MainActivity later prefers fresher copies
@@ -21,12 +27,16 @@ val webAssets by tasks.registering(Copy::class) {
     from(siteRoot.resolve("Sam_font.ttf"))
     from(siteRoot.resolve("cal")) {
         into("cal")
-        bundledYears.forEach { include("$it.dat") }
+        include(bundledYears.map { year -> "$year.dat" })
     }
     doFirst {
-        bundledYears.filterNot { siteRoot.resolve("cal/$it.dat").isFile }
-            .takeIf { it.isNotEmpty() }
-            ?.let { logger.warn("wear: missing calendar years ${it.joinToString()} — the app will fall back to the network") }
+        val missing = bundledYears.filter { year -> !siteRoot.resolve("cal/$year.dat").isFile }
+        if (missing.isNotEmpty()) {
+            logger.warn(
+                "wear: calendar years ${missing.joinToString()} are not in cal/ — " +
+                    "the app will fall back to downloading them"
+            )
+        }
     }
 }
 
