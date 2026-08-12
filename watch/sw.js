@@ -4,7 +4,7 @@
 // Strategy: stale-while-revalidate. A watch face has to paint instantly and
 // often has no link of its own, so we always answer from cache when we have
 // it and refresh in the background for the next launch.
-const CACHE = 'sam-watch-v1';
+const CACHE = 'sam-watch-v2';
 const SHELL = ['./', 'index.html', 'manifest.json', '../Sam_font.ttf', '../icon-192.png'];
 
 // Israel's calendar year, not the device's — matches the page's own date logic.
