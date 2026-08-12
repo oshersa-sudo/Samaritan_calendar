@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl" translate="no" class="notranslate">
+<head>
+<meta charset="utf-8">
+<meta name="google" content="notranslate">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>חשבון קשט — שעון</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="קשט">
+<link rel="apple-touch-icon" href="../icon-192.png">
+<link rel="icon" href="../icon-192.png" type="image/png">
+<style>
+  /* Watch build: dark on true black (OLED power), round-safe, sized in vmin so it
+     scales from a 1.2" round face up to a phone screen without a media query. */
+  @font-face{ font-family:'SAM_FONT'; src:url('../Sam_font.ttf') format('truetype'); font-display:swap; }
+  :root{
+    --bg:#000; --card:#15130f; --ink:#f2ece0; --muted:#8f8676;
+    --accent:#c9a35f; --line:#2c2721;
+    --sam:#63c184; --moed:#4fc3cf; --jew:#87a9e8; --sab:#b58fdd;
+    --rosh:#d8b268; --nat:#d98a8a;
+    --u: 1vmin;                       /* one unit = 1% of the smaller viewport side */
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{height:100%; overflow:hidden}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"Assistant","Segoe UI",system-ui,Arial,sans-serif;
+    font-size:calc(var(--u)*4.4); line-height:1.35;
+    display:flex; align-items:center; justify-content:center;
+    user-select:none;
+  }
+  .samf{ font-family:'SAM_FONT'; font-size:.86em }
+  .dot{ font-style:normal; font-family:initial; color:var(--accent); opacity:.7; margin:0 .12em; vertical-align:.18em; font-size:.7em }
+  .num{ font-family:Arial,sans-serif }
+
+  /* Round-safe: everything lives inside the inscribed square of the circle. */
+  #stage{ position:relative; width:100vmin; height:100vmin; max-width:100vw; max-height:100vh; overflow:hidden }
+  .panel{
+    position:absolute; inset:0; display:none;
+    flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:12% 16%;
+    overflow-y:auto; overscroll-behavior:contain;
+    /* Samaritan names are long and unbroken; never let one run past the bezel. */
+    overflow-wrap:anywhere;
+  }
+  .panel.on{ display:flex; animation:fade .18s ease-out }
+  @keyframes fade{ from{opacity:0; transform:scale(.97)} to{opacity:1; transform:none} }
+  .panel::-webkit-scrollbar{ width:0 }
+
+  .cap{ color:var(--accent); font-size:calc(var(--u)*3.6); font-weight:700; letter-spacing:.06em; margin-bottom:calc(var(--u)*1.5) }
+  .big{ font-size:calc(var(--u)*13); line-height:1; font-weight:700; color:var(--ink); margin:calc(var(--u)*.4) 0 }
+  .big .samf{ font-size:.9em }
+  .mname{ font-size:calc(var(--u)*4.5); color:var(--accent); margin-top:calc(var(--u)*.8); line-height:1.25 }
+  .rule{ width:38%; height:1px; background:var(--line); margin:calc(var(--u)*1.9) 0 }
+  .greg{ font-size:calc(var(--u)*4); color:var(--ink); opacity:.9 }
+  .yr{ font-size:calc(var(--u)*3.1); color:var(--muted); margin-top:calc(var(--u)*.5) }
+
+  .sun{ display:flex; gap:calc(var(--u)*4); margin-top:calc(var(--u)*2.2); font-size:calc(var(--u)*3.9) }
+  .sun span{ display:inline-flex; align-items:center; gap:calc(var(--u)*.9) }
+  .sun i{ font-style:normal; opacity:.8 }
+
+  .chips{ display:flex; flex-wrap:wrap; gap:calc(var(--u)*1.1); justify-content:center; margin-top:calc(var(--u)*1.9); max-width:100% }
+  .chip{
+    font-size:calc(var(--u)*3.1); padding:calc(var(--u)*.8) calc(var(--u)*1.8);
+    border-radius:calc(var(--u)*3); background:var(--card); border:1px solid var(--line);
+    color:var(--ink); max-width:100%;
+  }
+  .chip.k-sam,.chip.k-moed{ border-color:var(--sam); color:var(--sam) }
+  .chip.k-moed{ border-color:var(--moed); color:var(--moed) }
+  .chip.k-jew{ border-color:var(--jew); color:var(--jew) }
+  .chip.k-sabbath,.chip.k-parasha{ border-color:var(--sab); color:var(--sab) }
+  .chip.k-rosh{ border-color:var(--rosh); color:var(--rosh) }
+  .chip.k-national{ border-color:var(--nat); color:var(--nat) }
+
+  .times{ display:flex; flex-direction:column; gap:calc(var(--u)*1.6); margin-top:calc(var(--u)*1.5); width:100% }
+  .trow{ display:flex; justify-content:space-between; align-items:baseline; gap:calc(var(--u)*2);
+    background:var(--card); border:1px solid var(--line); border-radius:calc(var(--u)*2.5);
+    padding:calc(var(--u)*1.6) calc(var(--u)*2.6) }
+  .trow b{ font-size:calc(var(--u)*5.2); font-weight:700; color:var(--accent); font-family:Arial,sans-serif }
+  .trow span{ font-size:calc(var(--u)*3.4); color:var(--ink); text-align:start }
+  .trow em{ display:block; font-style:normal; font-size:calc(var(--u)*2.9); color:var(--muted); margin-top:calc(var(--u)*.3) }
+  .countdown{ font-size:calc(var(--u)*4.2); color:var(--accent); font-weight:700; margin-top:calc(var(--u)*1.2) }
+  .evname{ font-size:calc(var(--u)*5.4); margin-top:calc(var(--u)*1) }
+  .evname + .evname{ font-size:calc(var(--u)*4); color:var(--muted); margin-top:calc(var(--u)*.6) }
+
+  /* page dots — pinned to the bottom of the circle's safe zone */
+  #dots{ position:absolute; bottom:5.5%; left:0; right:0; display:flex; gap:calc(var(--u)*1.6);
+    justify-content:center; pointer-events:none; z-index:5 }
+  #dots i{ width:calc(var(--u)*1.6); height:calc(var(--u)*1.6); border-radius:50%; background:#4a443a; display:block }
+  #dots i.on{ background:var(--accent); transform:scale(1.15) }
+
+  /* script toggle — top of the circle, small and out of the way */
+  #script{ position:absolute; top:5%; left:50%; transform:translateX(-50%); z-index:6;
+    background:var(--card); border:1px solid var(--line); color:var(--muted);
+    border-radius:calc(var(--u)*3); padding:calc(var(--u)*.7) calc(var(--u)*2.4);
+    font-size:calc(var(--u)*3); font-family:inherit; cursor:pointer }
+  #script:active{ background:#221e18 }
+
+  .msg{ color:var(--muted); font-size:calc(var(--u)*4) }
+  .msg b{ color:var(--accent); display:block; margin-bottom:calc(var(--u)*1.5) }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <button id="script" type="button">א</button>
+  <div class="panel on" id="p0"></div>
+  <div class="panel"    id="p1"></div>
+  <div class="panel"    id="p2"></div>
+  <div id="dots"><i class="on"></i><i></i><i></i></div>
+</div>
+
+<script>
+/* ============================ data layer ============================
+   Same .dat pipeline as the full site: base64 → XOR → JSON. We read the
+   shared cal/ folder one directory up, so nothing is duplicated and the
+   watch build stays a few KB instead of the 103 MB the archive weighs. */
+const DAT_KEY = 'shomron-luach-5786';
+const YEARS   = {};                       // greg_year → parsed year, or null
+
+function decodeDat(b64){
+  const bin = atob(b64), bytes = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i) ^ DAT_KEY.charCodeAt(i % DAT_KEY.length);
+  return new TextDecoder('utf-8').decode(bytes);
+}
+async function loadYear(gy){
+  if(YEARS[gy] !== undefined) return YEARS[gy];
+  try{
+    const r = await fetch('../cal/' + gy + '.dat', {cache:'no-cache'});
+    YEARS[gy] = r.ok ? JSON.parse(decodeDat(await r.text())) : null;
+  }catch(e){ YEARS[gy] = null; }
+  return YEARS[gy];
+}
+
+/* A Samaritan year file starts in Nisan (≈April), so an ISO date in Jan–Mar
+   lives in the *previous* greg_year file — probe both, newest first. */
+async function findDay(iso){
+  const y = +iso.slice(0,4);
+  for(const gy of [y, y-1]){
+    const yc = await loadYear(gy); if(!yc) continue;
+    for(const mo of yc.months) for(const rec of mo.days)
+      if(rec.greg === iso) return {rec, mo, yc};
+  }
+  return null;
+}
+
+/* Flat, de-duplicated, date-sorted view over three year files — enough to
+   walk forward past any year boundary when hunting the next festival. */
+async function timeline(aroundIso){
+  const y = +aroundIso.slice(0,4), out = [], seen = new Set();
+  for(const gy of [y-1, y, y+1]){
+    const yc = await loadYear(gy); if(!yc) continue;
+    for(const mo of yc.months) for(const rec of mo.days)
+      if(!seen.has(rec.greg)){ seen.add(rec.greg); out.push({rec, mo, yc}); }
+  }
+  out.sort((a,b) => a.rec.greg < b.rec.greg ? -1 : 1);
+  return out;
+}
+
+/* ============================ dates ============================ */
+const WD_HE = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+const GMON  = ['','ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+
+/* The calendar's sunrise/sunset are Israel local time, so "today" must be
+   Israel's today even when the watch is in another timezone. */
+function israelParts(d){
+  const f = new Intl.DateTimeFormat('en-GB', {timeZone:'Asia/Jerusalem',
+    year:'numeric', month:'2-digit', day:'2-digit', weekday:'short', hour12:false});
+  const p = {}; for(const x of f.formatToParts(d)) p[x.type] = x.value;
+  const wd = {Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
+  return {y:+p.year, m:+p.month, d:+p.day, weekday:wd[p.weekday]};
+}
+const isoOf   = (y,m,d) => y + '-' + String(m).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+const todayIso = () => { const p = israelParts(new Date()); return isoOf(p.y,p.m,p.d); };
+function addDays(iso,n){
+  const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate()+n);
+  return isoOf(d.getUTCFullYear(), d.getUTCMonth()+1, d.getUTCDate());
+}
+const daysBetween = (a,b) =>
+  Math.round((new Date(b+'T12:00:00Z') - new Date(a+'T12:00:00Z')) / 86400000);
+
+/* ============================ script rendering ============================
+   The Samaritan font maps Hebrew codepoints, so "Samaritan mode" is a font
+   swap plus the site's cleanup: drop gershayim, keep digits Latin, separate
+   words with a raised dot. Jewish/community/national names stay Hebrew — the
+   full site makes the same exception. */
+const MODERN = new Set(['jew','community','national','eclipse']);
+const esc = s => String(s==null?'':s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const stripGer = s => String(s==null?'':s).replace(/[׳״'"]/g,'');
+
+let SAMARITAN = localStorage.getItem('watch-script') !== 'he';   // default: Samaritan
+
+function sam(s){
+  if(s==null || s==='') return '';
+  s = String(s).replace(/[.׃]+\s*$/,'').trim();
+  if(!SAMARITAN) return esc(s);
+  return s.split(/[\s·]+/).filter(Boolean)
+    .map(t => /^[\d:.,\/()\-–%]+$/.test(t)
+      ? `<span class="num">${esc(t)}</span>`
+      : `<span class="samf">${esc(stripGer(t))}</span>`)
+    // <wbr> after each separator: the spans carry no whitespace between them,
+    // so without an explicit break opportunity a long name (e.g. "החדש האחד
+    // עשר · ראש המופתים") runs straight off both edges of a round screen.
+    .join('<i class="dot">·</i><wbr>');
+}
+const festHtml = f => MODERN.has(f.kind) ? esc(f.name) : sam(f.name);
+
+/* ============================ panels ============================ */
+const P = [document.getElementById('p0'), document.getElementById('p1'), document.getElementById('p2')];
+const DOTS = document.querySelectorAll('#dots i');
+let page = 0;
+
+function show(i){
+  page = (i + P.length) % P.length;
+  P.forEach((el,n) => el.classList.toggle('on', n === page));
+  DOTS.forEach((el,n) => el.classList.toggle('on', n === page));
+}
+const fail = (el,t) => { el.innerHTML = `<div class="msg"><b>${esc(t)}</b>נסו שוב כשיש חיבור</div>`; };
+
+/* -- panel 0: today -- */
+async function renderToday(){
+  const iso = todayIso(), hit = await findDay(iso);
+  if(!hit) return fail(P[0], 'הלוח לא נטען');
+  const {rec, mo, yc} = hit;
+  const cy = mo.index >= (yc.year_change_month || 6) ? yc.canaan_year + 1 : yc.canaan_year;
+  const wd = WD_HE[new Date(iso + 'T12:00:00Z').getUTCDay()];
+
+  const chips = (rec.festivals || [])
+    .filter(f => f.kind !== 'hijri')
+    .map(f => `<div class="chip k-${esc(f.kind)}">${festHtml(f)}</div>`).join('');
+
+  P[0].innerHTML = `
+    <div class="cap">${sam('יום ' + wd)}</div>
+    <div class="big">${SAMARITAN ? sam(rec.heb_label) : esc(rec.heb_day)}</div>
+    <div class="mname">${sam(mo.name)}</div>
+    <div class="rule"></div>
+    <div class="greg"><span class="num">${rec.greg_day}</span> ${esc(GMON[+rec.greg.slice(5,7)])} <span class="num">${esc(rec.greg.slice(0,4))}</span></div>
+    <div class="yr">שנת <span class="num">${cy}</span> לכניסה לארץ הקדושה</div>
+    <div class="sun">
+      <span><i>☀</i><span class="num">${esc(rec.sunrise || '—')}</span></span>
+      <span><i>☾</i><span class="num">${esc(rec.sunset || '—')}</span></span>
+    </div>
+    ${chips ? `<div class="chips">${chips}</div>` : ''}`;
+}
+
+/* -- panel 1: next notable event -- */
+const NOTABLE = new Set(['sam','moed','rosh','community','jew','national']);
+async function renderNext(){
+  const iso = todayIso(), line = await timeline(iso);
+  if(!line.length) return fail(P[1], 'הלוח לא נטען');
+
+  const hit = line.find(x => x.rec.greg > iso &&
+    (x.rec.festivals || []).some(f => NOTABLE.has(f.kind)));
+  if(!hit){
+    P[1].innerHTML = `<div class="msg"><b>${sam('המועד הבא')}</b>אין אירוע קרוב בטווח הנתונים</div>`;
+    return;
+  }
+  const {rec} = hit;
+  const n = daysBetween(iso, rec.greg);
+  const names = [...new Set((rec.festivals || []).filter(f => NOTABLE.has(f.kind)).map(f => f.name))];
+  const main = (rec.festivals || []).find(f => NOTABLE.has(f.kind));
+  const wd = WD_HE[new Date(rec.greg + 'T12:00:00Z').getUTCDay()];
+
+  P[1].innerHTML = `
+    <div class="cap">${sam('המועד הבא')}</div>
+    ${names.map((nm,i) =>
+      `<div class="evname">${i === 0 ? festHtml({kind:main.kind, name:nm}) : esc(nm)}</div>`).join('')}
+    <div class="countdown">${n === 1 ? 'מחר' : 'בעוד ' + n + ' ימים'}</div>
+    <div class="rule"></div>
+    <div class="greg">${sam('יום ' + wd)}</div>
+    <div class="yr"><span class="num">${rec.greg_day}</span> ${esc(GMON[+rec.greg.slice(5,7)])} <span class="num">${esc(rec.greg.slice(0,4))}</span></div>
+    <div class="sun"><span><i>☾</i><span class="num">${esc(rec.sunset || '—')}</span></span></div>`;
+}
+
+/* -- panel 2: Shabbat (entry = Friday sunset, exit = Saturday sunset) -- */
+async function renderShabbat(){
+  const iso = todayIso();
+  const dow = new Date(iso + 'T12:00:00Z').getUTCDay();
+  // Saturday still counts as "this Shabbat"; any other day looks ahead to Friday.
+  const friIso = dow === 6 ? addDays(iso,-1) : addDays(iso, (5 - dow + 7) % 7);
+  const satIso = addDays(friIso, 1);
+
+  const fri = await findDay(friIso), sat = await findDay(satIso);
+  if(!fri) return fail(P[2], 'זמני שבת לא נטענו');
+
+  const names = sat ? (sat.rec.festivals || [])
+    .filter(f => f.kind === 'sabbath' || f.kind === 'parasha')
+    .map(f => `<div class="chip k-${esc(f.kind)}">${festHtml(f)}</div>`).join('') : '';
+
+  // Shabbat runs sunset→sunset, so the exit time can read *earlier* than the
+  // entry as days shorten. Spelling out each day removes the apparent paradox.
+  const dayLabel = iso2 => `${WD_HE[new Date(iso2 + 'T12:00:00Z').getUTCDay()]} · ` +
+    `<span class="num">${+iso2.slice(8,10)}</span> ${esc(GMON[+iso2.slice(5,7)])}`;
+
+  P[2].innerHTML = `
+    <div class="cap">${sam('שבת שלום')}</div>
+    <div class="times">
+      <div class="trow"><span>כניסת שבת<em>${dayLabel(friIso)}</em></span><b>${esc(fri.rec.sunset || '—')}</b></div>
+      <div class="trow"><span>צאת שבת<em>${dayLabel(satIso)}</em></span><b>${esc(sat && sat.rec.sunset || '—')}</b></div>
+    </div>
+    <div class="yr" style="margin-top:calc(var(--u)*1.8)">שקיעה בחולון</div>
+    ${names ? `<div class="chips">${names}</div>` : ''}`;
+}
+
+/* ============================ navigation ============================ */
+let sx = 0, sy = 0;
+addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, {passive:true});
+addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+  if(Math.abs(dx) > 34 && Math.abs(dx) > Math.abs(dy) * 1.4)
+    show(page + (dx < 0 ? 1 : -1));       // RTL: swipe left → next panel
+}, {passive:true});
+
+// Wear OS rotary bezel / crown arrives as a wheel event in the WebView.
+let wlock = 0;
+addEventListener('wheel', e => {
+  const now = Date.now(); if(now - wlock < 260) return; wlock = now;
+  show(page + (e.deltaY > 0 ? 1 : -1));
+}, {passive:true});
+
+addEventListener('keydown', e => {
+  if(e.key === 'ArrowRight' || e.key === 'ArrowUp')   show(page - 1);
+  if(e.key === 'ArrowLeft'  || e.key === 'ArrowDown') show(page + 1);
+});
+
+/* Script toggle — persisted, re-renders every panel in place. */
+const btn = document.getElementById('script');
+/* The button previews what a tap switches *to*. SAM_FONT maps Hebrew
+   codepoints, so the Samaritan alaf is a Hebrew "א" in that font — the
+   Samaritan Unicode block itself would render as tofu here. */
+function syncBtn(){
+  btn.innerHTML = SAMARITAN ? 'א' : '<span class="samf">א</span>';
+  btn.title = SAMARITAN ? 'עברית' : 'כתב שומרוני';
+  btn.setAttribute('aria-label', btn.title);
+}
+btn.addEventListener('click', async () => {
+  SAMARITAN = !SAMARITAN;
+  localStorage.setItem('watch-script', SAMARITAN ? 'sam' : 'he');
+  syncBtn(); await renderAll();
+});
+
+/* ============================ boot ============================ */
+async function renderAll(){ await renderToday(); await renderNext(); await renderShabbat(); }
+
+(async () => {
+  syncBtn();
+  await renderAll();
+  if('serviceWorker' in navigator)
+    navigator.serviceWorker.register('sw.js', {scope:'./'}).catch(() => {});
+})();
+
+/* The date rolls over at Israel midnight — re-render so a watch left on the
+   face overnight doesn't keep showing yesterday. */
+let lastIso = todayIso();
+setInterval(() => { const t = todayIso(); if(t !== lastIso){ lastIso = t; renderAll(); } }, 60000);
+document.addEventListener('visibilitychange', () => {
+  if(!document.hidden){ const t = todayIso(); if(t !== lastIso){ lastIso = t; renderAll(); } }
+});
+</script>
+</body>
+</html>

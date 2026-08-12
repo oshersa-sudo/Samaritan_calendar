@@ -462,6 +462,7 @@
     <button id="ham-version">גרסה נוכחית: <span class="ham-ver" id="ham-ver"></span></button>
     <button id="ham-lang">🌐 שנה שפה</button>
     <button id="ham-install">📲 התקנת אפליקציה</button>
+    <button id="ham-watch">⌚ גרסת שעון</button>
     <hr class="ham-sep">
     <button id="ham-events">עריכת אירועי הקהילה</button>
   </div>
@@ -927,6 +928,7 @@ const I18N = {
   h_help:{he:'❓ עזרה',en:'❓ Help',ar:'❓ مساعدة'},
   h_version:{he:'גרסה נוכחית: ',en:'Version: ',ar:'الإصدار: '},
   h_install:{he:'📲 התקנת אפליקציה',en:'📲 Install app',ar:'📲 تثبيت التطبيق'},
+  h_watch:{he:'⌚ גרסת שעון',en:'⌚ Watch version',ar:'⌚ نسخة الساعة'},
   h_events:{he:'עריכת אירועי הקהילה',en:'Edit community events',ar:'تحرير أحداث الطائفة'},
   ok:{he:'הבנתי',en:'Got it',ar:'حسنًا'},
   t_help:{he:'❓ עזרה — מדריך לשימוש באפליקציה',en:'❓ Help — using the app',ar:'❓ مساعدة — استخدام التطبيق'},
@@ -998,6 +1000,7 @@ function translateUI(){
   if(ew) ew.lastChild.textContent=' '+t('m_word'); if(ex) ex.lastChild.textContent=' '+t('m_excel');
   set('ham-whatsnew','h_whatsnew'); set('ham-more','h_more'); set('ham-private','h_private');
   set('ham-lang','h_lang'); set('ham-help','h_help'); set('ham-install','h_install'); set('ham-events','h_events');
+  set('ham-watch','h_watch');
   const hv=document.getElementById('ham-version'); if(hv){ hv.firstChild.textContent=t('h_version'); }
   // sub-menu proxy buttons
   document.querySelectorAll('#ham-more-sub button').forEach(b=>{ const m={moadim:'m_moadim',notif:'m_notif',print:'m_print',ics:'m_sync',share:'m_share','exp-word':'m_word','exp-excel':'m_excel',shortcut:'m_install',colors:'m_colors'}[b.dataset.act]; if(m) b.textContent=t(m); });
@@ -1840,6 +1843,8 @@ function setupCommunity(){
   moreSub.querySelectorAll('button').forEach(b=>b.onclick=()=>{ closeMenus(); const t=document.getElementById(b.dataset.act); if(t) t.click(); });
   document.getElementById('ham-version').onclick=()=>{ closeMenus(); dialog({title:'גרסה נוכחית',html:'גרסה <b>'+APP_VERSION+'</b>',buttons:[{label:'מה חדש?',primary:true,act:()=>showWhatsNew(true)},{label:'סגור'}]}); };
   document.getElementById('ham-install').onclick=()=>{ closeMenus(); createShortcut(); };
+  // compact build for smartwatches — its own page, manifest and service worker under watch/
+  document.getElementById('ham-watch').onclick=()=>{ closeMenus(); location.href='watch/'; };
   document.getElementById('ham-lang').onclick=()=>{ closeMenus(); chooseLang(); };
   document.getElementById('ham-help').onclick=()=>{ closeMenus(); document.getElementById('help-modal').hidden=false; };
   document.getElementById('help-close').onclick=()=>{ document.getElementById('help-modal').hidden=true; };
