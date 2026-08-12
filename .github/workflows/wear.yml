@@ -49,9 +49,23 @@ jobs:
         working-directory: wear
         run: gradle assembleDebug --no-daemon
 
-      - name: Report APK
+      # A green build does not prove the web build and calendar files were
+      # copied in — a silently empty assets copy would ship an APK that opens
+      # to "הלוח לא נטען". Assert the contents instead of assuming.
+      - name: Verify bundled assets
         working-directory: wear
-        run: ls -lh app/build/outputs/apk/debug/
+        run: |
+          set -euo pipefail
+          apk=$(ls app/build/outputs/apk/debug/*.apk | head -1)
+          echo "APK: $apk ($(du -h "$apk" | cut -f1))"
+          list=$(unzip -l "$apk")
+          for required in assets/watch/index.html assets/watch/sw.js assets/Sam_font.ttf; do
+            grep -qF "$required" <<<"$list" || { echo "::error::$required missing from the APK"; exit 1; }
+          done
+          years=$(grep -cE 'assets/cal/[0-9]{4}\.dat' <<<"$list" || true)
+          echo "calendar years bundled: $years"
+          [ "$years" -ge 2 ] || { echo "::error::expected at least 2 bundled year files, found $years"; exit 1; }
+          grep -E 'assets/(watch/|cal/|Sam_font)' <<<"$list"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
