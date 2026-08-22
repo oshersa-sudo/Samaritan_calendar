@@ -162,6 +162,31 @@
     .print-footer{display:block;position:fixed;bottom:0;left:0;right:0;text-align:center;
       font-size:10px;color:#3a342a;border-top:1px solid #999;padding:4px 0;background:#fff;font-weight:600}
     .wrap{padding-bottom:34px}
+    /* each printed month is its own page (calendar format) — a new "שנה לכניסה" always starts a fresh page */
+    .month{break-before:auto}
+  }
+  /* ---- donation ("תרומה") print format: hidden on screen, activated via body.don-print when printing ---- */
+  #print-don{display:none}
+  @media print{
+    body.don-print #result,body.don-print .legend,body.don-print .year-nav-foot,
+    body.don-print .meta,body.don-print .view-toggle{display:none!important}
+    body.don-print #print-don{display:block}
+    /* one month per page: every month (i.e. every "שנה לכניסה" header) starts a fresh page */
+    #print-don .dpage{break-inside:avoid;page-break-inside:avoid;break-after:page;page-break-after:always;margin:0}
+    #print-don .dpage:last-child{break-after:auto;page-break-after:auto}
+    #print-don .cybig{text-align:center;font-size:26pt;font-weight:bold;color:#8a6d3b;margin:0}
+    #print-don .mh-name{text-align:center;font-size:16pt;font-weight:bold;color:#8a6d3b;margin:0}
+    #print-don .dmolad{text-align:center;font-size:12pt;color:#6c6253;margin:0}
+    #print-don .dgreg{text-align:center;font-size:13pt;color:#222;margin:0 0 6px}
+    #print-don table.tbl{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13pt;margin:0 auto}
+    #print-don .tbl th,#print-don .tbl td{border:1px solid #999;text-align:center;vertical-align:middle;padding:1px 5px;word-break:break-word}
+    #print-don .tbl th{background:#efe6d3;color:#735a30}
+    #print-don .tbl .evt{width:40%}
+    #print-don .tbl .evln{margin:0;line-height:1.25}
+    /* Samaritan glyphs via the app's already-loaded web font — no system install needed to print */
+    #print-don .samx,#print-don td.samx{font-family:'SAM_FONT',Arial;font-size:12pt}
+    #print-don .num,#print-don .modheb{font-family:Arial}
+    #print-don .dot{font-family:Arial;font-style:normal;color:#8a6d3b;margin:0 1px;vertical-align:.18em}
   }
 
   .bar{position:sticky;top:0;z-index:20;display:flex;flex-direction:column;align-items:stretch;
@@ -545,6 +570,7 @@
   </div>
 
   <div id="result"></div>
+  <div id="print-don" aria-hidden="true"></div>
   <div class="year-nav-foot" id="yearNavFoot" hidden>
     <button class="ynf-btn" id="ynfPrev" type="button"></button>
     <button class="ynf-btn" id="ynfNext" type="button"></button>
@@ -2127,12 +2153,38 @@ async function init(){
   const applyZoom=()=>{document.getElementById('result').style.zoom=zoom;};
   document.getElementById('zoomin').onclick=()=>{zoom=Math.min(1.8,zoom+0.1);applyZoom();};
   document.getElementById('zoomout').onclick=()=>{zoom=Math.max(0.6,zoom-0.1);applyZoom();};
-  document.getElementById('print').onclick=()=>{
+  function setPfYear(){
     const yc=DATA_YC;
     document.getElementById('pf-year').textContent =
       yc ? `הלוח השומרוני · שנת ${yc.canaan_year} לכניסה לארץ הקדושה (לועזי ${yc.greg_year}) · ` : '';
-    window.print();   // print or "Save as PDF"
+  }
+  function printCalendar(){                      // format 1 — leave printing exactly as it is today
+    document.body.classList.remove('don-print');
+    document.getElementById('print-don').innerHTML='';
+    setPfYear();
+    window.print();
+  }
+  function printDonation(){                       // format 2 — donation ("תרומה") layout, one month per page
+    const yc=DATA_YC;
+    if(!yc){ dialog({title:'אין לוח',html:'בנו לוח תחילה.',buttons:[{label:'סגור',primary:true}]}); return; }
+    // reuse the Word-export donation renderer; each month is its own <div class=dpage> → its own page
+    document.getElementById('print-don').innerHTML = yc.months.map(mo=>donationMonth(yc,mo)).join('');
+    setPfYear();
+    const go=()=>{ document.body.classList.add('don-print'); window.print(); };
+    // check the Samaritan font (as the Word export does); the browser prints via the loaded SAM_FONT
+    const ok = fontInstalled('SAM_FONT') || (document.fonts && document.fonts.check("16px 'SAM_FONT'"));
+    if(ok){ go(); return; }
+    dialog({ title:'הפונט השומרוני', html:'להדפסת הכתב השומרוני מומלץ להתקין את הפונט. אפשר גם להמשיך בלעדיו (יודפס בעברית רגילה).',
+      buttons:[ {label:'הורד והתקן פונט', primary:true, act:installFont}, {label:'המשך להדפסה', act:go} ]});
+  }
+  document.getElementById('print').onclick=()=>{
+    dialog({ title:'הדפסה / PDF', html:'בחרו את פורמט ההדפסה:',
+      buttons:[ {label:'פורמט לוח שנה', primary:true, act:printCalendar},
+                {label:'פורמט תרומה', act:printDonation} ]});
   };
+  // after printing, drop back to the normal on-screen calendar and free the donation buffer
+  window.addEventListener('afterprint',()=>{ document.body.classList.remove('don-print');
+    const pd=document.getElementById('print-don'); if(pd) pd.innerHTML=''; });
   document.getElementById('ics').onclick=openSync;
   document.getElementById('sync-close').onclick=()=>document.getElementById('sync-modal').hidden=true;
   document.getElementById('sync-modal').onclick=e=>{ if(e.target.id==='sync-modal') document.getElementById('sync-modal').hidden=true; };
