@@ -309,6 +309,26 @@
   .cell .fest .samstart{display:block;color:#0f6e56;font-weight:800;font-size:.66rem;margin:1px 0}
   .cell.flash{animation:cellflash 2.6s ease}
   @keyframes cellflash{0%,100%{box-shadow:none}15%,55%{box-shadow:inset 0 0 0 3px #f5a623,0 0 14px #f5a623}}
+  /* Gregorian-view: make the Gregorian day-of-month the emphasised number (distinct blue) */
+  body.gview .cell .gd{color:#1d4ed8;font-weight:800;font-size:1.02rem}
+  body.gview .cell .hd{font-weight:600;color:var(--muted);font-size:.86rem}
+  /* frozen weekday bar (sticky day-header, pinned above the month columns) */
+  #dow-freeze{display:none}
+  body.dow-frozen #dow-freeze{display:block}
+  body.dow-frozen .month .wdrow{display:none}                      /* the per-card bars are replaced by the frozen ones */
+  #dow-freeze .dowbar{position:fixed;z-index:18;background:var(--soft);
+    border:1px solid var(--line);border-top:none;border-radius:0 0 6px 6px;
+    box-shadow:0 5px 12px rgba(0,0,0,.14);display:grid;grid-template-columns:repeat(7,1fr);
+    overflow:hidden;pointer-events:none;font-size:.72rem}
+  #dow-freeze .dowbar div{text-align:center;color:var(--muted);padding:4px 0;font-weight:700;font-size:inherit}
+  #freeze-dow.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .act:disabled,.nav:disabled{opacity:.4;cursor:not-allowed}
+  #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(18px);z-index:90;
+    background:rgba(40,35,28,.94);color:#fff;padding:10px 16px;border-radius:11px;font-size:.9rem;font-weight:600;
+    box-shadow:0 8px 24px rgba(0,0,0,.32);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;
+    max-width:88vw;text-align:center;line-height:1.4}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media print{ #dow-freeze{display:none!important} .month .wdrow{display:grid!important} }
   /* "Ask the calendar" floating panel */
   .ask-panel{position:fixed;bottom:16px;left:16px;z-index:65;width:min(390px,92vw);max-height:78vh;
     display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:14px;
@@ -522,6 +542,9 @@
         <button class="nav ic" id="clear-filter" title="נקה סינון">
           <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H8.5L3.7 15.2a2 2 0 0 1 0-2.8l7.6-7.6a2 2 0 0 1 2.8 0l5.4 5.4a2 2 0 0 1 0 2.8L13 20"/><line x1="18" y1="20" x2="8" y2="20"/></svg>
         </button>
+        <button class="nav ic" id="freeze-dow" title="הקפאת סרגל הימים (קיבוע שורת הימים בראש המסך)" aria-pressed="false">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="9" x2="9" y2="20"/><line x1="15" y1="9" x2="15" y2="20"/></svg>
+        </button>
       </span>
     </span>
     </div>
@@ -570,6 +593,8 @@
   </div>
 
   <div id="result"></div>
+  <div id="dow-freeze" aria-hidden="true"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
   <div id="print-don" aria-hidden="true"></div>
   <div class="year-nav-foot" id="yearNavFoot" hidden>
     <button class="ynf-btn" id="ynfPrev" type="button"></button>
@@ -892,6 +917,39 @@ const WD = ['ראשון','שני','שלישי','רביעי','חמישי','שיש
 const GMON = ['','ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 // Calendar range metadata, inlined (no separate JSON file is shipped).
 let INDEX = {greg_range:[1900,3000], canaan_range:[3538,4638], canaan_offset:1638}, mode = 'greg', DATA_YC = null, gregView = false;
+
+// ---- frozen weekday bar: pin the day-header row above the month columns, calendar scrolls beneath ----
+let dowFrozen = false;
+function layoutDowFreeze(){
+  const host = document.getElementById('dow-freeze');
+  if(!host) return;
+  if(!dowFrozen){ host.innerHTML=''; return; }
+  const cards = [...document.querySelectorAll('.month')].filter(m=>m.offsetParent!==null);   // visible cards only
+  if(!cards.length){ host.innerHTML=''; return; }
+  const bar = document.querySelector('.bar');
+  const top = bar ? Math.max(0, Math.round(bar.getBoundingClientRect().bottom)) : 0;
+  const rects = cards.map(m=>m.getBoundingClientRect());
+  const minTop = Math.min(...rects.map(r=>r.top));
+  const row = rects.filter(r=>r.top-minTop<8);       // the first visual row of month cards (one bar per column)
+  if(host.children.length!==row.length){
+    const labels = WD.map(w=>`<div>${w}</div>`).join('');
+    host.innerHTML = row.map(()=>`<div class="dowbar">${labels}</div>`).join('');
+  }
+  const z = parseFloat(getComputedStyle(document.getElementById('result')).zoom) || 1;   // match the (locked) zoom
+  [...host.children].forEach((b,i)=>{
+    const r = row[i];
+    b.style.left = Math.round(r.left)+'px';
+    b.style.width = Math.round(r.width)+'px';
+    b.style.top = top+'px';
+    b.style.fontSize = (0.72*z).toFixed(3)+'rem';
+  });
+}
+let _toastT=null;
+function toast(msg){
+  const t=document.getElementById('toast'); if(!t) return;
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(_toastT); _toastT=setTimeout(()=>t.classList.remove('show'),3600);
+}
 const TODAY_ISO = (()=>{ const d=new Date();
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })();
 
@@ -973,6 +1031,7 @@ const I18N = {
 };
 const NEWS = {
   en: `<p class="wn-intro">Version history — what was added since 1.0:</p>
+    <div class="wn-ver"><b>Version 2.7</b><ul><li><b>Freeze the weekday bar</b> — a button next to "Clear filter" pins the day-of-week row at the top of the screen, exactly above the month columns, and the calendar scrolls beneath it (two bars when two months show across, one when a single month shows). While frozen, zoom / view-switch are locked — unfreeze, change, then re-freeze.</li><li><b>Gregorian-day emphasis</b> — in the Gregorian view the day-of-month number is highlighted in blue, distinct from the other numbers in the cell.</li><li><b>Print-format chooser</b> — Print/PDF now offers a Calendar format or a Donation format; each month on its own page.</li></ul></div>
     <div class="wn-ver"><b>Version 2.6</b><ul><li><b>Gregorian-month view</b> — a toolbar toggle: the same calendar grouped into Jan–Dec; each Samaritan month-start is marked inside the day cell.</li><li><b>Ask the calendar</b> (☰ menu) — a floating window to query calendar events (e.g. "when does Passover fall on Saturday?"); click a result to jump to that day.</li></ul></div>
     <div class="wn-ver"><b>Version 2.5</b><ul><li><b>Total solar & lunar eclipses</b> — marked on the calendar with an icon (eclipsed sun / blood moon). Validated 27/28 against NASA data.</li></ul></div>
     <div class="wn-ver"><b>Version 2.4</b><ul><li><b>Entry-year change accuracy</b> — a new "solar accumulator" engine for the month in which the year-number changes (replaces the fixed anchor; validated against 28 authentic calendar years).</li></ul></div>
@@ -983,6 +1042,7 @@ const NEWS = {
     <div class="wn-ver"><b>Version 1.5</b><ul><li><b>Word/Excel export</b> (calendar / donation) with the Samaritan script.</li><li><b>Calendar accuracy</b> — Julian gap frozen from 2200; exact molad 2009–2100.</li></ul></div>
     <div class="wn-ver"><b>Version 1.0</b><ul><li>The computed Samaritan calendar: Gregorian / Entry-to-the-Land modes, navigation, Today, filter, jump-to-date.</li><li>Samaritan & Jewish festivals, weekly portions, molad & Arabic clock, share/print/sync.</li></ul></div>`,
   ar: `<p class="wn-intro">سجلّ الإصدارات — ما أُضيف منذ 1.0:</p>
+    <div class="wn-ver"><b>الإصدار 2.7</b><ul><li><b>تثبيت شريط الأيام</b> — زر بجوار «مسح التصفية» يثبّت صفّ أيام الأسبوع أعلى الشاشة، تمامًا فوق أعمدة الأشهر، ويتحرّك التقويم أسفله (شريطان عند عرض شهرين بالعرض، وواحد عند عرض شهر واحد). أثناء التثبيت يُقفَل التكبير/تبديل العرض — ألغِ التثبيت، غيّر، ثم ثبّت من جديد.</li><li><b>إبراز اليوم الميلادي</b> — في العرض الميلادي يُبرز رقم يوم الشهر بالأزرق، مميّزًا عن بقية الأرقام في الخلية.</li><li><b>اختيار تنسيق الطباعة</b> — تتيح الطباعة/PDF الآن اختيار تنسيق التقويم أو تنسيق التبرّع؛ كل شهر في صفحة مستقلّة.</li></ul></div>
     <div class="wn-ver"><b>الإصدار 2.6</b><ul><li><b>عرض حسب الأشهر الميلادية</b> — زر في الشريط: التقويم نفسه مقسّم إلى يناير–ديسمبر؛ بداية الشهر السامري معلَّمة داخل الخلية.</li><li><b>اسأل التقويم</b> (قائمة ☰) — نافذة عائمة للاستفسار عن أحداث التقويم (مثل "متى يقع الفصح يوم السبت؟")؛ اضغط على نتيجة للانتقال إلى ذلك اليوم.</li></ul></div>
     <div class="wn-ver"><b>الإصدار 2.5</b><ul><li><b>كسوف الشمس وخسوف القمر الكلّيان</b> — معلَّمان في التقويم بأيقونة (شمس مكسوفة / قمر أحمر). مُتحقَّق 27/28 مقابل بيانات NASA.</li></ul></div>
     <div class="wn-ver"><b>الإصدار 2.4</b><ul><li><b>دقّة تغيّر سنة الدخول</b> — محرّك «تراكم شمسي» جديد لتحديد الشهر الذي يتغيّر فيه رقم السنة (بدلاً من المرساة الثابتة؛ مُتحقَّق مقابل 28 سنة تقويمية أصلية).</li></ul></div>
@@ -1172,12 +1232,13 @@ async function buildYear(greg){
   DATA_YC = yc;
   monthFilter.clear();   // a fresh year starts unfiltered
   document.getElementById('year').value = dispOf(greg);
-  if(gregView){ await renderGregView(greg, box, meta); updateYearNavFoot(); return; }
+  if(gregView){ await renderGregView(greg, box, meta); updateYearNavFoot(); if(dowFrozen) requestAnimationFrame(layoutDowFreeze); return; }
   box.innerHTML = `<div class="months">${yc.months.map(mo=>monthCard(yc.canaan_year,yc.year_change_month||6,mo)).join('')}</div>`;
   meta.innerHTML = `<b>שנה לועזית ${yc.greg_year}</b> · <b>כנען ${yc.canaan_year}</b> ·
      ${yc.n_months} חודשים ${yc.leap?'(מעוברת)':'(פשוטה)'} ·
      הלוח נפתח ב-1 אביב ונמשך עד החודש שלפני אביב הבא.`;
   updateYearNavFoot();
+  if(dowFrozen) requestAnimationFrame(layoutDowFreeze);
 }
 // prev/next-year buttons at the bottom of the calendar (labelled by the current display type)
 function updateYearNavFoot(){
@@ -1615,9 +1676,14 @@ function privSave(){
 }
 
 // ---- app version + "what's new" splash ----
-const APP_VERSION = '2.6';
+const APP_VERSION = '2.7';
 const NEWS_KEY = 'sam-news-seen';
 const APP_NEWS = `<p class="wn-intro">היסטוריית הגרסאות — מה התווסף מאז גרסה 1.0:</p>
+  <div class="wn-ver"><b>גרסה 2.7</b><ul>
+    <li><b>הקפאת סרגל הימים</b> — כפתור ליד "נקה סינון": מקבע את שורת ימי-השבוע בראש המסך, בדיוק מעל עמודות החודשים, והלוח נגלל מתחתיו (שני סרגלים כשמוצגים שני חודשים לרוחב, אחד כשמוצג חודש בודד). בזמן ההקפאה שינוי הגודל/התצוגה נעול — יש לבטל, לשנות, ולהקפיא מחדש.</li>
+    <li><b>הדגשת היום הלועזי</b> — בתצוגה הלועזית מספר היום בחודש הלועזי מודגש בכחול, נבדל משאר המספרים בתא.</li>
+    <li><b>בחירת פורמט הדפסה</b> — בהדפסה/PDF ניתן לבחור בין פורמט לוח שנה לפורמט תרומה; כל חודש בעמוד נפרד.</li>
+  </ul></div>
   <div class="wn-ver"><b>גרסה 2.6</b><ul>
     <li><b>תצוגה לפי חודשים לועזיים</b> — כפתור "תצוגה לועזית" בסרגל: אותו לוח, מחולק לחודשי ינואר–דצמבר; תחילת חודש שומרוני מסומנת בתוך התא.</li>
     <li><b>שאל את הלוח</b> (בתפריט ☰) — חלון צף לשאלות על אירועי הלוח (למשל "מתי פסח בשבת?"); לחיצה על תוצאה מעבירה ליום בלוח.</li>
@@ -1834,6 +1900,7 @@ function setupBarCollapse(){
   function arm(){ clearTimeout(timer); timer=setTimeout(collapse, 6000); }   // auto-collapse after ~6s of no use
   function expand(){ document.body.classList.remove('bar-collapsed'); arm(); }
   handle.onclick=()=>{ isCollapsed()?expand():collapse(); };
+  extra.addEventListener('transitionend',()=>{ if(dowFrozen) layoutDowFreeze(); });   // toolbar height settled → re-fit the frozen bar
   ['pointerdown','keydown','focusin'].forEach(ev=>extra.addEventListener(ev,()=>{ if(!isCollapsed()) arm(); }));  // stay open while in use
   expand();   // start expanded so the user notices everything, then it folds up on its own
 }
@@ -1872,6 +1939,7 @@ function setupCommunity(){
   document.getElementById('help-close').onclick=()=>{ document.getElementById('help-modal').hidden=true; };
   // Gregorian-month view toggle
   document.getElementById('viewToggle').onclick=()=>{
+    if(dowFrozen){ toast('בטלו תחילה את הקפאת סרגל הימים כדי להחליף תצוגה.'); return; }
     gregView=!gregView;
     document.getElementById('viewToggle').classList.toggle('on',gregView);
     document.getElementById('viewToggle').textContent = gregView ? '📅 תצ.שומרונית' : '📅 תצ.לועזית';
@@ -2074,6 +2142,7 @@ async function init(){
       const key = gregView ? +m.dataset.gm : +m.dataset.mi;   // greg-month view filters by Gregorian month
       m.style.display = (!monthFilter.size || monthFilter.has(key)) ? '' : 'none';
     });
+    if(dowFrozen) requestAnimationFrame(layoutDowFreeze);   // fewer/more columns → re-fit the frozen bars
   }
   function buildFilterPanel(){
     const panel=document.getElementById('month-filter-panel'); panel.innerHTML='';
@@ -2151,8 +2220,29 @@ async function init(){
   dateInput.addEventListener('keydown',e=>{ if(e.key==='Enter') gotoDate(); });
   let zoom=1;
   const applyZoom=()=>{document.getElementById('result').style.zoom=zoom;};
-  document.getElementById('zoomin').onclick=()=>{zoom=Math.min(1.8,zoom+0.1);applyZoom();};
-  document.getElementById('zoomout').onclick=()=>{zoom=Math.max(0.6,zoom-0.1);applyZoom();};
+  document.getElementById('zoomin').onclick=()=>{ if(dowFrozen){ toast('לא ניתן להגדיל בזמן הקפאת סרגל הימים — בטלו את ההקפאה תחילה.'); return; } zoom=Math.min(1.8,zoom+0.1);applyZoom();};
+  document.getElementById('zoomout').onclick=()=>{ if(dowFrozen){ toast('לא ניתן להקטין בזמן הקפאת סרגל הימים — בטלו את ההקפאה תחילה.'); return; } zoom=Math.max(0.6,zoom-0.1);applyZoom();};
+
+  // ---- freeze the weekday bar (toggle). Locks zoom + view-switch while active. ----
+  function setDowFreeze(on){
+    dowFrozen=on;
+    document.body.classList.toggle('dow-frozen',on);
+    const btn=document.getElementById('freeze-dow');
+    btn.classList.toggle('on',on);
+    btn.setAttribute('aria-pressed',on?'true':'false');
+    ['zoomin','zoomout','viewToggle'].forEach(id=>{
+      const el=document.getElementById(id); if(!el) return;
+      if(on) el.setAttribute('disabled','disabled'); else el.removeAttribute('disabled');
+    });
+    if(on){ layoutDowFreeze(); requestAnimationFrame(layoutDowFreeze);   // sync (reads post-reflow rects) + rAF safety net
+      toast('סרגל הימים קובע בראש המסך. לשינוי גודל או תצוגה — בטלו תחילה את ההקפאה.'); }
+    else { document.getElementById('dow-freeze').innerHTML=''; }
+  }
+  document.getElementById('freeze-dow').onclick=()=>setDowFreeze(!dowFrozen);
+  let _dowRaf=0;
+  const relayoutDow=()=>{ if(!dowFrozen) return; if(_dowRaf) return; _dowRaf=requestAnimationFrame(()=>{ _dowRaf=0; layoutDowFreeze(); }); };
+  window.addEventListener('resize',relayoutDow);
+  window.addEventListener('scroll',relayoutDow,{passive:true});   // keep the bar under the (sticky/collapsible) toolbar
   function setPfYear(){
     const yc=DATA_YC;
     document.getElementById('pf-year').textContent =
