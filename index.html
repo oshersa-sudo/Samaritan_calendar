@@ -709,7 +709,7 @@
         <ul>
           <li><b>חישוב עצמאי במכשיר</b> — הלוח אינו נטען מהאינטרנט; הוא מחושב מראש עבור כל <b>טווח השנים 1900–3000</b> (מנוע אסטרונומי המבוסס על טבלאות רוברטסון ועל חשבון הקשט).</li>
           <li><b>שעת המולד (הקיבוץ)</b> — <b>מדויקת לשנים 2009–2100</b> על-פי נתוני חשבון הקשט המודפסים; מחוץ לטווח זה — אומדן אסטרונומי.</li>
-          <li><b>עיבור (שנה מעוברת)</b>, <b>ראשי-חודשים</b>, <b>פרשות השבוע</b>, <b>שעון ערבי</b> (מהשקיעה) — כולם מחושבים במנוע.</li>
+          <li><b>עיבור (שנה מעוברת)</b>, <b>ראשי-חודשים</b>, <b>פרשות השבוע</b>, <b>שעון שמשי</b> (מהשקיעה) — כולם מחושבים במנוע.</li>
           <li><b>ליקויי חמה ולבנה הנראים בישראל</b> — מחושבים (שיטת Meeus) ומסומנים בלוח (רק כאלו הנראים בישראל באופן מובהק).</li>
           <li><b>עובד גם ללא רשת (PWA)</b> — לאחר טעינה ראשונה ניתן להשתמש במצב לא-מקוון; ניתן להתקין כאפליקציה במסך הבית.</li>
           <li><b>ללא שרת</b> — כל החישובים והנתונים רצים בדפדפן שלכם. אין שמירת נתונים בענן.</li>
@@ -733,7 +733,7 @@
           <li><b>מספר קטן</b> = התאריך הלועזי.</li>
           <li><b>מז.</b> = היום בחודש המזרחי (סורי / יוליאני).</li>
           <li><b>ז / ש</b> = זריחה / שקיעה (זמני חולון; בהר גריזים הוסיפו ~5 דקות).</li>
-          <li><b>שורת המולד</b> בכותרת כל חודש — יום המולד, השעה (שעון ערבי), והחודש המזרחי.</li>
+          <li><b>שורת המולד</b> בכותרת כל חודש — יום המולד, השעה (שעון שמשי), והחודש המזרחי.</li>
           <li><b>צבעי הימים</b> — ראו את המקרא שמתחת לסרגל.</li>
         </ul>
 
@@ -1040,7 +1040,7 @@ const NEWS = {
     <div class="wn-ver"><b>Version 2.1</b><ul><li><b>Notifications</b> — future events, filter by type, per-event lead time.</li><li><b>Options sub-menu</b> and version-update notice for installed users.</li></ul></div>
     <div class="wn-ver"><b>Version 2.0</b><ul><li><b>Hamburger ☰ menu</b>, what's-new screen and version badge.</li><li><b>Community-events editor</b> — editable per-year list with colours.</li></ul></div>
     <div class="wn-ver"><b>Version 1.5</b><ul><li><b>Word/Excel export</b> (calendar / donation) with the Samaritan script.</li><li><b>Calendar accuracy</b> — Julian gap frozen from 2200; exact molad 2009–2100.</li></ul></div>
-    <div class="wn-ver"><b>Version 1.0</b><ul><li>The computed Samaritan calendar: Gregorian / Entry-to-the-Land modes, navigation, Today, filter, jump-to-date.</li><li>Samaritan & Jewish festivals, weekly portions, molad & Arabic clock, share/print/sync.</li></ul></div>`,
+    <div class="wn-ver"><b>Version 1.0</b><ul><li>The computed Samaritan calendar: Gregorian / Entry-to-the-Land modes, navigation, Today, filter, jump-to-date.</li><li>Samaritan & Jewish festivals, weekly portions, molad & solar clock, share/print/sync.</li></ul></div>`,
   ar: `<p class="wn-intro">سجلّ الإصدارات — ما أُضيف منذ 1.0:</p>
     <div class="wn-ver"><b>الإصدار 2.7</b><ul><li><b>تثبيت شريط الأيام</b> — زر بجوار «مسح التصفية» يثبّت صفّ أيام الأسبوع أعلى الشاشة، تمامًا فوق أعمدة الأشهر، ويتحرّك التقويم أسفله (شريطان عند عرض شهرين بالعرض، وواحد عند عرض شهر واحد). أثناء التثبيت يُقفَل التكبير/تبديل العرض — ألغِ التثبيت، غيّر، ثم ثبّت من جديد.</li><li><b>إبراز اليوم الميلادي</b> — في العرض الميلادي يُبرز رقم يوم الشهر بالأزرق، مميّزًا عن بقية الأرقام في الخلية.</li><li><b>اختيار تنسيق الطباعة</b> — تتيح الطباعة/PDF الآن اختيار تنسيق التقويم أو تنسيق التبرّع؛ كل شهر في صفحة مستقلّة.</li></ul></div>
     <div class="wn-ver"><b>الإصدار 2.6</b><ul><li><b>عرض حسب الأشهر الميلادية</b> — زر في الشريط: التقويم نفسه مقسّم إلى يناير–ديسمبر؛ بداية الشهر السامري معلَّمة داخل الخلية.</li><li><b>اسأل التقويم</b> (قائمة ☰) — نافذة عائمة للاستفسار عن أحداث التقويم (مثل "متى يقع الفصح يوم السبت؟")؛ اضغط على نتيجة للانتقال إلى ذلك اليوم.</li></ul></div>
@@ -1051,7 +1051,7 @@ const NEWS = {
     <div class="wn-ver"><b>الإصدار 2.1</b><ul><li><b>التنبيهات</b> — أحداث مستقبلية، تصفية حسب النوع، ومدة لكل حدث.</li><li><b>قائمة فرعية للخيارات</b> وإشعار تحديث للمستخدمين المثبِّتين.</li></ul></div>
     <div class="wn-ver"><b>الإصدار 2.0</b><ul><li><b>قائمة ☰</b>، شاشة «ما الجديد» وشارة الإصدار.</li><li><b>محرّر أحداث الطائفة</b> — قائمة قابلة للتعديل لكل سنة بالألوان.</li></ul></div>
     <div class="wn-ver"><b>الإصدار 1.5</b><ul><li><b>التصدير إلى Word/Excel</b> (تقويم / تبرّع) بالخط السامري.</li><li><b>دقّة التقويم</b> — تجميد الفارق اليولياني من 2200؛ مولد دقيق 2009–2100.</li></ul></div>
-    <div class="wn-ver"><b>الإصدار 1.0</b><ul><li>التقويم السامري المحسوب: وضعا الميلادي / الدخول إلى الأرض، التنقّل، اليوم، التصفية، الانتقال إلى تاريخ.</li><li>الأعياد السامرية واليهودية، فصول الأسبوع، المولد والساعة العربية، المشاركة/الطباعة/المزامنة.</li></ul></div>`
+    <div class="wn-ver"><b>الإصدار 1.0</b><ul><li>التقويم السامري المحسوب: وضعا الميلادي / الدخول إلى الأرض، التنقّل، اليوم، التصفية، الانتقال إلى تاريخ.</li><li>الأعياد السامرية واليهودية، فصول الأسبوع، المولد والساعة الشمسية، المشاركة/الطباعة/المزامنة.</li></ul></div>`
 };
 const HELP = {
   en: `<p>This app computes the <b>Samaritan-Hebrew calendar</b> on its own. It is experimental — not a substitute for the official Kushta reckoning. The calendar's day letters, month and festival names remain in Hebrew/Samaritan.</p>
@@ -1717,7 +1717,7 @@ const APP_NEWS = `<p class="wn-intro">היסטוריית הגרסאות — מה
   </ul></div>
   <div class="wn-ver"><b>גרסה 1.0</b><ul>
     <li>הלוח השומרוני המחושב: מצב לועזי / כניסה-לארץ, ניווט בין שנים, "היום", סינון, וקפיצה לתאריך.</li>
-    <li>חגים שומריים ויהודיים, פרשות השבוע, מולד ושעון ערבי, ושיתוף/הדפסה/סנכרון יומן.</li>
+    <li>חגים שומריים ויהודיים, פרשות השבוע, מולד ושעון שמשי, ושיתוף/הדפסה/סנכרון יומן.</li>
   </ul></div>`;
 function newsIsNew(){ try{ return localStorage.getItem(NEWS_KEY)!==APP_VERSION; }catch(e){ return true; } }
 function updateNewsDim(){ const b=document.getElementById('ham-whatsnew'); if(b) b.classList.toggle('dim', !newsIsNew()); }
