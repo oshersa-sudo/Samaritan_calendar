@@ -1041,6 +1041,7 @@ const I18N = {
 };
 const NEWS = {
   en: `<p class="wn-intro">Version history — what was added since 1.0:</p>
+    <div class="wn-ver"><b>Version 2.9</b><ul><li><b>PUSH notifications — even when the app is closed</b> — a notification server (Cloudflare) is now live: you can get Shabbat entry/exit times and Samaritan holiday-eve/holiday alerts <b>even while the app is closed</b>. Enable via ☰ → "🔔 PUSH notifications". On iPhone, install the app to the home screen first.</li></ul></div>
     <div class="wn-ver"><b>Version 2.8</b><ul><li><b>Shabbat- and holiday-eve sunrise/sunset reminder</b> — a toggle in Manage notifications (☰ → More options): a reminder on the eve of Shabbat and on the eve of every Samaritan holiday, with the day's sunrise and sunset (Shabbat/holiday entry) for Holon. Appears while the app is open that evening; getting it while the app is closed needs a push server.</li></ul></div>
     <div class="wn-ver"><b>Version 2.7</b><ul><li><b>Freeze the weekday bar</b> — a button next to "Clear filter" pins the day-of-week row at the top of the screen, exactly above the month columns, and the calendar scrolls beneath it (two bars when two months show across, one when a single month shows). While frozen, zoom / view-switch are locked — unfreeze, change, then re-freeze.</li><li><b>Gregorian-day emphasis</b> — in the Gregorian view the day-of-month number is highlighted in blue, distinct from the other numbers in the cell.</li><li><b>Print-format chooser</b> — Print/PDF now offers a Calendar format or a Donation format; each month on its own page.</li></ul></div>
     <div class="wn-ver"><b>Version 2.6</b><ul><li><b>Gregorian-month view</b> — a toolbar toggle: the same calendar grouped into Jan–Dec; each Samaritan month-start is marked inside the day cell.</li><li><b>Ask the calendar</b> (☰ menu) — a floating window to query calendar events (e.g. "when does Passover fall on Saturday?"); click a result to jump to that day.</li></ul></div>
@@ -1053,6 +1054,7 @@ const NEWS = {
     <div class="wn-ver"><b>Version 1.5</b><ul><li><b>Word/Excel export</b> (calendar / donation) with the Samaritan script.</li><li><b>Calendar accuracy</b> — Julian gap frozen from 2200; exact molad 2009–2100.</li></ul></div>
     <div class="wn-ver"><b>Version 1.0</b><ul><li>The computed Samaritan calendar: Gregorian / Entry-to-the-Land modes, navigation, Today, filter, jump-to-date.</li><li>Samaritan & Jewish festivals, weekly portions, molad & solar clock, share/print/sync.</li></ul></div>`,
   ar: `<p class="wn-intro">سجلّ الإصدارات — ما أُضيف منذ 1.0:</p>
+    <div class="wn-ver"><b>الإصدار 2.9</b><ul><li><b>تنبيهات PUSH — حتى عندما يكون التطبيق مغلقًا</b> — تم تفعيل خادم تنبيهات (Cloudflare): يمكنك الآن تلقّي أوقات دخول/خروج السبت وتنبيهات عشية الأعياد السامرية والأعياد <b>حتى والتطبيق مغلق</b>. التفعيل: ☰ ← «🔔 تنبيهات PUSH». على iPhone ثبّت التطبيق على الشاشة الرئيسية أولًا.</li></ul></div>
     <div class="wn-ver"><b>الإصدار 2.8</b><ul><li><b>تذكير عشية السبت وعشية العيد السامري — الشروق والغروب</b> — مفتاح في «إدارة التنبيهات» (☰ ← خيارات إضافية): تذكير عشية السبت وعشية كل عيد سامري بوقتي شروق وغروب اليوم (دخول السبت/العيد) لمدينة حولون. يظهر عندما يكون التطبيق مفتوحًا في تلك العشية؛ ولتلقّيه والتطبيق مغلق يلزم خادم دفع.</li></ul></div>
     <div class="wn-ver"><b>الإصدار 2.7</b><ul><li><b>تثبيت شريط الأيام</b> — زر بجوار «مسح التصفية» يثبّت صفّ أيام الأسبوع أعلى الشاشة، تمامًا فوق أعمدة الأشهر، ويتحرّك التقويم أسفله (شريطان عند عرض شهرين بالعرض، وواحد عند عرض شهر واحد). أثناء التثبيت يُقفَل التكبير/تبديل العرض — ألغِ التثبيت، غيّر، ثم ثبّت من جديد.</li><li><b>إبراز اليوم الميلادي</b> — في العرض الميلادي يُبرز رقم يوم الشهر بالأزرق، مميّزًا عن بقية الأرقام في الخلية.</li><li><b>اختيار تنسيق الطباعة</b> — تتيح الطباعة/PDF الآن اختيار تنسيق التقويم أو تنسيق التبرّع؛ كل شهر في صفحة مستقلّة.</li></ul></div>
     <div class="wn-ver"><b>الإصدار 2.6</b><ul><li><b>عرض حسب الأشهر الميلادية</b> — زر في الشريط: التقويم نفسه مقسّم إلى يناير–ديسمبر؛ بداية الشهر السامري معلَّمة داخل الخلية.</li><li><b>اسأل التقويم</b> (قائمة ☰) — نافذة عائمة للاستفسار عن أحداث التقويم (مثل "متى يقع الفصح يوم السبت؟")؛ اضغط على نتيجة للانتقال إلى ذلك اليوم.</li></ul></div>
@@ -1688,9 +1690,12 @@ function privSave(){
 }
 
 // ---- app version + "what's new" splash ----
-const APP_VERSION = '2.8';
+const APP_VERSION = '2.9';
 const NEWS_KEY = 'sam-news-seen';
 const APP_NEWS = `<p class="wn-intro">היסטוריית הגרסאות — מה התווסף מאז גרסה 1.0:</p>
+  <div class="wn-ver"><b>גרסה 2.9</b><ul>
+    <li><b>התראות PUSH — גם כשהאפליקציה סגורה</b> — הופעל שרת התראות (Cloudflare): כעת אפשר לקבל התראות על זמני כניסת/יציאת השבת, וערבי-חג וחגים שומרוניים, <b>גם כשהאפליקציה סגורה</b>. הפעלה: ☰ ← “🔔 התראות PUSH”. במובייל (iPhone) יש להתקין תחילה את האפליקציה למסך הבית.</li>
+  </ul></div>
   <div class="wn-ver"><b>גרסה 2.8</b><ul>
     <li><b>התראה בערב שבת ובערב חג שומרוני — זריחה ושקיעה</b> — מתג ב"ניהול התראות" (☰ ← אפשרויות נוספות): תזכורת בערב שבת ובערב כל חג שומרוני, עם זמני הזריחה והשקיעה (כניסת שבת/חג) לחולון. מופיעה כשהאפליקציה פתוחה באותו ערב; לקבלה גם כשהאפליקציה סגורה נדרש שרת התראות.</li>
   </ul></div>
@@ -1880,7 +1885,7 @@ function saveNotif(){
   const done=perm=>{
     if(perm==='granted'){
       const parts=[]; if(shabbat) parts.push('התראת ערב שבת וערב חג (זריחה/שקיעה) פעילה'); parts.push(events.length+' אירועים');
-      note.innerHTML='✅ ההתראות נשמרו — '+parts.join(' · ')+'. תזכורות יופיעו כשהאפליקציה פתוחה.<br><b>הערה:</b> לקבלת התראות כשהאפליקציה סגורה נדרש שרת — אינו זמין באתר סטטי.';
+      note.innerHTML='✅ ההתראות נשמרו — '+parts.join(' · ')+'. תזכורות יופיעו כשהאפליקציה פתוחה.<br><b>לקבלת התראות גם כשהאפליקציה סגורה:</b> הפעילו “🔔 התראות PUSH” בתפריט ☰ (זמני שבת וחג — חולון).';
       checkNotifications();
     }
     else{ note.innerHTML='⚠️ לא ניתנה הרשאה להתראות. כדי לאפשר: לחצו על מנעול האתר → התראות → "אפשר". במובייל: התקינו את האפליקציה למסך הבית (אפשרויות נוספות → התקן), ואז אפשרו התראות בהגדרות האפליקציה.'; }
@@ -1891,7 +1896,7 @@ function saveNotif(){
 }
 
 // ================= Web-Push opt-in (activates only once the Worker URL is set) =================
-const PUSH_WORKER_URL   = '';   // ← paste the deployed Cloudflare Worker URL here, then redeploy the site
+const PUSH_WORKER_URL   = 'https://samaritan-calendar-push.oshersa.workers.dev';   // deployed Cloudflare Worker (background push)
 const PUSH_VAPID_PUBLIC = 'BLXuxYvP-xKuVOdbFMPTsLOiwi_0NpUtVi1w8dQFU36ejVbdUkNDIzs3snXmErKmwyKPlRWeeu_RqM_YAnd9UYE';
 const PUSH_ASKED_KEY = 'sam-push-asked', PUSH_PREFS_KEY = 'sam-push-prefs';
 function _urlB64(s){ s=(s+'='.repeat((4-s.length%4)%4)).replace(/-/g,'+').replace(/_/g,'/'); const raw=atob(s),a=new Uint8Array(raw.length); for(let i=0;i<raw.length;i++)a[i]=raw.charCodeAt(i); return a; }
