@@ -117,6 +117,11 @@
   .notif-lead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0 12px;border-bottom:1px solid var(--line)}
   .notif-lead label{font-size:.82rem;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:4px}
   .notif-lead input{width:60px;padding:6px 6px;border:1px solid var(--line);border-radius:8px;text-align:center;font-size:.92rem}
+  .shabbat-toggle{display:flex;align-items:flex-start;gap:9px;padding:10px 12px;margin-bottom:10px;
+    background:var(--sab-bg);border:1px solid var(--line);border-radius:11px;cursor:pointer;color:var(--sab)}
+  .shabbat-toggle input{margin-top:2px;width:18px;height:18px;flex:0 0 auto;accent-color:var(--sab);cursor:pointer}
+  .shabbat-toggle span{font-size:.9rem;line-height:1.45}
+  .shabbat-toggle small{color:var(--muted);font-weight:500}
   .notif-cats{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;padding:6px 0;border-top:1px solid var(--soft)}
   .notif-cats .nc-lbl{font-size:.8rem;color:var(--muted);font-weight:700}
   .notif-cats label{display:flex;align-items:center;gap:4px;font-size:.8rem;color:var(--ink)}
@@ -819,6 +824,11 @@
         <span class="modal-actions"><button class="act" id="notif-close" title="סגור">✕</button></span>
       </div>
       <div class="modal-body">
+        <label class="shabbat-toggle" for="notif-shabbat">
+          <input type="checkbox" id="notif-shabbat">
+          <span><b>🕯️ התראה מידי שישי — זריחה ושקיעה (כניסת שבת), חולון.</b><br>
+          <small>מופיעה כשהאפליקציה פתוחה ביום שישי. לקבלה גם כשהאפליקציה סגורה נדרש שרת (ראו הערה למטה).</small></span>
+        </label>
         <div class="notif-lead">
           <span style="font-weight:600;font-size:.85rem">ברירת מחדל — להתריע</span>
           <label><select id="notif-d"></select> ימים</label>
@@ -1031,6 +1041,7 @@ const I18N = {
 };
 const NEWS = {
   en: `<p class="wn-intro">Version history — what was added since 1.0:</p>
+    <div class="wn-ver"><b>Version 2.8</b><ul><li><b>Friday sunrise/sunset reminder</b> — a toggle in Manage notifications (☰ → More options): an eve-of-Shabbat reminder with the day's sunrise and sunset (Shabbat entry) for Holon. Appears while the app is open on Friday; getting it while the app is closed needs a push server.</li></ul></div>
     <div class="wn-ver"><b>Version 2.7</b><ul><li><b>Freeze the weekday bar</b> — a button next to "Clear filter" pins the day-of-week row at the top of the screen, exactly above the month columns, and the calendar scrolls beneath it (two bars when two months show across, one when a single month shows). While frozen, zoom / view-switch are locked — unfreeze, change, then re-freeze.</li><li><b>Gregorian-day emphasis</b> — in the Gregorian view the day-of-month number is highlighted in blue, distinct from the other numbers in the cell.</li><li><b>Print-format chooser</b> — Print/PDF now offers a Calendar format or a Donation format; each month on its own page.</li></ul></div>
     <div class="wn-ver"><b>Version 2.6</b><ul><li><b>Gregorian-month view</b> — a toolbar toggle: the same calendar grouped into Jan–Dec; each Samaritan month-start is marked inside the day cell.</li><li><b>Ask the calendar</b> (☰ menu) — a floating window to query calendar events (e.g. "when does Passover fall on Saturday?"); click a result to jump to that day.</li></ul></div>
     <div class="wn-ver"><b>Version 2.5</b><ul><li><b>Total solar & lunar eclipses</b> — marked on the calendar with an icon (eclipsed sun / blood moon). Validated 27/28 against NASA data.</li></ul></div>
@@ -1042,6 +1053,7 @@ const NEWS = {
     <div class="wn-ver"><b>Version 1.5</b><ul><li><b>Word/Excel export</b> (calendar / donation) with the Samaritan script.</li><li><b>Calendar accuracy</b> — Julian gap frozen from 2200; exact molad 2009–2100.</li></ul></div>
     <div class="wn-ver"><b>Version 1.0</b><ul><li>The computed Samaritan calendar: Gregorian / Entry-to-the-Land modes, navigation, Today, filter, jump-to-date.</li><li>Samaritan & Jewish festivals, weekly portions, molad & solar clock, share/print/sync.</li></ul></div>`,
   ar: `<p class="wn-intro">سجلّ الإصدارات — ما أُضيف منذ 1.0:</p>
+    <div class="wn-ver"><b>الإصدار 2.8</b><ul><li><b>تذكير كل جمعة — الشروق والغروب</b> — مفتاح في «إدارة التنبيهات» (☰ ← خيارات إضافية): تذكير عشية السبت بوقتي شروق وغروب اليوم (دخول السبت) لمدينة حولون. يظهر عندما يكون التطبيق مفتوحًا يوم الجمعة؛ ولتلقّيه والتطبيق مغلق يلزم خادم دفع.</li></ul></div>
     <div class="wn-ver"><b>الإصدار 2.7</b><ul><li><b>تثبيت شريط الأيام</b> — زر بجوار «مسح التصفية» يثبّت صفّ أيام الأسبوع أعلى الشاشة، تمامًا فوق أعمدة الأشهر، ويتحرّك التقويم أسفله (شريطان عند عرض شهرين بالعرض، وواحد عند عرض شهر واحد). أثناء التثبيت يُقفَل التكبير/تبديل العرض — ألغِ التثبيت، غيّر، ثم ثبّت من جديد.</li><li><b>إبراز اليوم الميلادي</b> — في العرض الميلادي يُبرز رقم يوم الشهر بالأزرق، مميّزًا عن بقية الأرقام في الخلية.</li><li><b>اختيار تنسيق الطباعة</b> — تتيح الطباعة/PDF الآن اختيار تنسيق التقويم أو تنسيق التبرّع؛ كل شهر في صفحة مستقلّة.</li></ul></div>
     <div class="wn-ver"><b>الإصدار 2.6</b><ul><li><b>عرض حسب الأشهر الميلادية</b> — زر في الشريط: التقويم نفسه مقسّم إلى يناير–ديسمبر؛ بداية الشهر السامري معلَّمة داخل الخلية.</li><li><b>اسأل التقويم</b> (قائمة ☰) — نافذة عائمة للاستفسار عن أحداث التقويم (مثل "متى يقع الفصح يوم السبت؟")؛ اضغط على نتيجة للانتقال إلى ذلك اليوم.</li></ul></div>
     <div class="wn-ver"><b>الإصدار 2.5</b><ul><li><b>كسوف الشمس وخسوف القمر الكلّيان</b> — معلَّمان في التقويم بأيقونة (شمس مكسوفة / قمر أحمر). مُتحقَّق 27/28 مقابل بيانات NASA.</li></ul></div>
@@ -1676,9 +1688,12 @@ function privSave(){
 }
 
 // ---- app version + "what's new" splash ----
-const APP_VERSION = '2.7';
+const APP_VERSION = '2.8';
 const NEWS_KEY = 'sam-news-seen';
 const APP_NEWS = `<p class="wn-intro">היסטוריית הגרסאות — מה התווסף מאז גרסה 1.0:</p>
+  <div class="wn-ver"><b>גרסה 2.8</b><ul>
+    <li><b>התראה מידי שישי — זריחה ושקיעה</b> — מתג ב"ניהול התראות" (☰ ← אפשרויות נוספות): תזכורת בערב שבת עם זמני הזריחה והשקיעה (כניסת שבת) לחולון. מופיעה כשהאפליקציה פתוחה ביום שישי; לקבלה גם כשהאפליקציה סגורה נדרש שרת התראות.</li>
+  </ul></div>
   <div class="wn-ver"><b>גרסה 2.7</b><ul>
     <li><b>הקפאת סרגל הימים</b> — כפתור ליד "נקה סינון": מקבע את שורת ימי-השבוע בראש המסך, בדיוק מעל עמודות החודשים, והלוח נגלל מתחתיו (שני סרגלים כשמוצגים שני חודשים לרוחב, אחד כשמוצג חודש בודד). בזמן ההקפאה שינוי הגודל/התצוגה נעול — יש לבטל, לשנות, ולהקפיא מחדש.</li>
     <li><b>הדגשת היום הלועזי</b> — בתצוגה הלועזית מספר היום בחודש הלועזי מודגש בכחול, נבדל משאר המספרים בתא.</li>
@@ -1732,8 +1747,9 @@ function showWhatsNew(markSeen){
 const NOTIF_KEY = 'sam-notifications';
 function loadNotifPrefs(){
   let p=null; try{ p=JSON.parse(localStorage.getItem(NOTIF_KEY)||'null'); }catch(e){}
-  if(!p) return {lead:{d:1,h:0,m:0}, events:[]};
+  if(!p) return {lead:{d:1,h:0,m:0}, events:[], shabbat:false};
   if(!p.lead) p.lead={d:1,h:0,m:0};
+  p.shabbat=!!p.shabbat;                                 // weekly Friday sunrise/sunset reminder
   p.events=(p.events||[]).map(e=> typeof e==='string'   // old format: bare key -> use global lead
     ? {key:e, d:p.lead.d, h:p.lead.h, m:p.lead.m}
     : {key:e.key, d:+e.d||0, h:+e.h||0, m:+e.m||0});
@@ -1767,6 +1783,7 @@ function openNotifManager(){
   document.getElementById('notif-h').innerHTML=selOpts(23,p.lead.h);
   document.getElementById('notif-m').innerHTML=selOpts(59,p.lead.m);
   document.getElementById('notif-year').value=(DATA_YC&&DATA_YC.greg_year)||new Date().getFullYear();
+  document.getElementById('notif-shabbat').checked=p.shabbat;
   document.getElementById('notif-note').textContent='';
   renderNotifList();
   document.getElementById('notif-modal').hidden=false;
@@ -1799,9 +1816,33 @@ function fireNotif(title,body){
     new Notification(title,{body});
   }catch(e){}
 }
+// weekly Friday reminder: sunrise + sunset (= Shabbat entry) for Holon. Fires once per Friday, while the app is open.
+async function dayRecordISO(iso){
+  const y=+iso.slice(0,4);
+  for(const gy of [y, y-1]){
+    const yc=(DATA_YC&&DATA_YC.greg_year===gy)?DATA_YC:await fetchYC(gy);
+    if(!yc) continue;
+    for(const mo of yc.months) for(const rec of mo.days) if(rec.greg===iso) return rec;
+  }
+  return null;
+}
+async function maybeFridayReminder(){
+  if(wdOfISO(TODAY_ISO)!==5) return;                 // 5 = Friday only
+  let firedDay=''; try{ firedDay=localStorage.getItem('sam-shabbat-fired')||''; }catch(e){}
+  if(firedDay===TODAY_ISO) return;                   // once per day
+  try{ localStorage.setItem('sam-shabbat-fired',TODAY_ISO); }catch(e){}   // mark first (avoid re-entry while awaiting)
+  const rec=await dayRecordISO(TODAY_ISO);
+  const sr=rec&&rec.sunrise, ss=rec&&rec.sunset;
+  const body=(sr||ss)
+    ? `זריחה ${sr||'--'} · שקיעה (כניסת שבת) ${ss||'--'} — חולון. בהר גריזים יש להוסיף כ-5 דקות.`
+    : 'זמני הזריחה/שקיעה אינם זמינים למועד זה.';
+  fireNotif('🕯️ ערב שבת שלום — זמני היום', body);
+}
 function checkNotifications(){
   if(!('Notification' in window) || Notification.permission!=='granted') return;
-  const p=loadNotifPrefs(); if(!p.events || !p.events.length) return;
+  const p=loadNotifPrefs();
+  if(p.shabbat) maybeFridayReminder();
+  if(!p.events || !p.events.length) return;
   let fired={}; try{ fired=JSON.parse(localStorage.getItem('sam-notif-fired')||'{}'); }catch(e){}
   const now=Date.now();
   for(const ev of p.events){
@@ -1817,15 +1858,20 @@ function checkNotifications(){
 }
 function saveNotif(){
   const lead={ d:+document.getElementById('notif-d').value||0, h:+document.getElementById('notif-h').value||0, m:+document.getElementById('notif-m').value||0 };
+  const shabbat=document.getElementById('notif-shabbat').checked;
   const events=[...document.querySelectorAll('#notif-list .notif-item')].filter(it=>it.querySelector('.ni-cb').checked).map(it=>({
     key: it.querySelector('.ni-cb').dataset.key,
     d:+it.querySelector('.ni-d').value||0, h:+it.querySelector('.ni-h').value||0, m:+it.querySelector('.ni-m').value||0
   }));
-  try{ localStorage.setItem(NOTIF_KEY, JSON.stringify({lead,events})); }catch(e){}
+  try{ localStorage.setItem(NOTIF_KEY, JSON.stringify({lead,events,shabbat})); }catch(e){}
   const note=document.getElementById('notif-note');
   if(!('Notification' in window)){ note.textContent='הדפדפן אינו תומך בהתראות.'; return; }
   const done=perm=>{
-    if(perm==='granted'){ note.innerHTML='✅ ההתראות נשמרו ('+events.length+' אירועים). תזכורות יופיעו כשהאפליקציה פתוחה.<br><b>הערה:</b> לקבלת התראות כשהאפליקציה סגורה נדרש שרת — אינו זמין באתר סטטי.'; checkNotifications(); }
+    if(perm==='granted'){
+      const parts=[]; if(shabbat) parts.push('התראת יום שישי (זריחה/שקיעה) פעילה'); parts.push(events.length+' אירועים');
+      note.innerHTML='✅ ההתראות נשמרו — '+parts.join(' · ')+'. תזכורות יופיעו כשהאפליקציה פתוחה.<br><b>הערה:</b> לקבלת התראות כשהאפליקציה סגורה נדרש שרת — אינו זמין באתר סטטי.';
+      checkNotifications();
+    }
     else{ note.innerHTML='⚠️ לא ניתנה הרשאה להתראות. כדי לאפשר: לחצו על מנעול האתר → התראות → "אפשר". במובייל: התקינו את האפליקציה למסך הבית (אפשרויות נוספות → התקן), ואז אפשרו התראות בהגדרות האפליקציה.'; }
   };
   if(Notification.permission==='granted') done('granted');
