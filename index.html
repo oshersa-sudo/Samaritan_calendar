@@ -508,6 +508,7 @@
     <button id="ham-private">➕ הוסף אירוע פרטי</button>
     <button id="ham-ask" hidden>💬 שאל את הלוח</button>
     <button id="ham-push" hidden>🔔 התראות PUSH</button>
+    <button id="ham-push-test" hidden>🔔 שלח התראת בדיקה</button>
     <button id="ham-help">❓ עזרה</button>
     <button id="ham-version">גרסה נוכחית: <span class="ham-ver" id="ham-ver"></span></button>
     <button id="ham-lang">🌐 שנה שפה</button>
@@ -1942,6 +1943,25 @@ async function _finishPush(g){
     else dialog({title:'לא הופעלו התראות', html:'לא ניתנה הרשאת התראות, או שהדפדפן/המכשיר אינו תומך (ב-iPhone יש להתקין את האפליקציה למסך הבית).', buttons:[{label:'סגור',primary:true}]});
   } else { pushApply(g); }   // both declined → ensure unsubscribed
 }
+// send a test PUSH to THIS device only (via the Worker's /test-self), to verify notifications work
+async function sendSelfTest(){
+  if(!PUSH_WORKER_URL) return;
+  if(!('serviceWorker' in navigator) || !('PushManager' in window)){
+    dialog({title:'לא נתמך', html:'הדפדפן/המכשיר אינו תומך בהתראות PUSH.', buttons:[{label:'סגור',primary:true}]}); return;
+  }
+  let sub=null; try{ const reg=await navigator.serviceWorker.ready; sub=await reg.pushManager.getSubscription(); }catch(e){}
+  if(!sub){
+    dialog({title:'עדיין לא רשום', html:'כדי לשלוח בדיקה יש קודם להפעיל את ההתראות ולאשר הרשאה.', buttons:[
+      {label:'הפעל התראות',primary:true,act:()=>askPush(true)},{label:'סגור'}]}); return;
+  }
+  try{
+    const r=await fetch(PUSH_WORKER_URL.replace(/\/$/,'')+'/test-self',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({endpoint:sub.endpoint})});
+    const j=await r.json().catch(()=>({}));
+    if(r.ok && j.ok) dialog({title:'נשלחה התראת בדיקה ✓', html:'ההתראה אמורה להופיע במכשיר תוך שניות ספורות.', buttons:[{label:'מצוין',primary:true}]});
+    else if(r.status===404) dialog({title:'הרישום פג', html:'המנוי אינו קיים עוד בשרת. הפעילו מחדש את ההתראות.', buttons:[{label:'הפעל מחדש',primary:true,act:()=>askPush(true)},{label:'סגור'}]});
+    else dialog({title:'הבדיקה נכשלה', html:'לא ניתן היה לשלוח ('+escHtml(String(j.error||('שגיאה '+r.status)))+'). ודאו שההתראות מאושרות במכשיר.', buttons:[{label:'סגור',primary:true}]});
+  }catch(e){ dialog({title:'שגיאת רשת', html:escHtml(String(e)), buttons:[{label:'סגור',primary:true}]}); }
+}
 function setupPush(){
   if('serviceWorker' in navigator)
     navigator.serviceWorker.addEventListener('message', e=>{ if(e.data && e.data.goto) gotoResult(e.data.goto); });
@@ -2010,7 +2030,8 @@ function setupCommunity(){
   };
   // "Ask the calendar" chat
   document.getElementById('ham-ask').onclick=()=>{ closeMenus(); openAsk(); };
-  if(PUSH_WORKER_URL){ const pb=document.getElementById('ham-push'); pb.hidden=false; pb.onclick=()=>{ closeMenus(); askPush(true); }; }
+  if(PUSH_WORKER_URL){ const pb=document.getElementById('ham-push'); pb.hidden=false; pb.onclick=()=>{ closeMenus(); askPush(true); };
+    const tb=document.getElementById('ham-push-test'); if(tb){ tb.hidden=false; tb.onclick=()=>{ closeMenus(); sendSelfTest(); }; } }
   document.getElementById('ask-close').onclick=()=>{ document.getElementById('ask-modal').hidden=true; };
   document.getElementById('ask-send').onclick=runAsk;
   document.getElementById('ask-input').addEventListener('keydown',e=>{ if(e.key==='Enter') runAsk(); });
