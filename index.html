@@ -490,6 +490,7 @@
     <button id="ham-private">➕ הוסף אירוע פרטי</button>
     <button id="ham-push" hidden>🔔 התראות PUSH</button>
     <button id="ham-push-test" hidden>🔔 שלח התראת בדיקה</button>
+    <button id="ham-video" hidden>🎬 סרטון הסבר: חישוב הלוח</button>
     <button id="ham-facts">📊 פרטים ועובדות על הלוח השומרוני</button>
     <button id="ham-help">❓ עזרה</button>
     <button id="ham-version">גרסה נוכחית: <span class="ham-ver" id="ham-ver"></span></button>
@@ -668,6 +669,16 @@
         <div class="wn-body" id="wn-body"></div>
         <div class="cevt-foot"><button class="go" id="wn-ok">הבנתי</button></div>
       </div>
+    </div>
+  </div>
+
+  <div id="video-modal" class="modal" hidden>
+    <div class="modal-box">
+      <div class="modal-head">
+        <span id="video-title">🎬 סרטון הסבר: חישוב הלוח</span>
+        <span class="modal-actions"><button class="act" id="video-close" title="סגור">✕</button></span>
+      </div>
+      <div class="modal-body"><video id="tutorial-video" controls playsinline preload="none" style="width:100%;border-radius:10px;background:#000"></video></div>
     </div>
   </div>
 
@@ -992,6 +1003,7 @@ const I18N = {
   h_help:{he:'❓ עזרה',en:'❓ Help',ar:'❓ مساعدة'},
   h_version:{he:'גרסה נוכחית: ',en:'Version: ',ar:'الإصدار: '},
   h_install:{he:'📲 התקנת אפליקציה',en:'📲 Install app',ar:'📲 تثبيت التطبيق'},
+  h_video:{he:'🎬 סרטון הסבר: חישוב הלוח',en:'🎬 Video: how the calendar is calculated',ar:'🎬 فيديو: كيف يُحسب التقويم'},
   h_facts:{he:'📊 פרטים ועובדות על הלוח השומרוני',en:'📊 Facts about the Samaritan calendar',ar:'📊 حقائق عن التقويم السامري'},
   h_events:{he:'עריכת אירועי הקהילה',en:'Edit community events',ar:'تحرير أحداث الطائفة'},
   ok:{he:'הבנתי',en:'Got it',ar:'حسنًا'},
@@ -1071,7 +1083,7 @@ function translateUI(){
   const ew=document.getElementById('exp-word'), ex=document.getElementById('exp-excel');   // keep the SVG icon
   if(ew) ew.lastChild.textContent=' '+t('m_word'); if(ex) ex.lastChild.textContent=' '+t('m_excel');
   set('ham-whatsnew','h_whatsnew'); set('ham-more','h_more'); set('ham-private','h_private');
-  set('ham-lang','h_lang'); set('ham-help','h_help'); set('ham-facts','h_facts'); set('ham-install','h_install'); set('ham-events','h_events');
+  set('ham-lang','h_lang'); set('ham-help','h_help'); set('ham-facts','h_facts'); set('ham-video','h_video'); set('video-title','h_video'); set('ham-install','h_install'); set('ham-events','h_events');
   const hv=document.getElementById('ham-version'); if(hv){ hv.firstChild.textContent=t('h_version'); }
   // sub-menu proxy buttons
   document.querySelectorAll('#ham-more-sub button').forEach(b=>{ const m={moadim:'m_moadim',notif:'m_notif',print:'m_print',ics:'m_sync',share:'m_share','exp-word':'m_word','exp-excel':'m_excel',shortcut:'m_install',colors:'m_colors'}[b.dataset.act]; if(m) b.textContent=t(m); });
@@ -1887,6 +1899,14 @@ function setupCommunity(){
   document.getElementById('ham-version').onclick=()=>{ closeMenus(); dialog({title:'גרסה נוכחית',html:'גרסה <b>'+APP_VERSION+'</b>',buttons:[{label:'מה חדש?',primary:true,act:()=>showWhatsNew(true)},{label:'סגור'}]}); };
   document.getElementById('ham-install').onclick=()=>{ closeMenus(); createShortcut(); };
   document.getElementById('ham-lang').onclick=()=>{ closeMenus(); chooseLang(); };
+  // Calendar-calculation tutorial: the menu item appears only once the video file is deployed
+  const TUTORIAL_VIDEO='media/samaritan_calendar_tutorial_subtitled.mp4';
+  fetch(TUTORIAL_VIDEO,{method:'HEAD'}).then(r=>{ if(r.ok) document.getElementById('ham-video').hidden=false; }).catch(()=>{});
+  const closeVideo=()=>{ const v=document.getElementById('tutorial-video'); v.pause(); document.getElementById('video-modal').hidden=true; };
+  document.getElementById('ham-video').onclick=()=>{ closeMenus(); const v=document.getElementById('tutorial-video');
+    if(!v.src) v.src=TUTORIAL_VIDEO; document.getElementById('video-modal').hidden=false; v.play().catch(()=>{}); };
+  document.getElementById('video-close').onclick=closeVideo;
+  document.getElementById('video-modal').addEventListener('click',e=>{ if(e.target.id==='video-modal') closeVideo(); });
   document.getElementById('ham-facts').onclick=()=>{ closeMenus(); location.href='facts.html'; };
   document.getElementById('ham-help').onclick=()=>{ closeMenus(); document.getElementById('help-modal').hidden=false; };
   document.getElementById('help-close').onclick=()=>{ document.getElementById('help-modal').hidden=true; };
