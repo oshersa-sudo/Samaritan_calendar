@@ -1,6 +1,6 @@
 // Minimal service worker — required for "install app" on mobile, plus light offline caching.
-const CACHE = 'shomron-luach-v34';
-const SHELL = ['./', 'index.html', 'Sam_font.ttf', 'manifest.json', 'icon-192.png', 'icon-512.png'];
+const CACHE = 'shomron-luach-v35';
+const SHELL = ['./', 'index.html', 'Sam_font.ttf', 'manifest.json', 'icon-192.png', 'icon-512.png', 'facts.html'];
 
 self.addEventListener('install', e => {
   self.skipWaiting();

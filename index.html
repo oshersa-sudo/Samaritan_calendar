@@ -334,25 +334,7 @@
     max-width:88vw;text-align:center;line-height:1.4}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   @media print{ #dow-freeze{display:none!important} .month .wdrow{display:grid!important} }
-  /* "Ask the calendar" floating panel */
-  .ask-panel{position:fixed;bottom:16px;left:16px;z-index:65;width:min(390px,92vw);max-height:78vh;
-    display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:14px;
-    box-shadow:0 12px 44px rgba(0,0,0,.38);overflow:hidden}
-  .ask-panel[hidden]{display:none}
-  .ask-head{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--soft);border-bottom:1px solid var(--line);font-weight:700}
-  .ask-head button{background:none;border:none;font-size:1.15rem;cursor:pointer;color:var(--muted);line-height:1}
-  .ask-io{display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line)}
-  .ask-io input{flex:1;padding:7px 9px;border:1px solid var(--line);border-radius:9px;font-size:.9rem;font-family:inherit}
-  .ask-io button{padding:7px 13px;border:none;border-radius:9px;background:var(--accent);color:#fff;font-weight:700;cursor:pointer;white-space:nowrap}
-  .ask-past-row{display:flex;align-items:center;gap:6px;padding:5px 12px;font-size:.82rem;color:var(--muted);border-bottom:1px solid var(--line);cursor:pointer}
-  .ask-past-row input{cursor:pointer}
-  .ask-results{overflow-y:auto;padding:6px 8px}
-  .ask-hint{color:var(--muted);font-size:.85rem;line-height:1.7;padding:6px 4px}
-  .ask-res{padding:7px 8px;border-bottom:1px solid var(--line);cursor:pointer;font-size:.85rem;border-radius:8px}
-  .ask-res:last-child{border-bottom:none}
-  .ask-res:hover{background:var(--soft)}
-  .ask-res .ask-ev{color:var(--accent);font-weight:700}
-  @media print{.ask-panel,.view-toggle{display:none!important}}
+  @media print{.view-toggle{display:none!important}}
   .mhead .canaan.yearchange{color:#7a3b9e;font-weight:800}
   .print-footer{display:none}
   .modal{position:fixed;inset:0;z-index:50;background:rgba(40,35,28,.55);display:flex;
@@ -506,9 +488,9 @@
       <button data-act="colors">🎨 הגדר צבעים</button>
     </div>
     <button id="ham-private">➕ הוסף אירוע פרטי</button>
-    <button id="ham-ask" hidden>💬 שאל את הלוח</button>
     <button id="ham-push" hidden>🔔 התראות PUSH</button>
     <button id="ham-push-test" hidden>🔔 שלח התראת בדיקה</button>
+    <button id="ham-facts">📊 פרטים ועובדות על הלוח השומרוני</button>
     <button id="ham-help">❓ עזרה</button>
     <button id="ham-version">גרסה נוכחית: <span class="ham-ver" id="ham-ver"></span></button>
     <button id="ham-lang">🌐 שנה שפה</button>
@@ -687,19 +669,6 @@
         <div class="cevt-foot"><button class="go" id="wn-ok">הבנתי</button></div>
       </div>
     </div>
-  </div>
-
-  <div id="ask-modal" class="ask-panel" hidden>
-    <div class="ask-head">
-      <span>💬 שאל את הלוח</span>
-      <button id="ask-close" title="סגור">✕</button>
-    </div>
-    <div class="ask-io">
-      <input id="ask-input" type="text" placeholder='למשל: מתי יחול פסח בשבת? · חג הסוכות הבא · בן פרת'>
-      <button id="ask-send">שאל</button>
-    </div>
-    <label class="ask-past-row"><input type="checkbox" id="ask-past"> כלול אירועים מהעבר (חיפוש גם אחורה)</label>
-    <div class="ask-results" id="ask-results"></div>
   </div>
 
   <div id="help-modal" class="modal" hidden>
@@ -1023,6 +992,7 @@ const I18N = {
   h_help:{he:'❓ עזרה',en:'❓ Help',ar:'❓ مساعدة'},
   h_version:{he:'גרסה נוכחית: ',en:'Version: ',ar:'الإصدار: '},
   h_install:{he:'📲 התקנת אפליקציה',en:'📲 Install app',ar:'📲 تثبيت التطبيق'},
+  h_facts:{he:'📊 פרטים ועובדות על הלוח השומרוני',en:'📊 Facts about the Samaritan calendar',ar:'📊 حقائق عن التقويم السامري'},
   h_events:{he:'עריכת אירועי הקהילה',en:'Edit community events',ar:'تحرير أحداث الطائفة'},
   ok:{he:'הבנתי',en:'Got it',ar:'حسنًا'},
   t_help:{he:'❓ עזרה — מדריך לשימוש באפליקציה',en:'❓ Help — using the app',ar:'❓ مساعدة — استخدام التطبيق'},
@@ -1042,6 +1012,7 @@ const I18N = {
 };
 const NEWS = {
   en: `<p class="wn-intro">Version history — what was added since 1.0:</p>
+    <div class="wn-ver"><b>Version 3.0</b><ul><li><b>Facts about the Samaritan calendar</b> (☰) — a new page derived from the calendar itself (1900–3000): the Gregorian date range of every festival, the leap-year rule, Shabbat HaSakhanta rules, years when Yom Kippur falls on Shabbat, the gap from the Jewish Rosh Chodesh Nisan, fifth Sabbaths, separate Ben Porat readings and more (Hebrew).</li><li>"Ask the calendar" was removed from the menu.</li></ul></div>
     <div class="wn-ver"><b>Version 2.9</b><ul><li><b>PUSH notifications — even when the app is closed</b> — a notification server (Cloudflare) is now live: you can get Shabbat entry/exit times and Samaritan holiday-eve/holiday alerts <b>even while the app is closed</b>. Enable via ☰ → "🔔 PUSH notifications". On iPhone, install the app to the home screen first.</li></ul></div>
     <div class="wn-ver"><b>Version 2.8</b><ul><li><b>Shabbat- and holiday-eve sunrise/sunset reminder</b> — a toggle in Manage notifications (☰ → More options): a reminder on the eve of Shabbat and on the eve of every Samaritan holiday, with the day's sunrise and sunset (Shabbat/holiday entry) for Holon. Appears while the app is open that evening; getting it while the app is closed needs a push server.</li></ul></div>
     <div class="wn-ver"><b>Version 2.7</b><ul><li><b>Freeze the weekday bar</b> — a button next to "Clear filter" pins the day-of-week row at the top of the screen, exactly above the month columns, and the calendar scrolls beneath it (two bars when two months show across, one when a single month shows). While frozen, zoom / view-switch are locked — unfreeze, change, then re-freeze.</li><li><b>Gregorian-day emphasis</b> — in the Gregorian view the day-of-month number is highlighted in blue, distinct from the other numbers in the cell.</li><li><b>Print-format chooser</b> — Print/PDF now offers a Calendar format or a Donation format; each month on its own page.</li></ul></div>
@@ -1055,6 +1026,7 @@ const NEWS = {
     <div class="wn-ver"><b>Version 1.5</b><ul><li><b>Word/Excel export</b> (calendar / donation) with the Samaritan script.</li><li><b>Calendar accuracy</b> — Julian gap frozen from 2200; exact molad 2009–2100.</li></ul></div>
     <div class="wn-ver"><b>Version 1.0</b><ul><li>The computed Samaritan calendar: Gregorian / Entry-to-the-Land modes, navigation, Today, filter, jump-to-date.</li><li>Samaritan & Jewish festivals, weekly portions, molad & solar clock, share/print/sync.</li></ul></div>`,
   ar: `<p class="wn-intro">سجلّ الإصدارات — ما أُضيف منذ 1.0:</p>
+    <div class="wn-ver"><b>الإصدار 3.0</b><ul><li><b>حقائق عن التقويم السامري</b> (☰) — صفحة جديدة مستخرجة من التقويم نفسه (1900–3000): نطاق التواريخ الميلادية لكل عيد، قاعدة الكبس، قواعد سبت السكنتا، السنوات التي يقع فيها يوم الغفران يوم السبت، الفرق عن رأس شهر نيسان اليهودي، السبت الخامس في الشهر وغير ذلك (بالعبرية).</li><li>أُزيل خيار «اسأل التقويم» من القائمة.</li></ul></div>
     <div class="wn-ver"><b>الإصدار 2.9</b><ul><li><b>تنبيهات PUSH — حتى عندما يكون التطبيق مغلقًا</b> — تم تفعيل خادم تنبيهات (Cloudflare): يمكنك الآن تلقّي أوقات دخول/خروج السبت وتنبيهات عشية الأعياد السامرية والأعياد <b>حتى والتطبيق مغلق</b>. التفعيل: ☰ ← «🔔 تنبيهات PUSH». على iPhone ثبّت التطبيق على الشاشة الرئيسية أولًا.</li></ul></div>
     <div class="wn-ver"><b>الإصدار 2.8</b><ul><li><b>تذكير عشية السبت وعشية العيد السامري — الشروق والغروب</b> — مفتاح في «إدارة التنبيهات» (☰ ← خيارات إضافية): تذكير عشية السبت وعشية كل عيد سامري بوقتي شروق وغروب اليوم (دخول السبت/العيد) لمدينة حولون. يظهر عندما يكون التطبيق مفتوحًا في تلك العشية؛ ولتلقّيه والتطبيق مغلق يلزم خادم دفع.</li></ul></div>
     <div class="wn-ver"><b>الإصدار 2.7</b><ul><li><b>تثبيت شريط الأيام</b> — زر بجوار «مسح التصفية» يثبّت صفّ أيام الأسبوع أعلى الشاشة، تمامًا فوق أعمدة الأشهر، ويتحرّك التقويم أسفله (شريطان عند عرض شهرين بالعرض، وواحد عند عرض شهر واحد). أثناء التثبيت يُقفَل التكبير/تبديل العرض — ألغِ التثبيت، غيّر، ثم ثبّت من جديد.</li><li><b>إبراز اليوم الميلادي</b> — في العرض الميلادي يُبرز رقم يوم الشهر بالأزرق، مميّزًا عن بقية الأرقام في الخلية.</li><li><b>اختيار تنسيق الطباعة</b> — تتيح الطباعة/PDF الآن اختيار تنسيق التقويم أو تنسيق التبرّع؛ كل شهر في صفحة مستقلّة.</li></ul></div>
@@ -1099,7 +1071,7 @@ function translateUI(){
   const ew=document.getElementById('exp-word'), ex=document.getElementById('exp-excel');   // keep the SVG icon
   if(ew) ew.lastChild.textContent=' '+t('m_word'); if(ex) ex.lastChild.textContent=' '+t('m_excel');
   set('ham-whatsnew','h_whatsnew'); set('ham-more','h_more'); set('ham-private','h_private');
-  set('ham-lang','h_lang'); set('ham-help','h_help'); set('ham-install','h_install'); set('ham-events','h_events');
+  set('ham-lang','h_lang'); set('ham-help','h_help'); set('ham-facts','h_facts'); set('ham-install','h_install'); set('ham-events','h_events');
   const hv=document.getElementById('ham-version'); if(hv){ hv.firstChild.textContent=t('h_version'); }
   // sub-menu proxy buttons
   document.querySelectorAll('#ham-more-sub button').forEach(b=>{ const m={moadim:'m_moadim',notif:'m_notif',print:'m_print',ics:'m_sync',share:'m_share','exp-word':'m_word','exp-excel':'m_excel',shortcut:'m_install',colors:'m_colors'}[b.dataset.act]; if(m) b.textContent=t(m); });
@@ -1296,113 +1268,6 @@ async function renderGregView(greg, box, meta){
   meta.innerHTML = `<b>תצוגה לפי חודשים לועזיים — ${greg}</b> · הלוח השומרוני (חגים, תאריך מזרחי, זריחה/שקיעה) מפורש בתוך תאי הימים; תחילת כל חודש שומרוני מסומנת בתא.`;
 }
 
-// ---- "Ask the calendar": free-text search over the calendar events, across future years ----
-const _askCache=new Map();
-async function cachedYC(greg){ if(_askCache.has(greg)) return _askCache.get(greg); const yc=await fetchYC(greg); _askCache.set(greg,yc); return yc; }
-function openAsk(){
-  document.getElementById('ask-modal').hidden=false;
-  const inp=document.getElementById('ask-input'); inp.focus();
-  const r=document.getElementById('ask-results');
-  if(!r.innerHTML.trim()) r.innerHTML='<div class="ask-hint">שאל שאלה על אירועי הלוח. לדוגמה:<br>• "מתי יחול פסח בשבת?"<br>• "מתי חג הסוכות הבא?"<br>• "מתי החג הבא בשבת?"<br>• "פרשת בנים אתם בנפרד"<br>לחיצה על תוצאה תעביר אותך ליום בלוח.</div>';
-}
-// ---- text normalization + fuzzy Hebrew matching (defective/full spelling, prefixes, finals) ----
-const _FIN={'ך':'כ','ם':'מ','ן':'נ','ף':'פ','ץ':'צ'};
-const _normHeb=s=>String(s==null?'':s).replace(/[֑-ׇ׳״'"]/g,'').replace(/[ךםןףץ]/g,c=>_FIN[c]).replace(/\s+/g,' ').trim();
-const _WDNAME={'ראשון':0,'שני':1,'שלישי':2,'רביעי':3,'חמישי':4,'שישי':5,'ששי':5,'שבת':6};
-// hard fillers: question / linking words that carry no event meaning
-const _FILLER=new Set(['מתי','יחול','יחולו','תחול','יחל','חל','חלה','יהיה','יהיו','תהיה','הבא','הבאה','הבאים','הבאות','בפעם','פעם','הפעם','שוב','ביום','את','של','בלוח','על','לפי','הקרוב','הקרובה','הקרובים','הקרובות','מקיימת','מתקיימת','מקיימים','נחוג','נחוגת','חוגגים','לי','לנו','אנא','בבקשה','נא','מה','איזה','אילו','כמה','הם','הן','יש','הבאת','בשנה','בשנים','השנה']);
-// soft context words: dropped only if the query has other, more specific content
-const _SOFT=new Set(['חג','חגים','פרשה','פרשת','פרשיה','מועד','מועדי','יום','ראש','שבתות']);
-// spelling/synonym bridges → substrings that DO occur in the stored names (defective spelling etc.)
-const _ALIAS={'סוכות':['סכות'],'סוכה':['סכות'],'הסוכות':['סכות'],'שבועות':['שבעות'],'הכיפורים':['כפור'],'כיפור':['כפור'],'הסליחות':['סליחות'],'סליחות':['סליחות'],'חודש':['חדש'],'קהילה':['קהלה'],'קהל':['קהלה'],'מכות':['מופת'],'מכה':['מופת'],'ליקוי':['ליקוי'],'עצמאות':['העצמאות'],'זכרון':['הזיכרון']};
-const _PFX='והבכלמש';
-function _forms(w){ const out=[w]; let s=w;                       // the word + up to 2 leading prefixes removed
-  for(let i=0;i<2;i++){ if(s.length>=3 && _PFX.indexOf(s[0])>=0){ s=s.slice(1); if(out.indexOf(s)<0) out.push(s); } else break; }
-  const all=[...out]; out.forEach(f=>{ if(_ALIAS[f]) _ALIAS[f].forEach(a=>{ if(all.indexOf(a)<0) all.push(a); }); });
-  return all; }
-async function runAsk(){
-  const q=(document.getElementById('ask-input').value||'').trim();
-  const rbox=document.getElementById('ask-results');
-  if(!q){ openAsk(); return; }
-  let weekday=null, separate=false; const content=[], soft=[];
-  for(let raw of _normHeb(q).replace(/[?.,!()׃]/g,' ').split(/\s+/)){
-    if(!raw) continue;
-    const forms=_forms(raw);
-    const wd=forms.find(f=>f in _WDNAME); if(wd!=null){ weekday=_WDNAME[wd]; continue; }   // day of week
-    if(forms.some(f=>f==='נפרד')){ separate=true; continue; }                               // "בנפרד" → separate reading only
-    if(forms.some(f=>_FILLER.has(f))) continue;
-    if(forms.some(f=>_SOFT.has(f))){ soft.push(forms); continue; }
-    if(raw.length>=2) content.push(forms);
-  }
-  // if the query had only soft/generic words (e.g. "החג הבא בשבת"), fall back to them as the terms
-  let terms = content.length ? content : soft;
-  const holidayMode = !content.length && (soft.length>0 || weekday!=null);   // "which holiday …" style
-  if(!terms.length && weekday==null){ rbox.innerHTML='<div class="ask-hint">לא זיהיתי אירוע בשאלה. נסה שם של חג / פרשה / אירוע — למשל "חג המצות", "פסח בשבת", או "פרשת בנים אתם".</div>'; return; }
-  rbox.innerHTML='<div class="ask-hint">מחפש…</div>';
-  const HOLIDAY_KINDS=new Set(['sam','moed','jew','national','eclipse']);
-  const nameHitAll = n => terms.every(alts=>alts.some(a=>n.indexOf(a)>=0));   // strict: every term present
-  const nameHitAny = n => terms.some(alts=>alts.some(a=>n.indexOf(a)>=0));    // loose: any term (suggestions)
-  // scan the FULL calendar range; forward to the data end (3000), and — if requested — backward to the start (1900)
-  const includePast = !!(document.getElementById('ask-past') && document.getElementById('ask-past').checked);
-  const rangeLo=(INDEX.greg_range&&INDEX.greg_range[0])||(currentGreg()-60);
-  const rangeHi=(INDEX.greg_range&&INDEX.greg_range[1])||(currentGreg()+60);
-  const startY=currentGreg(), CAP=80, BATCH=8;
-  let scanLo=startY, scanHi=startY;
-  // scan a list of years (in the given order), collecting matches; early-exit at CAP. timeFilter: 'future'|'past'
-  async function scanYears(matcher, years, timeFilter){
-    const out=[], seen=new Set();
-    for(let k=0;k<years.length && out.length<CAP;k+=BATCH){
-      const ys=years.slice(k,k+BATCH);
-      rbox.innerHTML=`<div class="ask-hint">מחפש… שנת ${ys[0]}${includePast?' (כולל עבר)':''} · נמצאו ${out.length}</div>`;
-      const ycs=await Promise.all(ys.map(cachedYC));
-      for(const y of ys){ if(y<scanLo)scanLo=y; if(y>scanHi)scanHi=y; }
-      for(const yc of ycs){ if(!yc) continue;
-        for(const mo of yc.months) for(const rec of mo.days){
-          if(seen.has(rec.greg)) continue;
-          if(timeFilter==='future' && rec.greg<TODAY_ISO) continue;
-          if(timeFilter==='past'   && rec.greg>=TODAY_ISO) continue;
-          if(weekday!=null && wdOfISO(rec.greg)!==weekday) continue;
-          const hits=[];
-          (rec.festivals||[]).forEach(f=>{
-            if(separate && f.kind==='parasha' && f.name.indexOf('+')>=0) return;   // "separate" excludes combined readings
-            if(holidayMode){ if(HOLIDAY_KINDS.has(f.kind)) hits.push(f.name); }
-            else if(matcher(_normHeb(f.name))) hits.push(f.name);
-          });
-          if(!holidayMode){
-            USER_EVENTS.filter(e=>e.date===rec.greg).forEach(e=>{ if(matcher(_normHeb(e.desc))) hits.push(e.desc); });
-            PRIVATE_EVENTS.filter(e=>e.date===rec.greg).forEach(e=>{ if(matcher(_normHeb(e.desc))) hits.push('פרטי- '+e.desc); });
-          }
-          if(hits.length){ seen.add(rec.greg); out.push({date:rec.greg, names:[...new Set(hits)]}); }
-        }
-      }
-    }
-    return out;
-  }
-  // forward years: today → end ; backward years: today → start (descending, so nearest past is found first)
-  const fwdYears=[]; for(let y=startY;y<=rangeHi;y++) fwdYears.push(y);
-  const bwdYears=[]; for(let y=startY-1;y>=rangeLo;y--) bwdYears.push(y);
-  async function scan(matcher){
-    const fut=await scanYears(matcher, fwdYears, 'future');
-    const past=includePast ? await scanYears(matcher, bwdYears, 'past') : [];
-    const all=[...past,...fut];
-    all.sort((a,b)=>a.date.localeCompare(b.date));
-    return all;
-  }
-  let matches = await scan(holidayMode? (()=>true) : nameHitAll);
-  let note='';
-  if(!matches.length && !holidayMode && terms.length>1){       // strict found nothing → try loose (suggestions)
-    matches = await scan(nameHitAny);
-    if(matches.length) note='<div class="ask-hint">לא נמצאה התאמה מדויקת — מוצגות תוצאות קרובות:</div>';
-  }
-  const DCAP=60;
-  if(!matches.length){ rbox.innerHTML=`<div class="ask-hint">לא נמצאו תוצאות ל‑"${escHtml(q)}" בין השנים ${scanLo}–${scanHi}. ייתכן שאין אירוע בשם זה בלוח.</div>`; return; }
-  const more = matches.length>DCAP ? `<div class="ask-hint">מוצגות ${DCAP} התוצאות הראשונות (מתוך ${matches.length}+, נסרקו ${scanLo}–${scanHi}).</div>` : `<div class="ask-hint">נסרקו השנים ${scanLo}–${scanHi}.</div>`;
-  rbox.innerHTML = note + matches.slice(0,DCAP).map(m=>{
-    const d=new Date(m.date+'T00:00:00');
-    return `<div class="ask-res" data-g="${m.date}"><b>${d.toLocaleDateString('he-IL')}</b> · יום ${WD[d.getDay()]} · <span class="ask-ev">${escHtml(m.names.join(' · '))}</span></div>`;
-  }).join('') + more;
-  rbox.querySelectorAll('.ask-res').forEach(el=>el.onclick=()=>gotoResult(el.dataset.g));
-}
 async function gotoResult(date){
   const dY=+date.slice(0,4), dM=+date.slice(5,7);
   if(mode!=='greg') setMode('greg');
@@ -1691,9 +1556,13 @@ function privSave(){
 }
 
 // ---- app version + "what's new" splash ----
-const APP_VERSION = '2.9';
+const APP_VERSION = '3.0';
 const NEWS_KEY = 'sam-news-seen';
 const APP_NEWS = `<p class="wn-intro">היסטוריית הגרסאות — מה התווסף מאז גרסה 1.0:</p>
+  <div class="wn-ver"><b>גרסה 3.0</b><ul>
+    <li><b>פרטים ועובדות על הלוח השומרוני</b> (☰) — עמוד חדש שכל נתוניו נגזרו מהלוח עצמו (1900–3000): טווח התאריכים הלועזיים של כל מועד, חוק העיבור, כללי שבת הסכנתה, השנים שבהן יום הכפור חל בשבת, ההפרש מראש חודש ניסן היהודי, שבת חמישית בחודש, פרשת בן פרת בנפרד ועוד.</li>
+    <li>האפשרות "שאל את הלוח" הוסרה מהתפריט.</li>
+  </ul></div>
   <div class="wn-ver"><b>גרסה 2.9</b><ul>
     <li><b>התראות PUSH — גם כשהאפליקציה סגורה</b> — הופעל שרת התראות (Cloudflare): כעת אפשר לקבל התראות על זמני כניסת/יציאת השבת, וערבי-חג וחגים שומרוניים, <b>גם כשהאפליקציה סגורה</b>. הפעלה: ☰ ← “🔔 התראות PUSH”. במובייל (iPhone) יש להתקין תחילה את האפליקציה למסך הבית.</li>
   </ul></div>
@@ -2017,6 +1886,7 @@ function setupCommunity(){
   document.getElementById('ham-version').onclick=()=>{ closeMenus(); dialog({title:'גרסה נוכחית',html:'גרסה <b>'+APP_VERSION+'</b>',buttons:[{label:'מה חדש?',primary:true,act:()=>showWhatsNew(true)},{label:'סגור'}]}); };
   document.getElementById('ham-install').onclick=()=>{ closeMenus(); createShortcut(); };
   document.getElementById('ham-lang').onclick=()=>{ closeMenus(); chooseLang(); };
+  document.getElementById('ham-facts').onclick=()=>{ closeMenus(); location.href='facts.html'; };
   document.getElementById('ham-help').onclick=()=>{ closeMenus(); document.getElementById('help-modal').hidden=false; };
   document.getElementById('help-close').onclick=()=>{ document.getElementById('help-modal').hidden=true; };
   // Gregorian-month view toggle
@@ -2028,13 +1898,8 @@ function setupCommunity(){
     document.body.classList.toggle('gview',gregView);
     buildYear(currentGreg());
   };
-  // "Ask the calendar" chat
-  document.getElementById('ham-ask').onclick=()=>{ closeMenus(); openAsk(); };
   if(PUSH_WORKER_URL){ const pb=document.getElementById('ham-push'); pb.hidden=false; pb.onclick=()=>{ closeMenus(); askPush(true); };
     const tb=document.getElementById('ham-push-test'); if(tb){ tb.hidden=false; tb.onclick=()=>{ closeMenus(); sendSelfTest(); }; } }
-  document.getElementById('ask-close').onclick=()=>{ document.getElementById('ask-modal').hidden=true; };
-  document.getElementById('ask-send').onclick=runAsk;
-  document.getElementById('ask-input').addEventListener('keydown',e=>{ if(e.key==='Enter') runAsk(); });
   document.getElementById('help-ok').onclick=()=>{ document.getElementById('help-modal').hidden=true; };
   document.getElementById('ham-private').onclick=()=>{ closeMenus(); openPrivEditor(); };
   document.getElementById('priv-close').onclick=()=>{ document.getElementById('priv-modal').hidden=true; };
