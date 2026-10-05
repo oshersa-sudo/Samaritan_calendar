@@ -53,6 +53,7 @@
   .ham-sub button{display:block;width:100%;text-align:right;padding:7px 12px;background:none;border:none;border-radius:7px;cursor:pointer;font-size:.85rem;color:var(--ink);white-space:nowrap}
   .ham-sub button:hover{background:var(--soft)}
   @media print{ .hamburger,.ham-menu{display:none!important} }
+  body.modal-open .hamburger,body.modal-open .ham-menu{display:none}   /* a window's ✕ sits in the same corner */
   .more-wrap{position:relative;display:inline-flex}
   /* fixed + JS-positioned so the collapsible bar's overflow:hidden never clips it */
   .more-menu{position:fixed;z-index:80;background:var(--card);border:1px solid var(--line);
@@ -1899,6 +1900,10 @@ function setupCommunity(){
   document.getElementById('ham-version').onclick=()=>{ closeMenus(); dialog({title:'גרסה נוכחית',html:'גרסה <b>'+APP_VERSION+'</b>',buttons:[{label:'מה חדש?',primary:true,act:()=>showWhatsNew(true)},{label:'סגור'}]}); };
   document.getElementById('ham-install').onclick=()=>{ closeMenus(); createShortcut(); };
   document.getElementById('ham-lang').onclick=()=>{ closeMenus(); chooseLang(); };
+  // While any modal window is open, hide the ☰ button — it would cover the window's ✕ in the same corner
+  const syncModalOpen=()=>document.body.classList.toggle('modal-open',[...document.querySelectorAll('.modal')].some(m=>!m.hidden));
+  new MutationObserver(syncModalOpen).observe(document.body,{subtree:true,attributes:true,attributeFilter:['hidden']});
+  syncModalOpen();
   // Calendar-calculation tutorial: the menu item appears only once the video file is deployed
   const TUTORIAL_VIDEO='media/samaritan_calendar_tutorial_subtitled.mp4';
   fetch(TUTORIAL_VIDEO,{method:'HEAD'}).then(r=>{ if(r.ok) document.getElementById('ham-video').hidden=false; }).catch(()=>{});
