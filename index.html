@@ -690,7 +690,7 @@
     <div class="modal-box">
       <div class="modal-head">
         <span id="video-title">🎬 סרטון הסבר: חישוב הלוח</span>
-        <span class="modal-actions"><button class="act" id="video-close" title="סגור">✕</button></span>
+        <span class="modal-actions"><button class="act" id="video-fs" title="מסך מלא">⛶</button><button class="act" id="video-close" title="סגור">✕</button></span>
       </div>
       <div class="modal-body">
         <div class="vid-stage">
@@ -1952,6 +1952,12 @@ function setupCommunity(){
   }
   document.getElementById('ham-video').onclick=()=>{ closeMenus(); openVideo(); };
   document.getElementById('video-close').onclick=closeVideo;
+  document.getElementById('video-fs').onclick=()=>{                       // open the player on the whole screen
+    const v=document.getElementById('tutorial-video');
+    const req=v.requestFullscreen||v.webkitRequestFullscreen||v.msRequestFullscreen;
+    if(req){ try{ const p=req.call(v); if(p&&p.catch) p.catch(()=>{ v.webkitEnterFullscreen&&v.webkitEnterFullscreen(); }); return; }catch(e){} }
+    if(v.webkitEnterFullscreen){ try{ v.webkitEnterFullscreen(); }catch(e){} }  // iOS Safari native fullscreen
+  };
   document.getElementById('video-modal').addEventListener('click',e=>{ if(e.target.id==='video-modal') closeVideo(); });
   document.getElementById('ham-facts').onclick=()=>{ closeMenus(); location.href='facts.html'; };
   document.getElementById('ham-help').onclick=()=>{ closeMenus(); document.getElementById('help-modal').hidden=false; };
