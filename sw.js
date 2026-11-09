@@ -1,5 +1,5 @@
 // Minimal service worker — required for "install app" on mobile, plus light offline caching.
-const CACHE = 'shomron-luach-v35';
+const CACHE = 'shomron-luach-v36';
 const SHELL = ['./', 'index.html', 'Sam_font.ttf', 'manifest.json', 'icon-192.png', 'icon-512.png', 'facts.html'];
 
 self.addEventListener('install', e => {
@@ -13,6 +13,9 @@ self.addEventListener('activate', e => {
 // Network-first so updates always show; fall back to cache when offline.
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  // Let the browser stream the explainer video natively: never intercept range requests or the
+  // .mp4 (keeps HTTP Range working and the ~40MB video out of the cache).
+  if (e.request.headers.has('range') || /\.mp4(\?|$)/i.test(e.request.url)) return;
   e.respondWith(
     fetch(e.request).then(r => {
       const copy = r.clone();
