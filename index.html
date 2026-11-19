@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="google" content="notranslate">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* shown inside the Torah app ("אבני שהם"), in a frame: see html.in-app below */
+try{ if(window.top!==window.self) document.documentElement.classList.add('in-app'); }catch(e){ document.documentElement.classList.add('in-app'); }</script>
 <title>הלוח השומרוני — לוח שנה מלא</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#8a6d3b">
@@ -424,6 +426,13 @@
   .dlg-btn:hover{background:var(--soft)}
   .dlg-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
   .dlg-btn.primary:hover{background:var(--accent2)}
+
+  /* Inside the Torah app ("אבני שהם") this page stands in a frame, and the way back to the app is
+     an arrow of the app's own, 42px in the frame's top RIGHT corner (the hamburger keeps the left).
+     On a narrow screen the bar keeps that corner free, and a window always opens below it. The
+     room is a little wider than the arrow: the app may show this page scaled by its type size. */
+  @media (max-width:900px){ html.in-app .bar{padding-right:60px} }
+  html.in-app .modal{padding-top:62px}
 
   /* ---------- Responsive: tablets ---------- */
   @media (max-width:760px){
